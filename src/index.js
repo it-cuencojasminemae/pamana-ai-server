@@ -1,5 +1,10 @@
 'use strict';
 
+const {
+  DATA_MODE,
+  VERIFICATION_STATUS,
+} = require('./services/transport-data/planning-eligibility');
+
 /**
  * Strapi's schema sync (strapi.db.schema.sync(), run once per startup)
  * creates every attribute's column purely from its schema.json shape -
@@ -28,6 +33,19 @@ const ACCESSIBILITY_BOOLEAN_COLUMNS = [
   { table: 'vehicles', column: 'low_floor' },
   { table: 'route_stops', column: 'covered_waiting_area' },
   { table: 'route_stops', column: 'accessible_toilet_nearby' },
+];
+
+const ROUTE_TRUTH_TABLES = ['routes', 'route_stops'];
+const OPERATIONAL_DATA_TABLES = [
+  'cooperatives',
+  'drivers',
+  'vehicles',
+  'trips',
+  'vehicle_locations',
+  'passenger_reports',
+  'disruptions',
+  'passenger_demand_observations',
+  'predictions',
 ];
 
 const ROLE_LOOKUP_ACTION = 'plugin::users-permissions.role.find';
@@ -97,6 +115,63 @@ async function hardenAccessibilityColumns(strapi) {
       t.boolean(column).notNullable().defaultTo(false).alter();
     });
   }
+}
+
+/**
+ * Strapi sync adds these columns without database-level NOT NULL/default
+ * constraints. Backfill old rows conservatively, then harden the columns so
+ * raw imports cannot accidentally turn legacy/demo records into planning data.
+ * This is additive and idempotent; no route or operational rows are deleted.
+ */
+async function hardenDataTrustColumns(strapi) {
+  if (strapi.db.dialect.client !== 'postgres') {
+    return;
+  }
+
+  const knex = strapi.db.connection;
+
+  await knex.transaction(async (trx) => {
+    for (const tableName of ROUTE_TRUTH_TABLES) {
+      const requiredColumns = [
+        'planning_enabled',
+        'verification_status',
+        'data_mode',
+      ];
+      const columnChecks = await Promise.all(
+        requiredColumns.map((column) => trx.schema.hasColumn(tableName, column))
+      );
+
+      if (columnChecks.some((exists) => !exists)) {
+        continue;
+      }
+
+      await trx(tableName).whereNull('planning_enabled').update({ planning_enabled: false });
+      await trx(tableName)
+        .whereNull('verification_status')
+        .update({ verification_status: VERIFICATION_STATUS.HISTORICAL_UNVERIFIED });
+      await trx(tableName).whereNull('data_mode').update({ data_mode: DATA_MODE.SIMULATED });
+
+      await trx.schema.alterTable(tableName, (table) => {
+        table.boolean('planning_enabled').notNullable().defaultTo(false).alter();
+        table
+          .string('verification_status')
+          .notNullable()
+          .defaultTo(VERIFICATION_STATUS.RESEARCH_CANDIDATE)
+          .alter();
+        table.string('data_mode').notNullable().defaultTo(DATA_MODE.REAL).alter();
+      });
+    }
+
+    for (const tableName of OPERATIONAL_DATA_TABLES) {
+      const hasDataMode = await trx.schema.hasColumn(tableName, 'data_mode');
+      if (!hasDataMode) continue;
+
+      await trx(tableName).whereNull('data_mode').update({ data_mode: DATA_MODE.SIMULATED });
+      await trx.schema.alterTable(tableName, (table) => {
+        table.string('data_mode').notNullable().defaultTo(DATA_MODE.SIMULATED).alter();
+      });
+    }
+  });
 }
 
 /**
@@ -181,6 +256,7 @@ module.exports = {
    */
   async bootstrap({ strapi }) {
     await hardenAccessibilityColumns(strapi);
+    await hardenDataTrustColumns(strapi);
     await ensureRequiredRolePermissions(strapi);
     await ensureDefaultRegistrationRole(strapi);
   },

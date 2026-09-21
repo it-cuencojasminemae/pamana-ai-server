@@ -1,5 +1,7 @@
 'use strict';
 
+const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
+
 /**
  * live-vehicle controller
  *
@@ -40,6 +42,11 @@ module.exports = {
           return null;
         }
 
+        const dataMode = [trip.data_mode, trip.vehicle.data_mode, location.data_mode]
+          .every((mode) => mode === DATA_MODE.REAL)
+          ? DATA_MODE.REAL
+          : DATA_MODE.SIMULATED;
+
         return {
           vehicle_id: trip.vehicle.id,
           documentId: trip.vehicle.documentId,
@@ -50,6 +57,10 @@ module.exports = {
           occupancy_level: trip.vehicle.occupancy_level,
           wheelchair_accessible: trip.vehicle.wheelchair_accessible,
           low_floor: trip.vehicle.low_floor,
+          data_mode: dataMode,
+          trip_data_mode: trip.data_mode ?? DATA_MODE.SIMULATED,
+          vehicle_data_mode: trip.vehicle.data_mode ?? DATA_MODE.SIMULATED,
+          location_data_mode: location.data_mode ?? DATA_MODE.SIMULATED,
           route: {
             id: trip.route.id,
             route_name: trip.route.route_name,

@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * Trip Planner demo data - Passenger Trip Planner fix.
+ * LEGACY DEMO ARCHIVE: former-corridor Trip Planner fixtures.
+ * Retained for compatibility and historical regression work only.
  *
  * The San Luis <-> City of San Fernando pilot corridor previously had exactly
  * one Route record and zero Vehicle records, so /api/trip-search could only

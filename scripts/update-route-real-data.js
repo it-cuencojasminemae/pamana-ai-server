@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * Updates the pilot corridor only after a project member has field-verified
+ * LEGACY MAINTENANCE ARCHIVE for the former pilot corridor.
+ * Updates that corridor only after a project member has field-verified
  * a current fare. The earlier default of PHP38 was based on a proposed March
  * 2026 fare increase that was suspended before implementation, so this script
  * deliberately has no hard-coded "real" fare anymore.

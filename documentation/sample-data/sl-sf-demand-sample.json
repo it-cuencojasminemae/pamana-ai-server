@@ -1,5 +1,6 @@
 {
   "_meta": {
+    "status": "LEGACY_DEMO_ARCHIVE",
     "purpose": "Phase 13 (AI Data Foundation) labeled sample dataset - a small, portable illustration of what passenger_demand_observations rows should look like for the San Luis <-> San Fernando pilot corridor. This is a documentation artifact, not an operational seeder - the live demo seed is scripts/seed-demand-data.js (3 dates, all 24 hours, source: simulation), which as of this writing has NOT been run against the dev DB (0 rows currently in passenger_demand_observations).",
     "corridor": "San Luis <-> City of San Fernando (route_code SL-SF-01)",
     "stop": "San Luis Public Market",

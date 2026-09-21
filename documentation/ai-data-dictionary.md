@@ -1,5 +1,9 @@
 # PAMANA AI Data Dictionary (Phase 13 — AI Data Foundation)
 
+> **LEGACY REFERENCE:** Corridor-specific San Luis examples document the former
+> demo dataset. They are retained for audit history and are not active pilot
+> defaults or verified planning data.
+
 > Companion to `documentation/PAMANA_CLAUDE_CODE_CONTEXT.md` and
 > `documentation/data-validation-report.md`. Field names below were confirmed
 > against the actual `content-types/*/schema.json` files in `src/api/` as of

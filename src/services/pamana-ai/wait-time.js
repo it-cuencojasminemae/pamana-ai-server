@@ -16,6 +16,8 @@
  * service pattern (PAMANA_CLAUDE_CODE_CONTEXT.md data-integrity rule).
  */
 
+const { DATA_MODE } = require('../transport-data/planning-eligibility');
+
 const DEFAULT_FREQUENCY_MINUTES = 15; // typical jeepney headway assumption, used only as a fallback
 const MIN_GAP_MINUTES = 1; // filters out same-burst test artifacts, not real service gaps
 const MAX_PLAUSIBLE_GAP_MINUTES = 45; // a gap wider than this reflects a driver going offline/test data, not real headway
@@ -23,7 +25,12 @@ const MIN_INTERVALS_FOR_OBSERVED_PREDICTION = 5;
 
 async function predictWaitTime(strapi, { routeId }) {
   const trips = await strapi.documents('api::trip.trip').findMany({
-    filters: { route: { id: routeId }, trip_status: 'completed', is_simulated: false },
+    filters: {
+      route: { id: routeId },
+      trip_status: 'completed',
+      is_simulated: false,
+      data_mode: DATA_MODE.REAL,
+    },
     sort: ['started_at:asc'],
     fields: ['started_at'],
   });
@@ -47,7 +54,12 @@ async function predictWaitTime(strapi, { routeId }) {
     : DEFAULT_FREQUENCY_MINUTES;
 
   const activeTrips = await strapi.documents('api::trip.trip').findMany({
-    filters: { route: { id: routeId }, trip_status: 'active', is_simulated: false },
+    filters: {
+      route: { id: routeId },
+      trip_status: 'active',
+      is_simulated: false,
+      data_mode: DATA_MODE.REAL,
+    },
     fields: ['id'],
   });
   const hasActiveVehicle = activeTrips.length > 0;

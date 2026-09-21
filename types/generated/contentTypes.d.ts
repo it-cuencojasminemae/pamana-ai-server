@@ -463,6 +463,9 @@ export interface ApiCooperativeCooperative extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     drivers: Schema.Attribute.Relation<'oneToMany', 'api::driver.driver'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -493,6 +496,9 @@ export interface ApiDisruptionDisruption extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     description: Schema.Attribute.Text;
     disruption_status: Schema.Attribute.Enumeration<
       ['active', 'resolved', 'inactive']
@@ -552,6 +558,9 @@ export interface ApiDriverDriver extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     driver_number: Schema.Attribute.String &
       Schema.Attribute.Required &
       Schema.Attribute.Unique;
@@ -595,6 +604,9 @@ export interface ApiPassengerDemandObservationPassengerDemandObservation
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     date: Schema.Attribute.Date & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -682,6 +694,9 @@ export interface ApiPassengerReportPassengerReport
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     latitude: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -739,6 +754,9 @@ export interface ApiPredictionPrediction extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
       'oneToMany',
@@ -781,6 +799,9 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
     latitude: Schema.Attribute.Float & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -790,6 +811,7 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     longitude: Schema.Attribute.Float & Schema.Attribute.Required;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    notes: Schema.Attribute.Text;
     passenger_demand_observations: Schema.Attribute.Relation<
       'oneToMany',
       'api::passenger-demand-observation.passenger-demand-observation'
@@ -798,6 +820,9 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::passenger-report.passenger-report'
     >;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     predictions: Schema.Attribute.Relation<
       'oneToMany',
       'api::prediction.prediction'
@@ -812,12 +837,28 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
     stop_type: Schema.Attribute.Enumeration<
       ['pickup', 'dropoff', 'both', 'terminal']
     >;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
   };
 }
 
@@ -842,6 +883,9 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
     destination: Schema.Attribute.String & Schema.Attribute.Required;
     estimated_travel_time: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
@@ -853,6 +897,7 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::route.route'> &
       Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
     origin: Schema.Attribute.String & Schema.Attribute.Required;
     passenger_demand_observations: Schema.Attribute.Relation<
       'oneToMany',
@@ -862,6 +907,9 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::passenger-report.passenger-report'
     >;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     predictions: Schema.Attribute.Relation<
       'oneToMany',
       'api::prediction.prediction'
@@ -878,11 +926,27 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::route-stop.route-stop'
     >;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
     trips: Schema.Attribute.Relation<'oneToMany', 'api::trip.trip'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     vehicles: Schema.Attribute.Relation<'oneToMany', 'api::vehicle.vehicle'>;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
   };
 }
 
@@ -900,6 +964,9 @@ export interface ApiTripTrip extends Struct.CollectionTypeSchema {
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     direction: Schema.Attribute.Enumeration<['outbound', 'inbound']> &
       Schema.Attribute.Required;
     driver: Schema.Attribute.Relation<'manyToOne', 'api::driver.driver'> &
@@ -946,6 +1013,9 @@ export interface ApiVehicleLocationVehicleLocation
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     heading: Schema.Attribute.Decimal;
     latitude: Schema.Attribute.Float & Schema.Attribute.Required;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
@@ -1001,6 +1071,9 @@ export interface ApiVehicleVehicle extends Struct.CollectionTypeSchema {
         number
       > &
       Schema.Attribute.DefaultTo<0>;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
     driver: Schema.Attribute.Relation<'oneToOne', 'api::driver.driver'>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<

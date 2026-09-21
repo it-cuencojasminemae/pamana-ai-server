@@ -1,5 +1,9 @@
 # PAMANA Data Validation Report: San Luis ↔ City of San Fernando Corridor, Pampanga
 
+> **LEGACY RESEARCH ARCHIVE:** Retained as evidence about the former corridor.
+> Its records are not active pilot defaults and must not be enabled for normal
+> passenger planning without the new verification process.
+
 ## TL;DR
 - Some PAMANA reference information is real and sourced: PSA population figures and a direct "San Luis – SM Pampanga" jeepney fare observation (₱21) documented by the Pampanga provincial government. The proposed March 2026 LTFRB fare hike cited in an earlier version of this report was suspended on March 18, 2026; it must not be used as a current fare matrix.
 - The two localities are genuinely adjacent — great-circle ~11–13 km, road distance ~16 km, ~25–40 min by car in normal traffic — so the app's `Route.estimated_travel_time` should use this range, NOT the erroneous 110-mile / ~3-hour Rome2Rio figure (which mistakenly geolocates San Luis, Aurora).

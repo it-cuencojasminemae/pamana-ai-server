@@ -20,6 +20,11 @@
 
 const { predictWaitTime } = require('../../../services/pamana-ai/wait-time');
 const { explainTripRecommendation } = require('../../../services/pamana-ai/explain');
+const {
+  DATA_MODE,
+  filterPlanningEligibleRoutes,
+  planningCandidateFilters,
+} = require('../../../services/transport-data/planning-eligibility');
 
 // Assumed overhead (wait + walk between legs) added to total journey time
 // for every transfer in a candidate's route - not real headway data, a
@@ -59,9 +64,8 @@ const RECOMMENDATION_WEIGHTS = {
 
 // Bidirectional, case-insensitive substring match done in memory rather
 // than via $containsi: a location picker can send a more specific string
-// than what's stored (e.g. "San Luis, Pampanga" vs. the stored "San
-// Luis") - $containsi only ever checks one direction, so a more specific
-// search string could never match. Fine at this pilot's route count.
+// than what is stored. $containsi only checks one direction, so a more
+// specific search string could otherwise fail to match.
 const matches = (storedValue, searchValue) => {
   const stored = String(storedValue).toLowerCase().trim();
   const search = String(searchValue).toLowerCase().trim();
@@ -85,10 +89,8 @@ const normalize = (values) => {
   return (v) => (typeof v === 'number' ? (v - min) / (max - min) : null);
 };
 
-// Drops the ", Pampanga" suffix and "City of " prefix the seeded route data
-// uses for full place names, so a service name reads "San Luis - San
-// Fernando Jeepney" instead of "San Luis, Pampanga - City of San Fernando,
-// Pampanga Jeepney".
+// Drops the ", Pampanga" suffix and "City of " prefix used by stored place
+// names so service names remain compact.
 const shortenPlaceName = (name) =>
   String(name)
     .replace(/^City of\s+/i, '')
@@ -153,6 +155,7 @@ const formatVehicle = (vehicle, source, location = null) =>
         vehicle_type: vehicle.vehicle_type,
         vehicle_status: vehicle.vehicle_status,
         occupancy_level: vehicle.occupancy_level ?? null,
+        data_mode: vehicle.data_mode ?? DATA_MODE.SIMULATED,
         source,
         location,
       }
@@ -163,14 +166,17 @@ const formatVehicle = (vehicle, source, location = null) =>
 // ordinary route-stop data.
 const findTransferStop = (stops) => stops.find((stop) => /transfer/i.test(stop.name)) ?? null;
 
-const dataQualityFor = (route, waitTime) => {
-  const isReferenceRoute = route.route_code === 'SL-SF-01';
-  const vehicleSource = isDemoMode() ? 'simulation' : 'unverified';
+const dataQualityFor = (route, waitTime, vehicle) => {
+  const vehicleSource = !vehicle
+    ? 'UNAVAILABLE'
+    : vehicle.data_mode === DATA_MODE.REAL
+      ? 'REAL'
+      : 'SIMULATED';
 
   return {
-    route: isReferenceRoute ? 'reference' : 'simulation',
-    fare: isReferenceRoute ? 'reference' : 'simulation',
-    travel_time: isReferenceRoute ? 'reference' : 'simulation',
+    route: route.verification_status,
+    fare: route.verification_status,
+    travel_time: route.verification_status,
     wait_time: waitTime.basis === 'historical_trip_intervals' ? 'observed' : 'fallback',
     vehicle: vehicleSource,
     occupancy: vehicleSource,
@@ -178,20 +184,23 @@ const dataQualityFor = (route, waitTime) => {
 };
 
 const dataNoticeFor = (quality) =>
-  quality.route === 'simulation'
-    ? 'Demo route: transfer, fare, travel time, vehicle assignment, and availability are simulated for this prototype.'
-    : 'Pilot corridor reference: fare and travel time are estimates; vehicle assignment and availability remain demo data until live driver tracking is connected.';
+  `Route facts passed the passenger-planning trust gate (${quality.route}). Vehicle and occupancy data are ${quality.vehicle}.`;
 
 async function latestObservedVehicleLocation(strapi, vehicleId) {
   const activeTrip = await strapi.documents('api::trip.trip').findFirst({
-    filters: { vehicle: { id: vehicleId }, trip_status: 'active', is_simulated: false },
+    filters: {
+      vehicle: { id: vehicleId },
+      trip_status: 'active',
+      is_simulated: false,
+      data_mode: DATA_MODE.REAL,
+    },
     fields: ['id'],
   });
 
   if (!activeTrip) return null;
 
   const location = await strapi.documents('api::vehicle-location.vehicle-location').findFirst({
-    filters: { trip: { id: activeTrip.id } },
+    filters: { trip: { id: activeTrip.id }, data_mode: DATA_MODE.REAL },
     sort: ['recorded_at:desc'],
     fields: ['latitude', 'longitude', 'recorded_at'],
   });
@@ -205,6 +214,7 @@ async function latestObservedVehicleLocation(strapi, vehicleId) {
     longitude: Number(location.longitude),
     recorded_at: location.recorded_at,
     source: 'observed',
+    data_mode: DATA_MODE.REAL,
   };
 }
 
@@ -229,12 +239,11 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
       waitTimeCache.set(route.id, await predictWaitTime(strapi, { routeId: route.id }));
     }
     const waitTime = waitTimeCache.get(route.id);
-    const data_quality = dataQualityFor(route, waitTime);
-
     const eligibleVehicles = (route.vehicles || []).filter((v) => v.vehicle_status !== 'offline');
     const vehicleCandidates = eligibleVehicles.length > 0 ? eligibleVehicles : [null];
 
     for (const vehicle of vehicleCandidates) {
+      const data_quality = dataQualityFor(route, waitTime, vehicle);
       const fare = route.base_fare != null ? Number(route.base_fare) : null;
       const estimatedTravelMinutes = route.estimated_travel_time ?? null;
       const reliability_score = reliabilityScoreFor(waitTime.confidence, vehicle, transferCount);
@@ -326,15 +335,16 @@ module.exports = {
       return ctx.badRequest('Both "origin" and "destination" query parameters are required.');
     }
 
-    const allActiveRoutes = await strapi.documents('api::route.route').findMany({
-      filters: { route_status: 'active' },
+    const planningCandidates = await strapi.documents('api::route.route').findMany({
+      filters: planningCandidateFilters({ requireActive: true }),
       populate: {
         route_stops: true,
         vehicles: true,
       },
     });
 
-    const matchedRoutes = allActiveRoutes.filter(
+    const planningEligibleRoutes = filterPlanningEligibleRoutes(planningCandidates);
+    const matchedRoutes = planningEligibleRoutes.filter(
       (route) =>
         (matches(route.origin, origin) && matches(route.destination, destination)) ||
         (matches(route.origin, destination) && matches(route.destination, origin))
@@ -351,6 +361,7 @@ module.exports = {
           recommended_option_id: null,
           recommendation_explanation: null,
           demo_mode: isDemoMode(),
+          planning_data_only: true,
         },
       };
       return;
@@ -439,6 +450,15 @@ module.exports = {
         route_id: option.route.documentId,
         route_code: option.route.route_code,
         route_name: option.route.route_name,
+        route_verification: {
+          planning_enabled: option.route.planning_enabled,
+          verification_status: option.route.verification_status,
+          data_mode: option.route.data_mode,
+          verified_at: option.route.verified_at,
+          source_name: option.route.source_name,
+          source_url: option.route.source_url,
+          source_reference: option.route.source_reference,
+        },
         direction: option.direction,
         origin: option.origin,
         destination: option.destination,
@@ -481,6 +501,7 @@ module.exports = {
         recommended_option_id: recommended.id,
         recommendation_explanation,
         demo_mode: isDemoMode(),
+        planning_data_only: true,
       },
     };
   },

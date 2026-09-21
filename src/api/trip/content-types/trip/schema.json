@@ -40,6 +40,15 @@
       "required": true,
       "default": false
     },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "SIMULATED",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
     "vehicle": {
       "type": "relation",
       "relation": "manyToOne",

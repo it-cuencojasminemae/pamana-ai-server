@@ -36,6 +36,15 @@
       "type": "datetime",
       "required": true
     },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "SIMULATED",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
     "passenger": {
       "type": "relation",
       "relation": "manyToOne",

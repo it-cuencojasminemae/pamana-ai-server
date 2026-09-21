@@ -40,6 +40,15 @@
       "type": "string",
       "required": true
     },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "SIMULATED",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
     "route": {
       "type": "relation",
       "relation": "manyToOne",

@@ -12,10 +12,10 @@ const { getAIExplainProvider } = require('../src/services/pamana-ai/providers');
 const { buildTripRecommendationPrompt } = require('../src/services/pamana-ai/explain');
 
 const SAMPLE_PROMPT = buildTripRecommendationPrompt({
-  service_name: 'San Luis - San Fernando Jeepney',
-  origin: 'San Luis, Pampanga',
+  service_name: 'Sample Origin - Sample Destination Jeepney',
+  origin: 'Sample Origin, Pampanga',
   destination: 'City of San Fernando, Pampanga',
-  pickup_stop: { name: 'San Luis Public Market' },
+  pickup_stop: { name: 'Sample Origin Terminal' },
   dropoff_stop: { name: 'SM City San Fernando' },
   fare: 38,
   estimated_travel_minutes: 45,

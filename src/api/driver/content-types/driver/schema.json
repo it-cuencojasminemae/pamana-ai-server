@@ -40,6 +40,15 @@
         "inactive"
       ]
     },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "SIMULATED",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
     "user": {
       "type": "relation",
       "relation": "oneToOne",

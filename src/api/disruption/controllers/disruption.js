@@ -11,6 +11,7 @@
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
+const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 
 const ROLE_SOURCE_LABELS = {
   lgu: 'lgu',
@@ -19,7 +20,7 @@ const ROLE_SOURCE_LABELS = {
 
 module.exports = createCoreController('api::disruption.disruption', ({ strapi }) => ({
   async create(ctx) {
-    const { type, title, description, latitude, longitude, severity, starts_at, ends_at } =
+    const { type, title, description, latitude, longitude, severity, starts_at, ends_at, data_mode } =
       ctx.request.body?.data || {};
 
     if (!type || !title || !severity || !starts_at) {
@@ -28,6 +29,13 @@ module.exports = createCoreController('api::disruption.disruption', ({ strapi })
 
     const roleType = ctx.state.user.role?.type;
     const source = ROLE_SOURCE_LABELS[roleType] || 'manual';
+    // Conservative default: a disruption is demo data unless the LGU/admin
+    // explicitly identifies it as a real current advisory.
+    const requestedDataMode = data_mode || DATA_MODE.SIMULATED;
+
+    if (!Object.values(DATA_MODE).includes(requestedDataMode)) {
+      return ctx.badRequest('"data_mode" must be "REAL" or "SIMULATED".');
+    }
 
     ctx.request.body.data = {
       type,
@@ -40,6 +48,7 @@ module.exports = createCoreController('api::disruption.disruption', ({ strapi })
       ends_at,
       disruption_status: 'active',
       source,
+      data_mode: requestedDataMode,
     };
 
     return super.create(ctx);

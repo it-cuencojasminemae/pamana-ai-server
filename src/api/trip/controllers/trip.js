@@ -10,6 +10,7 @@
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
+const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 
 const getOwnDriver = (userId) =>
   strapi
@@ -44,6 +45,11 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
       return ctx.badRequest('"route" and "direction" are required.');
     }
 
+    const dataMode =
+      driver.data_mode === DATA_MODE.REAL && driver.vehicle.data_mode === DATA_MODE.REAL
+        ? DATA_MODE.REAL
+        : DATA_MODE.SIMULATED;
+
     // Created via the Document Service directly (not super.create(ctx)):
     // the Driver role has no `find` permission on the Driver content-type,
     // and Strapi's content-API write validation rejects setting a relation
@@ -56,6 +62,8 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
         vehicle: driver.vehicle.id,
         trip_status: 'active',
         started_at: new Date().toISOString(),
+        data_mode: dataMode,
+        is_simulated: dataMode === DATA_MODE.SIMULATED,
       },
     });
 

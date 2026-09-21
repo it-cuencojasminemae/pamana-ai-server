@@ -1,11 +1,11 @@
 'use strict';
 
 /**
- * Creates the pilot San Luis to City of San Fernando corridor used by the
- * passenger trip planner. Safe to re-run: the route and stops are matched by
- * stable codes/names, and existing records are reused.
+ * LEGACY DEMO ARCHIVE: creates the former San Luis to City of San Fernando
+ * corridor. Retained only to reproduce historical demo databases. It must not
+ * be used as the active pilot or as a fallback route.
  *
- * Usage: npm run seed:local-demo-route
+ * Usage: npm run legacy:seed:local-demo-route
  */
 
 const crypto = require('crypto');

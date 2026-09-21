@@ -16,6 +16,7 @@
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
+const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 
 const DUPLICATE_WINDOW_MINUTES = 5;
 
@@ -83,6 +84,7 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
           longitude,
           location_note,
           reported_at: new Date().toISOString(),
+          data_mode: DATA_MODE.REAL,
           passenger: passengerProfile.id,
         },
       });

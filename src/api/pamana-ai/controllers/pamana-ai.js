@@ -24,30 +24,14 @@ const { explainWaitTime } = require('../../../services/pamana-ai/explain');
 const truthy = (value) => value === 'true' || value === '1';
 
 async function resolveRouteId(strapi, routeParam) {
-  if (routeParam) {
-    const route = await strapi.documents('api::route.route').findFirst({
-      filters: { documentId: routeParam },
-      fields: ['id'],
-    });
-    return route ? route.id : null;
-  }
+  if (!routeParam) return null;
 
-  // Single-corridor pilot: no route given just means "the corridor." Match
-  // by route_code specifically, not just "first active route" - the DB
-  // also has a leftover "Authentication Test Route" that's active too and
-  // would otherwise win a plain id-order tiebreak.
-  const pilotRoute = await strapi.documents('api::route.route').findFirst({
-    filters: { route_code: 'SL-SF-01', route_status: 'active' },
+  const route = await strapi.documents('api::route.route').findFirst({
+    filters: { documentId: routeParam, route_status: 'active' },
     fields: ['id'],
   });
-  if (pilotRoute) return pilotRoute.id;
 
-  const anyActiveRoute = await strapi.documents('api::route.route').findFirst({
-    filters: { route_status: 'active' },
-    sort: ['id:asc'],
-    fields: ['id'],
-  });
-  return anyActiveRoute ? anyActiveRoute.id : null;
+  return route ? route.id : null;
 }
 
 async function resolveStopId(strapi, stopParam) {

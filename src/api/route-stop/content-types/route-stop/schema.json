@@ -47,6 +47,48 @@
       "required": true,
       "default": false
     },
+    "planning_enabled": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "verification_status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "RESEARCH_CANDIDATE",
+      "enum": [
+        "AUTHORITATIVE_CURRENT",
+        "FIELD_VERIFIED",
+        "CORROBORATED_RESEARCH",
+        "HISTORICAL_UNVERIFIED",
+        "SIMULATED_DEMO",
+        "RESEARCH_CANDIDATE"
+      ]
+    },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "REAL",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
+    "verified_at": {
+      "type": "datetime"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "text"
+    },
+    "source_reference": {
+      "type": "text"
+    },
+    "notes": {
+      "type": "text"
+    },
     "route": {
       "type": "relation",
       "relation": "manyToOne",

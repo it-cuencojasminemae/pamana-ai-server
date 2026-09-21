@@ -33,6 +33,15 @@
         "inactive"
       ]
     },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "SIMULATED",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
     "vehicles": {
       "type": "relation",
       "relation": "oneToMany",

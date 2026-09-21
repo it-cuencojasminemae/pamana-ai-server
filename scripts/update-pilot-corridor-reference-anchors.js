@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * Applies the agreed reference anchors to the two San Luis pilot routes.
+ * LEGACY MAINTENANCE ARCHIVE: applies reference anchors to the former San
+ * Luis demo routes. It is not an active-pilot setup script.
  *
  * The direct route is intentionally an approximate corridor between stored
  * reference stops, not a claim of verified jeepney road geometry. The only

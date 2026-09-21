@@ -1,7 +1,8 @@
 'use strict';
 
 /**
- * One-off seed script for Phases 13-16 demo data (hackathon).
+ * LEGACY DEMO ARCHIVE: one-off seed script for the former pilot corridor.
+ * Do not use this as active pilot data.
  *
  * The pilot corridor has almost no real usage yet (a handful of same-day
  * test trips, zero demand observations), so wait-time/demand predictions

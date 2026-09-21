@@ -1,5 +1,10 @@
 # PAMANA — Project Context for Claude Code
 
+> **LEGACY ROADMAP ARCHIVE:** This document describes the former San Luis demo
+> pilot. It remains available for history only and must not be used to choose
+> active passenger origins, driver routes, or backend fallbacks. The current
+> revision plan is `PAMANA_UPDATED_SYSTEM_REVISION_PHASES_V2.md`.
+
 > Reference document for Claude Code when working in either `pamana-backend` or `pamana-frontend`. It consolidates the PAMANA System Concept Paper and the Complete Application Development Guide (30-phase roadmap) into one file, plus working rules for how to make changes safely on this project.
 >
 > **This complements, not replaces, the existing `CLAUDE.md` at the repo root**, which already covers git-workflow specifics (pull-before-push discipline, phase tagging, commit message conventions, schema-change approval requirements, post-commit plain-language summaries). Keep both in sync if either changes.

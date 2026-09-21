@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Regression audit for the San Luis <-> City of San Fernando pilot records.
+ * LEGACY REGRESSION AUDIT for the former San Luis demo records.
  *
  * This is read-only. It deliberately checks the database relations that feed
  * /api/trip-search so a transfer stop or stop row cannot accidentally leak

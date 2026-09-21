@@ -10,6 +10,7 @@
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
+const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 
 module.exports = createCoreController('api::vehicle-location.vehicle-location', ({ strapi }) => ({
   async create(ctx) {
@@ -43,6 +44,10 @@ module.exports = createCoreController('api::vehicle-location.vehicle-location', 
       speed,
       heading,
       recorded_at: recorded_at || new Date().toISOString(),
+      data_mode:
+        activeTrip.data_mode === DATA_MODE.REAL
+          ? DATA_MODE.REAL
+          : DATA_MODE.SIMULATED,
       trip: activeTrip.id,
       vehicle: activeTrip.vehicle.id,
     };
