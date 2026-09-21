@@ -53,6 +53,12 @@
       "relation": "oneToMany",
       "target": "api::driver.driver",
       "mappedBy": "cooperative"
+    },
+    "routes": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::route.route",
+      "mappedBy": "cooperative"
     }
   }
 }

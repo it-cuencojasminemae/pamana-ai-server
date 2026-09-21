@@ -20,6 +20,9 @@
       "required": true,
       "unique": true
     },
+    "transport_mode": {
+      "type": "string"
+    },
     "origin": {
       "type": "string",
       "required": true
@@ -45,6 +48,11 @@
         "active",
         "inactive"
       ]
+    },
+    "active": {
+      "type": "boolean",
+      "required": true,
+      "default": false
     },
     "planning_enabled": {
       "type": "boolean",
@@ -93,6 +101,24 @@
       "relation": "oneToMany",
       "target": "api::route-stop.route-stop",
       "mappedBy": "route"
+    },
+    "route_variants": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::route-variant.route-variant",
+      "mappedBy": "route"
+    },
+    "fare_rules": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::fare-rule.fare-rule",
+      "mappedBy": "route"
+    },
+    "cooperative": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::cooperative.cooperative",
+      "inversedBy": "routes"
     },
     "vehicles": {
       "type": "relation",

@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "route_stops",
+  "collectionName": "transport_nodes",
   "info": {
-    "singularName": "route-stop",
-    "pluralName": "route-stops",
-    "displayName": "Route Stop"
+    "singularName": "transport-node",
+    "pluralName": "transport-nodes",
+    "displayName": "Transport Node"
   },
   "options": {
     "draftAndPublish": false
@@ -15,33 +15,64 @@
       "type": "string",
       "required": true
     },
-    "sequence": {
-      "type": "integer",
+    "node_code": {
+      "type": "string",
       "required": true,
-      "min": 1
+      "unique": true
     },
     "latitude": {
-      "type": "float",
-      "required": true
+      "type": "decimal",
+      "min": -90,
+      "max": 90
     },
     "longitude": {
-      "type": "float",
-      "required": true
+      "type": "decimal",
+      "min": -180,
+      "max": 180
     },
-    "stop_type": {
+    "node_type": {
       "type": "enumeration",
+      "required": true,
       "enum": [
-        "pickup",
-        "dropoff",
-        "both",
-        "terminal"
+        "ROADSIDE_PICKUP",
+        "DESIGNATED_STOP",
+        "TERMINAL",
+        "LOADING_BAY",
+        "DROP_OFF",
+        "TRANSFER_POINT",
+        "TRANSPORT_HUB",
+        "LANDMARK",
+        "DESTINATION",
+        "ESSENTIAL_SERVICE",
+        "EMERGENCY_PICKUP"
       ]
+    },
+    "barangay": {
+      "type": "string"
+    },
+    "municipality_city": {
+      "type": "string"
+    },
+    "province": {
+      "type": "string"
+    },
+    "google_place_id": {
+      "type": "string"
     },
     "covered_waiting_area": {
       "type": "boolean"
     },
-    "accessible_toilet_nearby": {
+    "wheelchair_accessible": {
       "type": "boolean"
+    },
+    "lighting_notes": {
+      "type": "text"
+    },
+    "safety_notes": {
+      "type": "text"
+    },
+    "accessibility_notes": {
+      "type": "text"
     },
     "planning_enabled": {
       "type": "boolean",
@@ -85,29 +116,23 @@
     "notes": {
       "type": "text"
     },
-    "route": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::route.route",
-      "inversedBy": "route_stops"
-    },
-    "passenger_reports": {
+    "starting_variants": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::passenger-report.passenger-report",
-      "mappedBy": "stop"
+      "target": "api::route-variant.route-variant",
+      "mappedBy": "start_node"
     },
-    "passenger_demand_observations": {
+    "ending_variants": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::passenger-demand-observation.passenger-demand-observation",
-      "mappedBy": "stop"
+      "target": "api::route-variant.route-variant",
+      "mappedBy": "end_node"
     },
-    "predictions": {
+    "route_variant_stops": {
       "type": "relation",
       "relation": "oneToMany",
-      "target": "api::prediction.prediction",
-      "mappedBy": "stop"
+      "target": "api::route-variant-stop.route-variant-stop",
+      "mappedBy": "transport_node"
     }
   }
 }

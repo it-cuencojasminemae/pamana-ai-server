@@ -1,0 +1,173 @@
+{
+  "kind": "collectionType",
+  "collectionName": "route_variants",
+  "info": {
+    "singularName": "route-variant",
+    "pluralName": "route-variants",
+    "displayName": "Route Variant"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "variant_code": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "display_name": {
+      "type": "string",
+      "required": true
+    },
+    "direction": {
+      "type": "enumeration",
+      "required": true,
+      "enum": [
+        "OUTBOUND",
+        "INBOUND",
+        "LOOP",
+        "BIDIRECTIONAL_PATTERN"
+      ]
+    },
+    "route": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route.route",
+      "required": true,
+      "inversedBy": "route_variants"
+    },
+    "signboard_text": {
+      "type": "string"
+    },
+    "start_node": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transport-node.transport-node",
+      "inversedBy": "starting_variants"
+    },
+    "end_node": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transport-node.transport-node",
+      "inversedBy": "ending_variants"
+    },
+    "operating_status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "UNKNOWN",
+      "enum": [
+        "ACTIVE",
+        "LIMITED",
+        "SUSPENDED",
+        "INACTIVE",
+        "UNKNOWN"
+      ]
+    },
+    "planning_enabled": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "geometry_source": {
+      "type": "enumeration",
+      "required": true,
+      "default": "UNKNOWN",
+      "enum": [
+        "FIELD_GPS",
+        "AUTHORITATIVE",
+        "GOOGLE_ROAD_MATCHED",
+        "MANUAL_VERIFIED",
+        "SIMULATED",
+        "UNKNOWN"
+      ]
+    },
+    "encoded_polyline": {
+      "type": "text"
+    },
+    "geometry_geojson": {
+      "type": "json"
+    },
+    "verification_status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "RESEARCH_CANDIDATE",
+      "enum": [
+        "AUTHORITATIVE_CURRENT",
+        "FIELD_VERIFIED",
+        "CORROBORATED_RESEARCH",
+        "HISTORICAL_UNVERIFIED",
+        "SIMULATED_DEMO",
+        "RESEARCH_CANDIDATE"
+      ]
+    },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "REAL",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
+    "source_type": {
+      "type": "string"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "text"
+    },
+    "source_reference": {
+      "type": "text"
+    },
+    "verified_at": {
+      "type": "datetime"
+    },
+    "verified_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "effective_from": {
+      "type": "date"
+    },
+    "effective_to": {
+      "type": "date"
+    },
+    "notes": {
+      "type": "text"
+    },
+    "route_variant_stops": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::route-variant-stop.route-variant-stop",
+      "mappedBy": "route_variant"
+    },
+    "fare_rules": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::fare-rule.fare-rule",
+      "mappedBy": "route_variant"
+    },
+    "service_patterns": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::service-pattern.service-pattern",
+      "mappedBy": "route_variant"
+    },
+    "trips": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::trip.trip",
+      "mappedBy": "route_variant"
+    },
+    "active_vehicles": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::vehicle.vehicle",
+      "mappedBy": "active_route_variant"
+    }
+  }
+}

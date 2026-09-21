@@ -475,6 +475,7 @@ export interface ApiCooperativeCooperative extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private;
     name: Schema.Attribute.String & Schema.Attribute.Required;
     publishedAt: Schema.Attribute.DateTime;
+    routes: Schema.Attribute.Relation<'oneToMany', 'api::route.route'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -586,6 +587,126 @@ export interface ApiDriverDriver extends Struct.CollectionTypeSchema {
       'plugin::users-permissions.user'
     >;
     vehicle: Schema.Attribute.Relation<'oneToOne', 'api::vehicle.vehicle'>;
+  };
+}
+
+export interface ApiFareRuleFareRule extends Struct.CollectionTypeSchema {
+  collectionName: 'fare_rules';
+  info: {
+    displayName: 'Fare Rule';
+    pluralName: 'fare-rules';
+    singularName: 'fare-rule';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    base_distance_km: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    currency: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 3;
+      }> &
+      Schema.Attribute.DefaultTo<'PHP'>;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
+    effective_from: Schema.Attribute.Date;
+    effective_to: Schema.Attribute.Date;
+    fare_type: Schema.Attribute.Enumeration<
+      ['FLAT', 'DISTANCE_BASED', 'ZONE', 'MANUAL_LOOKUP']
+    > &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::fare-rule.fare-rule'
+    > &
+      Schema.Attribute.Private;
+    minimum_fare: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    notes: Schema.Attribute.Text;
+    per_km_after_base: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    pwd_discount_percent: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100;
+          min: 0;
+        },
+        number
+      >;
+    regular_base_fare: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    rounding_rule: Schema.Attribute.String;
+    route: Schema.Attribute.Relation<'manyToOne', 'api::route.route'>;
+    route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    >;
+    senior_discount_percent: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100;
+          min: 0;
+        },
+        number
+      >;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
+    student_discount_percent: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 100;
+          min: 0;
+        },
+        number
+      >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
   };
 }
 
@@ -790,12 +911,8 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
-    accessible_toilet_nearby: Schema.Attribute.Boolean &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
-    covered_waiting_area: Schema.Attribute.Boolean &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
+    accessible_toilet_nearby: Schema.Attribute.Boolean;
+    covered_waiting_area: Schema.Attribute.Boolean;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -862,6 +979,185 @@ export interface ApiRouteStopRouteStop extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiRouteVariantStopRouteVariantStop
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'route_variant_stops';
+  info: {
+    displayName: 'Route Variant Stop';
+    pluralName: 'route-variant-stops';
+    singularName: 'route-variant-stop';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    distance_from_variant_start_m: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
+    dropoff_allowed: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    instruction_template: Schema.Attribute.Text;
+    is_timepoint: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant-stop.route-variant-stop'
+    > &
+      Schema.Attribute.Private;
+    pickup_allowed: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    > &
+      Schema.Attribute.Required;
+    sequence: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
+    transfer_allowed: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    transport_node: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transport-node.transport-node'
+    > &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
+export interface ApiRouteVariantRouteVariant
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'route_variants';
+  info: {
+    displayName: 'Route Variant';
+    pluralName: 'route-variants';
+    singularName: 'route-variant';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    active_vehicles: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vehicle.vehicle'
+    >;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
+    direction: Schema.Attribute.Enumeration<
+      ['OUTBOUND', 'INBOUND', 'LOOP', 'BIDIRECTIONAL_PATTERN']
+    > &
+      Schema.Attribute.Required;
+    display_name: Schema.Attribute.String & Schema.Attribute.Required;
+    effective_from: Schema.Attribute.Date;
+    effective_to: Schema.Attribute.Date;
+    encoded_polyline: Schema.Attribute.Text;
+    end_node: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transport-node.transport-node'
+    >;
+    fare_rules: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::fare-rule.fare-rule'
+    >;
+    geometry_geojson: Schema.Attribute.JSON;
+    geometry_source: Schema.Attribute.Enumeration<
+      [
+        'FIELD_GPS',
+        'AUTHORITATIVE',
+        'GOOGLE_ROAD_MATCHED',
+        'MANUAL_VERIFIED',
+        'SIMULATED',
+        'UNKNOWN',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'UNKNOWN'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant.route-variant'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    operating_status: Schema.Attribute.Enumeration<
+      ['ACTIVE', 'LIMITED', 'SUSPENDED', 'INACTIVE', 'UNKNOWN']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'UNKNOWN'>;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    route: Schema.Attribute.Relation<'manyToOne', 'api::route.route'> &
+      Schema.Attribute.Required;
+    route_variant_stops: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant-stop.route-variant-stop'
+    >;
+    service_patterns: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service-pattern.service-pattern'
+    >;
+    signboard_text: Schema.Attribute.String;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_type: Schema.Attribute.String;
+    source_url: Schema.Attribute.Text;
+    start_node: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transport-node.transport-node'
+    >;
+    trips: Schema.Attribute.Relation<'oneToMany', 'api::trip.trip'>;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    variant_code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
+    verified_by: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+  };
+}
+
 export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
   collectionName: 'routes';
   info: {
@@ -873,6 +1169,9 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    active: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     base_fare: Schema.Attribute.Decimal &
       Schema.Attribute.SetMinMax<
         {
@@ -880,6 +1179,10 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    cooperative: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::cooperative.cooperative'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -894,6 +1197,10 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
         },
         number
       >;
+    fare_rules: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::fare-rule.fare-rule'
+    >;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<'oneToMany', 'api::route.route'> &
       Schema.Attribute.Private;
@@ -926,9 +1233,14 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::route-stop.route-stop'
     >;
+    route_variants: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant.route-variant'
+    >;
     source_name: Schema.Attribute.String;
     source_reference: Schema.Attribute.Text;
     source_url: Schema.Attribute.Text;
+    transport_mode: Schema.Attribute.String;
     trips: Schema.Attribute.Relation<'oneToMany', 'api::trip.trip'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
@@ -950,6 +1262,198 @@ export interface ApiRouteRoute extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiServicePatternServicePattern
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'service_patterns';
+  info: {
+    displayName: 'Service Pattern';
+    pluralName: 'service-patterns';
+    singularName: 'service-pattern';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
+    days_of_week: Schema.Attribute.JSON;
+    dispatch_type: Schema.Attribute.Enumeration<
+      [
+        'SCHEDULED',
+        'HEADWAY',
+        'LEAVE_WHEN_FULL',
+        'CONTINUOUS_UNSCHEDULED',
+        'UNKNOWN',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'UNKNOWN'>;
+    first_trip_time: Schema.Attribute.Time;
+    headway_max_minutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
+    headway_min_minutes: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+        },
+        number
+      >;
+    last_trip_time: Schema.Attribute.Time;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::service-pattern.service-pattern'
+    > &
+      Schema.Attribute.Private;
+    notes: Schema.Attribute.Text;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    publishedAt: Schema.Attribute.DateTime;
+    route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    > &
+      Schema.Attribute.Required;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
+  };
+}
+
+export interface ApiTransportNodeTransportNode
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'transport_nodes';
+  info: {
+    displayName: 'Transport Node';
+    pluralName: 'transport-nodes';
+    singularName: 'transport-node';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    accessibility_notes: Schema.Attribute.Text;
+    barangay: Schema.Attribute.String;
+    covered_waiting_area: Schema.Attribute.Boolean;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'REAL'>;
+    ending_variants: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant.route-variant'
+    >;
+    google_place_id: Schema.Attribute.String;
+    latitude: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 90;
+          min: -90;
+        },
+        number
+      >;
+    lighting_notes: Schema.Attribute.Text;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::transport-node.transport-node'
+    > &
+      Schema.Attribute.Private;
+    longitude: Schema.Attribute.Decimal &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 180;
+          min: -180;
+        },
+        number
+      >;
+    municipality_city: Schema.Attribute.String;
+    name: Schema.Attribute.String & Schema.Attribute.Required;
+    node_code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Unique;
+    node_type: Schema.Attribute.Enumeration<
+      [
+        'ROADSIDE_PICKUP',
+        'DESIGNATED_STOP',
+        'TERMINAL',
+        'LOADING_BAY',
+        'DROP_OFF',
+        'TRANSFER_POINT',
+        'TRANSPORT_HUB',
+        'LANDMARK',
+        'DESTINATION',
+        'ESSENTIAL_SERVICE',
+        'EMERGENCY_PICKUP',
+      ]
+    > &
+      Schema.Attribute.Required;
+    notes: Schema.Attribute.Text;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
+    province: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    route_variant_stops: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant-stop.route-variant-stop'
+    >;
+    safety_notes: Schema.Attribute.Text;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
+    starting_variants: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::route-variant.route-variant'
+    >;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
+    wheelchair_accessible: Schema.Attribute.Boolean;
+  };
+}
+
 export interface ApiTripTrip extends Struct.CollectionTypeSchema {
   collectionName: 'trips';
   info: {
@@ -967,8 +1471,7 @@ export interface ApiTripTrip extends Struct.CollectionTypeSchema {
     data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'SIMULATED'>;
-    direction: Schema.Attribute.Enumeration<['outbound', 'inbound']> &
-      Schema.Attribute.Required;
+    direction: Schema.Attribute.Enumeration<['outbound', 'inbound']>;
     driver: Schema.Attribute.Relation<'manyToOne', 'api::driver.driver'> &
       Schema.Attribute.Required;
     ended_at: Schema.Attribute.DateTime;
@@ -981,6 +1484,10 @@ export interface ApiTripTrip extends Struct.CollectionTypeSchema {
     publishedAt: Schema.Attribute.DateTime;
     route: Schema.Attribute.Relation<'manyToOne', 'api::route.route'> &
       Schema.Attribute.Required;
+    route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    >;
     started_at: Schema.Attribute.DateTime;
     trip_status: Schema.Attribute.Enumeration<
       ['scheduled', 'active', 'completed', 'cancelled']
@@ -1049,6 +1556,10 @@ export interface ApiVehicleVehicle extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    active_route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    >;
     capacity: Schema.Attribute.Integer &
       Schema.Attribute.SetMinMax<
         {
@@ -1081,9 +1592,7 @@ export interface ApiVehicleVehicle extends Struct.CollectionTypeSchema {
       'api::vehicle.vehicle'
     > &
       Schema.Attribute.Private;
-    low_floor: Schema.Attribute.Boolean &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
+    low_floor: Schema.Attribute.Boolean;
     occupancy_level: Schema.Attribute.Enumeration<
       ['empty', 'low', 'moderate', 'near_full', 'full']
     >;
@@ -1112,9 +1621,7 @@ export interface ApiVehicleVehicle extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required;
     vehicle_type: Schema.Attribute.String & Schema.Attribute.Required;
-    wheelchair_accessible: Schema.Attribute.Boolean &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<false>;
+    wheelchair_accessible: Schema.Attribute.Boolean;
   };
 }
 
@@ -1636,12 +2143,17 @@ declare module '@strapi/strapi' {
       'api::cooperative.cooperative': ApiCooperativeCooperative;
       'api::disruption.disruption': ApiDisruptionDisruption;
       'api::driver.driver': ApiDriverDriver;
+      'api::fare-rule.fare-rule': ApiFareRuleFareRule;
       'api::passenger-demand-observation.passenger-demand-observation': ApiPassengerDemandObservationPassengerDemandObservation;
       'api::passenger-profile.passenger-profile': ApiPassengerProfilePassengerProfile;
       'api::passenger-report.passenger-report': ApiPassengerReportPassengerReport;
       'api::prediction.prediction': ApiPredictionPrediction;
       'api::route-stop.route-stop': ApiRouteStopRouteStop;
+      'api::route-variant-stop.route-variant-stop': ApiRouteVariantStopRouteVariantStop;
+      'api::route-variant.route-variant': ApiRouteVariantRouteVariant;
       'api::route.route': ApiRouteRoute;
+      'api::service-pattern.service-pattern': ApiServicePatternServicePattern;
+      'api::transport-node.transport-node': ApiTransportNodeTransportNode;
       'api::trip.trip': ApiTripTrip;
       'api::vehicle-location.vehicle-location': ApiVehicleLocationVehicleLocation;
       'api::vehicle.vehicle': ApiVehicleVehicle;

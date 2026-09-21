@@ -5,36 +5,6 @@ const {
   VERIFICATION_STATUS,
 } = require('./services/transport-data/planning-eligibility');
 
-/**
- * Strapi's schema sync (strapi.db.schema.sync(), run once per startup)
- * creates every attribute's column purely from its schema.json shape -
- * `required`/`default` are enforced by the Document Service at the
- * application layer only, never as a DB-level NOT NULL/DEFAULT. Confirmed
- * empirically: even a from-scratch CREATE TABLE leaves these nullable with
- * no default, identically to an ALTER TABLE ADD COLUMN on an existing one.
- *
- * These four accessibility flags are meant to be read directly by a future
- * recommendation engine (Phase 17/20.3), so "unknown" must never be
- * possible to read back as true by construction, not just by convention -
- * this hardens that at the DB level too, closing the gap for anything that
- * writes via raw SQL/import scripts instead of the Strapi API.
- *
- * `database/migrations/*.js` files can't do this: Strapi always runs
- * pending user migrations BEFORE schema sync (see @strapi/database's
- * schema/index.js `sync()`), so on a fresh database the target tables
- * don't exist yet at migration time. The user `bootstrap()` lifecycle
- * below is the first hook guaranteed to run after schema sync has
- * finished (Strapi core's own bootstrap() calls db.schema.sync() long
- * before it runs user lifecycles) - so it runs identically on a fresh
- * clone and an existing database, every startup, and is fully idempotent.
- */
-const ACCESSIBILITY_BOOLEAN_COLUMNS = [
-  { table: 'vehicles', column: 'wheelchair_accessible' },
-  { table: 'vehicles', column: 'low_floor' },
-  { table: 'route_stops', column: 'covered_waiting_area' },
-  { table: 'route_stops', column: 'accessible_toilet_nearby' },
-];
-
 const ROUTE_TRUTH_TABLES = ['routes', 'route_stops'];
 const OPERATIONAL_DATA_TABLES = [
   'cooperatives',
@@ -49,6 +19,28 @@ const OPERATIONAL_DATA_TABLES = [
 ];
 
 const ROLE_LOOKUP_ACTION = 'plugin::users-permissions.role.find';
+const TRANSPORT_KNOWLEDGE_CONTENT_TYPES = [
+  'route-variant.route-variant',
+  'route-variant-stop.route-variant-stop',
+  'transport-node.transport-node',
+  'fare-rule.fare-rule',
+  'service-pattern.service-pattern',
+];
+const TRANSPORT_KNOWLEDGE_READ_ACTIONS = TRANSPORT_KNOWLEDGE_CONTENT_TYPES.flatMap(
+  (contentType) => [
+    `api::${contentType}.find`,
+    `api::${contentType}.findOne`,
+  ]
+);
+const TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS = TRANSPORT_KNOWLEDGE_CONTENT_TYPES.flatMap(
+  (contentType) => [
+    `api::${contentType}.find`,
+    `api::${contentType}.findOne`,
+    `api::${contentType}.create`,
+    `api::${contentType}.update`,
+    `api::${contentType}.delete`,
+  ]
+);
 const REQUIRED_ROLE_PERMISSIONS = {
   Passenger: [
     ROLE_LOOKUP_ACTION,
@@ -61,6 +53,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::passenger-profile.passenger-profile.update',
     'api::trip-search.trip-search.search',
     'api::live-vehicle.live-vehicle.list',
+    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   Driver: [
     ROLE_LOOKUP_ACTION,
@@ -70,6 +63,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::trip.trip.update',
     'api::vehicle.vehicle.update',
     'api::vehicle-location.vehicle-location.create',
+    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   LGU: [
     ROLE_LOOKUP_ACTION,
@@ -81,6 +75,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::disruption.disruption.create',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
+    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   Administrator: [
     ROLE_LOOKUP_ACTION,
@@ -92,30 +87,9 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::disruption.disruption.create',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
+    ...TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS,
   ],
 };
-
-async function hardenAccessibilityColumns(strapi) {
-  if (strapi.db.dialect.client !== 'postgres') {
-    return;
-  }
-
-  const knex = strapi.db.connection;
-
-  for (const { table, column } of ACCESSIBILITY_BOOLEAN_COLUMNS) {
-    const hasColumn = await knex.schema.hasColumn(table, column);
-
-    if (!hasColumn) {
-      continue;
-    }
-
-    await knex(table).whereNull(column).update({ [column]: false });
-
-    await knex.schema.alterTable(table, (t) => {
-      t.boolean(column).notNullable().defaultTo(false).alter();
-    });
-  }
-}
 
 /**
  * Strapi sync adds these columns without database-level NOT NULL/default
@@ -255,7 +229,6 @@ module.exports = {
    * run jobs, or perform some special logic.
    */
   async bootstrap({ strapi }) {
-    await hardenAccessibilityColumns(strapi);
     await hardenDataTrustColumns(strapi);
     await ensureRequiredRolePermissions(strapi);
     await ensureDefaultRegistrationRole(strapi);

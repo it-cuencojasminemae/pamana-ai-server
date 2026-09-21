@@ -55,14 +55,10 @@
       ]
     },
     "wheelchair_accessible": {
-      "type": "boolean",
-      "required": true,
-      "default": false
+      "type": "boolean"
     },
     "low_floor": {
-      "type": "boolean",
-      "required": true,
-      "default": false
+      "type": "boolean"
     },
     "data_mode": {
       "type": "enumeration",
@@ -78,6 +74,12 @@
       "relation": "manyToOne",
       "target": "api::route.route",
       "inversedBy": "vehicles"
+    },
+    "active_route_variant": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route-variant.route-variant",
+      "inversedBy": "active_vehicles"
     },
     "cooperative": {
       "type": "relation",

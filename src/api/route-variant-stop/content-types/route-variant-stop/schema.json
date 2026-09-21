@@ -1,0 +1,61 @@
+{
+  "kind": "collectionType",
+  "collectionName": "route_variant_stops",
+  "info": {
+    "singularName": "route-variant-stop",
+    "pluralName": "route-variant-stops",
+    "displayName": "Route Variant Stop"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "route_variant": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route-variant.route-variant",
+      "required": true,
+      "inversedBy": "route_variant_stops"
+    },
+    "transport_node": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transport-node.transport-node",
+      "required": true,
+      "inversedBy": "route_variant_stops"
+    },
+    "sequence": {
+      "type": "integer",
+      "required": true,
+      "min": 1
+    },
+    "pickup_allowed": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "dropoff_allowed": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "transfer_allowed": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "is_timepoint": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "instruction_template": {
+      "type": "text"
+    },
+    "distance_from_variant_start_m": {
+      "type": "integer",
+      "min": 0
+    }
+  }
+}

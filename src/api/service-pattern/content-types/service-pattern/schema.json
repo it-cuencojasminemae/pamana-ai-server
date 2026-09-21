@@ -1,0 +1,93 @@
+{
+  "kind": "collectionType",
+  "collectionName": "service_patterns",
+  "info": {
+    "singularName": "service-pattern",
+    "pluralName": "service-patterns",
+    "displayName": "Service Pattern"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "route_variant": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route-variant.route-variant",
+      "required": true,
+      "inversedBy": "service_patterns"
+    },
+    "days_of_week": {
+      "type": "json"
+    },
+    "first_trip_time": {
+      "type": "time"
+    },
+    "last_trip_time": {
+      "type": "time"
+    },
+    "dispatch_type": {
+      "type": "enumeration",
+      "required": true,
+      "default": "UNKNOWN",
+      "enum": [
+        "SCHEDULED",
+        "HEADWAY",
+        "LEAVE_WHEN_FULL",
+        "CONTINUOUS_UNSCHEDULED",
+        "UNKNOWN"
+      ]
+    },
+    "headway_min_minutes": {
+      "type": "integer",
+      "min": 1
+    },
+    "headway_max_minutes": {
+      "type": "integer",
+      "min": 1
+    },
+    "planning_enabled": {
+      "type": "boolean",
+      "required": true,
+      "default": false
+    },
+    "verification_status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "RESEARCH_CANDIDATE",
+      "enum": [
+        "AUTHORITATIVE_CURRENT",
+        "FIELD_VERIFIED",
+        "CORROBORATED_RESEARCH",
+        "HISTORICAL_UNVERIFIED",
+        "SIMULATED_DEMO",
+        "RESEARCH_CANDIDATE"
+      ]
+    },
+    "data_mode": {
+      "type": "enumeration",
+      "required": true,
+      "default": "REAL",
+      "enum": [
+        "REAL",
+        "SIMULATED"
+      ]
+    },
+    "verified_at": {
+      "type": "datetime"
+    },
+    "source_name": {
+      "type": "string"
+    },
+    "source_url": {
+      "type": "text"
+    },
+    "source_reference": {
+      "type": "text"
+    },
+    "notes": {
+      "type": "text"
+    }
+  }
+}

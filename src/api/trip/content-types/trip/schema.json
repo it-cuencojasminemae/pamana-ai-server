@@ -19,7 +19,6 @@
     },
     "direction": {
       "type": "enumeration",
-      "required": true,
       "enum": [
         "outbound",
         "inbound"
@@ -68,6 +67,12 @@
       "relation": "manyToOne",
       "target": "api::route.route",
       "required": true,
+      "inversedBy": "trips"
+    },
+    "route_variant": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route-variant.route-variant",
       "inversedBy": "trips"
     },
     "vehicle_locations": {
