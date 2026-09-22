@@ -4,7 +4,6 @@ const assert = require('assert');
 const { Client } = require('pg');
 
 const EXPECTED_LEGACY_COUNTS = Object.freeze({
-  routes: 2,
   route_stops: 7,
   vehicles: 4,
   trips: 0,
@@ -15,7 +14,6 @@ const EXPECTED_LEGACY_COUNTS = Object.freeze({
 
 const NEW_TABLES = [
   'route_variants',
-  'transport_nodes',
   'route_variant_stops',
   'fare_rules',
   'service_patterns',
@@ -47,6 +45,11 @@ async function count(client, table) {
     for (const [table, expected] of Object.entries(EXPECTED_LEGACY_COUNTS)) {
       assert.strictEqual(await count(client, table), expected, `${table} count changed`);
     }
+
+    const legacyRoutes = await client.query(
+      `select count(*)::int as count from routes where route_code not like 'RCH-%'`
+    );
+    assert.strictEqual(legacyRoutes.rows[0].count, 2, 'legacy route count changed');
 
     for (const table of NEW_TABLES) {
       assert.strictEqual(await count(client, table), 0, `${table} was unexpectedly seeded`);
@@ -80,17 +83,18 @@ async function count(client, table) {
     assert.strictEqual(sanLuis.rows[0].routes, 2, 'San Luis routes were renamed or removed');
     assert.strictEqual(sanLuis.rows[0].route_stops, 2, 'San Luis stops were renamed or removed');
 
-    const sanJuan = await client.query(
+    const unsafeSanJuan = await client.query(
       `select
          (select count(*)::int from routes
-           where coalesce(route_name, '') ilike '%San Juan%'
+           where route_code not like 'RCH-%'
+             and (coalesce(route_name, '') ilike '%San Juan%'
               or coalesce(origin, '') ilike '%San Juan%'
-              or coalesce(destination, '') ilike '%San Juan%') as routes,
+              or coalesce(destination, '') ilike '%San Juan%')) as routes,
          (select count(*)::int from route_stops
            where coalesce(name, '') ilike '%San Juan%') as route_stops`
     );
-    assert.strictEqual(sanJuan.rows[0].routes, 0, 'San Juan route data was created');
-    assert.strictEqual(sanJuan.rows[0].route_stops, 0, 'San Juan stop data was created');
+    assert.strictEqual(unsafeSanJuan.rows[0].routes, 0, 'legacy routes were renamed to San Juan');
+    assert.strictEqual(unsafeSanJuan.rows[0].route_stops, 0, 'San Juan stop data was fabricated');
 
     const accessibility = await client.query(
       `select table_name, column_name, is_nullable
@@ -131,7 +135,7 @@ async function count(client, table) {
     assert.strictEqual(permissionByRole.Public, undefined, 'Public must have no Phase 3 permissions');
 
     console.log('ok - legacy rows and San Luis records remain intact');
-    console.log('ok - new transport knowledge tables exist and remain unseeded');
+    console.log('ok - operational transport knowledge tables remain unseeded');
     console.log('ok - compatibility records are not planning-ready or authoritative');
     console.log('ok - accessibility columns support unknown/null');
     console.log('ok - role permissions preserve read-only and administrator boundaries');

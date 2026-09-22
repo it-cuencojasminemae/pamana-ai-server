@@ -1,0 +1,397 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": 4,
+  "title": "Mexico to City of San Fernando research knowledge seed",
+  "created_at": "2026-09-22",
+  "planning_policy": "Research evidence is not passenger-ready transport data. Every route and transport-node record in this manifest has planning_allowed=false.",
+  "internal_code_policy": "Codes beginning RCH- are PAMANA internal research identifiers, not official LTFRB route identifiers.",
+  "sources": {
+    "PSA_PSGC_MEXICO_2024": {
+      "source_name": "Philippine Statistics Authority",
+      "source_type": "GOVERNMENT",
+      "source_date": "2024",
+      "source_url": "https://psa.gov.ph/classification/psgc/barangays/0305413000",
+      "source_reference": "PSGC — Barangays of Mexico, Pampanga; 2024 population context",
+      "proves": [
+        "Mexico, Pampanga population context",
+        "The listed barangays are classified rural",
+        "The listed 2024 barangay population values"
+      ],
+      "does_not_prove": [
+        "Transport service",
+        "Loading points or terminals",
+        "Fares, schedules, stop sequences, or route paths"
+      ]
+    },
+    "CSF_LPTRP_2023_2026_RESEARCH_COPY": {
+      "source_name": "City of San Fernando LPTRP 2023–2026 research copy",
+      "source_type": "RESEARCH_COPY_OF_GOVERNMENT_PLAN",
+      "source_date": "2023-2026",
+      "source_url": "https://www.scribd.com/document/863526648/Final-Draft-LPTRP-CSF-Rev-compressed",
+      "source_reference": "Table 16 route inventory; copy is not hosted directly by the city",
+      "proves": [
+        "The plan copy lists Mexico/San Fernando and San Juan/San Fernando route descriptions",
+        "The route descriptions distinguish via SM City, via San Jose, and via San Jose/Lagundi research candidates"
+      ],
+      "does_not_prove": [
+        "Current active fleet count",
+        "Current boarding point, fare, timetable, path, or stop sequence",
+        "Passenger readiness"
+      ]
+    },
+    "LTFRB_NOTICE_2009_SAN_JUAN_SM_ROBINSON": {
+      "source_name": "LTFRB Region III notice published in Punto Central Luzon",
+      "source_type": "HISTORICAL_GOVERNMENT_NOTICE",
+      "source_date": "2009-03-24",
+      "source_url": "https://punto.com.ph/wp-content/uploads/data/pdf/vol2no245.pdf",
+      "source_reference": "Case R3-2009-09-00302: San Juan (Mexico) – City of San Fernando via SM City/Robinson's Starmills and vice versa",
+      "proves": [
+        "A historical regulatory proceeding referenced the named route"
+      ],
+      "does_not_prove": [
+        "The service is currently operating",
+        "A current fare, terminal, path, schedule, or fleet count"
+      ]
+    },
+    "CSF_BUSINESS_REGISTRY_2026": {
+      "source_name": "City of San Fernando Business Registry",
+      "source_type": "GOVERNMENT",
+      "source_date": "2026-02-27",
+      "source_url": "https://cityofsanfernando.gov.ph/wp-content/uploads/2026/03/BUSINESS-MASTERLIST-AS-OF-FEBRUARY-27-2026-1.pdf",
+      "source_reference": "Business masterlist entries for San Juan Mexico and San Matias-SM-San Jose jeepney associations",
+      "proves": [
+        "Named operator/driver associations or transport activity appear in the 2026 registry",
+        "One registry entry contains an SM City Pampanga public-transport-terminal reference"
+      ],
+      "does_not_prove": [
+        "A business address is a passenger boarding point",
+        "The exact route, fare, stop sequence, schedule, or current fleet count"
+      ]
+    },
+    "MEXICO_CLUP_2016": {
+      "source_name": "Municipality of Mexico CLUP / Main Report",
+      "source_type": "GOVERNMENT_PLANNING_DOCUMENT",
+      "source_date": "2016",
+      "source_url": "https://www.mexicopampanga.gov.ph/Clup/2016/Main%20Report.pdf",
+      "source_reference": "Historical TODA designated-route table, source: Office of the Sangguniang Bayan",
+      "proves": [
+        "The listed TODA/designated-route descriptions appeared in the historical municipal report"
+      ],
+      "does_not_prove": [
+        "Current operation, fare, route path, schedule, or boarding point"
+      ]
+    },
+    "MEXICO_LIBRENG_SAKAY_2026": {
+      "source_name": "Municipality of Mexico",
+      "source_type": "GOVERNMENT_EVENT_ADVISORY",
+      "source_date": "2026-03-23",
+      "source_url": "https://www.mexicopampanga.gov.ph/libreng-sakay-continues-for-affected-communities/",
+      "source_reference": "Temporary Libreng Sakay during a transport strike",
+      "proves": [
+        "Temporary government transport connected Jumbo Jenra Dolores with Mexico Bayan/Sta. Monica Parish area during the event"
+      ],
+      "does_not_prove": [
+        "A normal permanent public-transport route"
+      ]
+    },
+    "MEXICO_ROAD_CLOSURE_2026": {
+      "source_name": "Municipality of Mexico",
+      "source_type": "GOVERNMENT_EVENT_ADVISORY",
+      "source_date": "2026-03-15",
+      "source_url": "https://www.mexicopampanga.gov.ph/road-closure-advisory-2/",
+      "source_reference": "Temporary road closure and Magalang–City of San Fernando rerouting advisory",
+      "proves": [
+        "Temporary closures can require time-bounded rerouting"
+      ],
+      "does_not_prove": [
+        "A currently active disruption",
+        "A permanent route change"
+      ]
+    },
+    "PIA_PAMPANGA_CALAMITY_2026": {
+      "source_name": "Philippine Information Agency",
+      "source_type": "GOVERNMENT_NEWS",
+      "source_date": "2026-08-13",
+      "source_url": "https://pia.gov.ph/disaster-information-service/provincial-council-declares-pampanga-under-state-of-calamity/",
+      "source_reference": "Province-wide flood and state-of-calamity context",
+      "proves": [
+        "Flooding disrupted communities and essential services across Pampanga"
+      ],
+      "does_not_prove": [
+        "A specific PAMANA route or road was blocked"
+      ]
+    },
+    "PIA_PAMPANGA_FLOOD_ASSESSMENT_2026": {
+      "source_name": "Philippine Information Agency / Presidential Communications Office",
+      "source_type": "GOVERNMENT_NEWS",
+      "source_date": "2026-08-24",
+      "source_url": "https://pia.gov.ph/press-release/pbbm-visits-pampanga-to-assess-massive-flooding-in-central-luzon-as-over-1m-individuals-affected/",
+      "source_reference": "Pampanga flood assessment and resilience context",
+      "proves": [
+        "Flooding affected transport-relevant infrastructure and large parts of Pampanga"
+      ],
+      "does_not_prove": [
+        "A specific PAMANA route or road was blocked"
+      ]
+    },
+    "PHASE4_RESEARCH_BRIEF": {
+      "source_name": "PAMANA Phase 4 research brief",
+      "source_type": "INTERNAL_RESEARCH",
+      "source_date": "2026-09-22",
+      "source_url": null,
+      "source_reference": "PHASE4-MEXICO-SAN-FERNANDO-RESEARCH",
+      "proves": [
+        "The named urban places are candidates for later place resolution and field verification"
+      ],
+      "does_not_prove": [
+        "Coordinates",
+        "A transport terminal, loading bay, boarding point, or route relation"
+      ]
+    }
+  },
+  "geographic_context": {
+    "record_type": "GEOGRAPHIC_CONTEXT",
+    "internal_code": "RCH-GEO-MEXICO-PAMPANGA-2024",
+    "display_name": "Mexico, Pampanga rural-barangay population context",
+    "research_status": "AUTHORITATIVE_CURRENT",
+    "data_mode": "REAL",
+    "planning_allowed": false,
+    "municipality": "Mexico",
+    "province": "Pampanga",
+    "population_2024": 187597,
+    "evidence": ["PSA_PSGC_MEXICO_2024"],
+    "barangays": [
+      { "name": "San Juan", "classification": "Rural", "population_2024": 4600, "primary_pilot_candidate": true },
+      { "name": "Tangle", "classification": "Rural", "population_2024": 5657 },
+      { "name": "San Patricio", "classification": "Rural", "population_2024": 5051 },
+      { "name": "San Vicente", "classification": "Rural", "population_2024": 4717 },
+      { "name": "San Carlos", "classification": "Rural", "population_2024": 3430 },
+      { "name": "San Pablo", "classification": "Rural", "population_2024": 3196 },
+      { "name": "Nueva Victoria", "classification": "Rural", "population_2024": 3181 },
+      { "name": "Culubasa", "classification": "Rural", "population_2024": 3177 },
+      { "name": "San Lorenzo", "classification": "Rural", "population_2024": 3170 }
+    ],
+    "storage_policy": "Manifest only. A barangay is not a transport pickup point, so no TransportNode is created.",
+    "unresolved_questions": [
+      "Which exact San Juan location is used for passenger boarding?",
+      "Which other rural barangays have currently operating services suitable for later pilots?"
+    ]
+  },
+  "route_candidates": [
+    {
+      "record_type": "ROUTE",
+      "internal_code": "RCH-SJ-CSF-SM-ROB",
+      "display_name": "San Juan, Mexico ↔ City of San Fernando via SM City / Robinsons Starmills",
+      "origin": "San Juan, Mexico, Pampanga",
+      "destination": "City of San Fernando, Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": [
+        "CSF_LPTRP_2023_2026_RESEARCH_COPY",
+        "LTFRB_NOTICE_2009_SAN_JUAN_SM_ROBINSON",
+        "CSF_BUSINESS_REGISTRY_2026",
+        "PSA_PSGC_MEXICO_2024"
+      ],
+      "source_reference": "PAMANA internal research identifier; not an official route identifier. Historical route evidence is retained as HISTORICAL_UNVERIFIED corroboration and does not raise this candidate above CORROBORATED_RESEARCH.",
+      "unresolved_questions": [
+        "Exact San Juan boarding point and coordinates",
+        "Passenger-facing signboard and vehicle type",
+        "Exact path and intermediate stops",
+        "SM/Robinson alighting and reverse boarding points",
+        "Current fare, operating window, dispatch behavior, observed wait and travel time",
+        "Current operator/TODA/cooperative confirmation",
+        "Accessibility and safety observations"
+      ]
+    },
+    {
+      "record_type": "ROUTE",
+      "internal_code": "RCH-SJ-CSF-SAN-JOSE",
+      "display_name": "San Juan, Mexico ↔ City of San Fernando via San Jose",
+      "origin": "San Juan, Mexico, Pampanga",
+      "destination": "City of San Fernando, Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["CSF_LPTRP_2023_2026_RESEARCH_COPY", "CSF_BUSINESS_REGISTRY_2026", "PSA_PSGC_MEXICO_2024"],
+      "source_reference": "PAMANA internal research identifier; not an official route identifier.",
+      "unresolved_questions": ["Exact boarding points", "Exact path and stops", "Current fare and operations", "Operator confirmation"]
+    },
+    {
+      "record_type": "ROUTE",
+      "internal_code": "RCH-MEX-CSF-SM",
+      "display_name": "Mexico ↔ City of San Fernando via SM City",
+      "origin": "Mexico, Pampanga",
+      "destination": "City of San Fernando, Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["CSF_LPTRP_2023_2026_RESEARCH_COPY"],
+      "source_reference": "PAMANA internal research identifier; not an official route identifier.",
+      "unresolved_questions": ["Exact Mexico boarding point", "Exact SM passenger point", "Exact path and stops", "Current fare and operations"]
+    },
+    {
+      "record_type": "ROUTE",
+      "internal_code": "RCH-MEX-CSF-SJ-LAG",
+      "display_name": "Mexico ↔ City of San Fernando via San Jose / Lagundi",
+      "origin": "Mexico, Pampanga",
+      "destination": "City of San Fernando, Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["CSF_LPTRP_2023_2026_RESEARCH_COPY"],
+      "source_reference": "PAMANA internal research identifier; not an official route identifier.",
+      "unresolved_questions": ["Exact boarding points", "Exact path through San Jose/Lagundi", "Current fare and operations"]
+    }
+  ],
+  "transport_node_candidates": [
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-SM-CITY",
+      "display_name": "SM City Pampanga",
+      "node_type": "DESTINATION",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["CSF_LPTRP_2023_2026_RESEARCH_COPY", "CSF_BUSINESS_REGISTRY_2026"],
+      "source_reference": "Destination candidate only; not a loading bay or terminal.",
+      "unresolved_questions": ["Google Places identity and destination coordinate", "Separate verified passenger loading/alighting location"]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-ROBINSONS-STARMILLS",
+      "display_name": "Robinsons Starmills Pampanga",
+      "node_type": "DESTINATION",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["CSF_LPTRP_2023_2026_RESEARCH_COPY", "LTFRB_NOTICE_2009_SAN_JUAN_SM_ROBINSON"],
+      "source_reference": "Destination candidate only; not a loading bay or terminal.",
+      "unresolved_questions": ["Google Places identity and destination coordinate", "Separate verified passenger loading/alighting location"]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-DOLORES-INTERSECTION",
+      "display_name": "Dolores / Intersection",
+      "node_type": "TRANSFER_POINT",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "RESEARCH_CANDIDATE",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["MEXICO_LIBRENG_SAKAY_2026", "PHASE4_RESEARCH_BRIEF"],
+      "source_reference": "Broad transfer-area candidate only; exact transfer bay is unknown.",
+      "unresolved_questions": ["Exact transfer location", "Whether transfer activity is current and regular", "Google Places identity and coordinate"]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-PUBLIC-MARKET-CITY-PROPER",
+      "display_name": "City of San Fernando Public Market / City Proper",
+      "node_type": "DESTINATION",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "RESEARCH_CANDIDATE",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["PHASE4_RESEARCH_BRIEF"],
+      "source_reference": "Destination candidate pending place resolution; no transport relation asserted.",
+      "unresolved_questions": ["Exact destination entity and coordinate", "Any separate passenger loading/alighting point"]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-JBLMGH",
+      "display_name": "Jose B. Lingad Memorial General Hospital",
+      "node_type": "ESSENTIAL_SERVICE",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "RESEARCH_CANDIDATE",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["PHASE4_RESEARCH_BRIEF"],
+      "source_reference": "Essential-service destination candidate pending place resolution; no transport relation asserted.",
+      "unresolved_questions": ["Google Places identity and destination coordinate", "Accessible passenger drop-off options"]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-NODE-CSF-DMGC-MAIMPIS",
+      "display_name": "Diosdado Macapagal Government Center / Maimpis",
+      "node_type": "ESSENTIAL_SERVICE",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "research_status": "RESEARCH_CANDIDATE",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "latitude": null,
+      "longitude": null,
+      "evidence": ["PHASE4_RESEARCH_BRIEF"],
+      "source_reference": "Essential-service destination candidate pending place resolution; no transport relation asserted.",
+      "unresolved_questions": ["Exact destination entity and coordinate", "Current public-transport access"]
+    }
+  ],
+  "historical_toda_research": [
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SAN-JUAN", "display_name": "SAN JUAN — San Juan via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates", "Current route truth"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SAN-VICENTE", "display_name": "SAN VICENTE — San Vicente via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SAPA-SAN-PATRICIO", "display_name": "SAPA/SAN PATRICIO — San Patricio via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SAN-CARLOS", "display_name": "SAN CARLOS — San Carlos via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-NV", "display_name": "NV — Nueva Victoria via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SASL", "display_name": "SASL — San Antonio/San Lorenzo via Poblacion", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-PTBT", "display_name": "PTBT — Pandacaqui/Telepayong/Buenavista/Tangle", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] },
+    { "record_type": "HISTORICAL_TODA_EVIDENCE", "internal_code": "RCH-HIST-TODA-SMP", "display_name": "SMP — Malino/Pangatlan/Culubasa/Anao/San Juan", "research_status": "HISTORICAL_UNVERIFIED", "data_mode": "REAL", "planning_allowed": false, "evidence": ["MEXICO_CLUP_2016"], "source_reference": "Manifest only; no live Route created.", "unresolved_questions": ["Whether the service currently operates"] }
+  ],
+  "disruption_research": [
+    {
+      "record_type": "DISRUPTION_RESEARCH_REFERENCE",
+      "internal_code": "RCH-EVENT-2026-MEXICO-LIBRENG-SAKAY",
+      "display_name": "Mexico transport-strike Libreng Sakay",
+      "research_status": "HISTORICAL_UNVERIFIED",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["MEXICO_LIBRENG_SAKAY_2026"],
+      "source_reference": "Documentation only; no permanent Route or active Disruption created.",
+      "unresolved_questions": ["Future modeling of temporary replacement service and effective windows"]
+    },
+    {
+      "record_type": "DISRUPTION_RESEARCH_REFERENCE",
+      "internal_code": "RCH-EVENT-2026-MEXICO-ROAD-CLOSURE",
+      "display_name": "Mexico temporary road closure and rerouting",
+      "research_status": "HISTORICAL_UNVERIFIED",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["MEXICO_ROAD_CLOSURE_2026"],
+      "source_reference": "Documentation only; event has ended, so no active Disruption created.",
+      "unresolved_questions": ["Future route-to-road impact mapping and effective time windows"]
+    },
+    {
+      "record_type": "DISRUPTION_RESEARCH_REFERENCE",
+      "internal_code": "RCH-CONTEXT-2026-PAMPANGA-FLOOD",
+      "display_name": "Pampanga flood resilience context",
+      "research_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_allowed": false,
+      "evidence": ["PIA_PAMPANGA_CALAMITY_2026", "PIA_PAMPANGA_FLOOD_ASSESSMENT_2026"],
+      "source_reference": "Province-level resilience evidence only; no route-specific blockage asserted.",
+      "unresolved_questions": ["Which verified roads and routes are affected during specific future flood events?"]
+    }
+  ],
+  "operational_seed_policy": {
+    "route_variants": [],
+    "route_variant_stops": [],
+    "fare_rules": [],
+    "service_patterns": [],
+    "reason": "Phase 4 evidence does not establish precise direction, transport-node relations, stop sequences, current fares, or operating patterns. Empty operational tables are safer than fabricated data."
+  }
+}
