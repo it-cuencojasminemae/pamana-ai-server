@@ -16,14 +16,20 @@ This checklist is intentionally blank on operational facts. Phase 4 research ide
 - [ ] Boarding latitude and longitude captured at the actual passenger point
 - [ ] Passenger-facing signboard text photographed/transcribed
 - [ ] Vehicle type observed
-- [ ] SM City and/or Robinsons actual alighting point
-- [ ] Reverse-direction boarding point
+- [~] SM City Pampanga main-gate drop-off area — commuter-supported and remotely visually corroborated; not field-verified
+- [~] Robinsons Starmills Arayat Gate return-loading area — commuter-supported and remotely visually corroborated; not field-verified
+- [ ] Exact transport GPS point at SM main gate
+- [ ] Exact San Juan jeep bay at Arayat Gate
+- [ ] Current on-site confirmation that San Juan service still boards there
+- [ ] San Juan/PSU boarding-point coordinate
 - [ ] Operator confirms whether SM and Robinsons are one service pattern or distinct variants
 
 ## Route and stop truth
 
 - [ ] Exact outbound path observed
 - [ ] Exact inbound path observed
+- [ ] Exact outbound route GPS trace
+- [ ] Exact inbound route GPS trace
 - [ ] Intermediate landmarks/stops recorded in travel order
 - [ ] Pickup/drop-off/transfer rules observed per stop
 - [ ] Any route deviation or direction asymmetry documented

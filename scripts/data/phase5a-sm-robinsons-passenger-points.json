@@ -1,0 +1,179 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "5A",
+  "title": "Remotely corroborated SM and Robinsons passenger points",
+  "created_at": "2026-09-22",
+  "evidence_classification": "REMOTE VISUAL CORROBORATION — NOT PHYSICAL FIELD VERIFICATION",
+  "planning_policy": "All Phase 5A records remain planning-disabled until physical ride observation and GPS verification are complete.",
+  "sources": {
+    "COMMUTER_ACCOUNT_2026_09_22": {
+      "source_type": "FIRSTHAND_COMMUTER_ACCOUNT",
+      "source_name": "Regular San Juan/PSU Mexico commuter",
+      "source_date": "2026-09-22",
+      "source_url": null,
+      "source_reference": "PAMANA-PHASE5A-COMMUTER-ACCOUNT",
+      "privacy_note": "No commuter identity or personal information is stored.",
+      "proves": [
+        "The commuter reports that San Juan/PSU Mexico passengers commonly alight at the SM City Pampanga main-gate area",
+        "The commuter reports that return trips toward San Juan are boarded from the Robinsons Starmills terminal area"
+      ],
+      "does_not_prove": [
+        "Exact coordinates",
+        "Official or exclusive bay assignment",
+        "Current fare, schedule, or fleet availability"
+      ]
+    },
+    "REMOTE_STREET_VIEW_REVIEW_2026_09_22": {
+      "source_type": "REMOTE_VISUAL_REVIEW",
+      "source_name": "PAMANA team manual Google Maps Street View review",
+      "source_date": "2026-09-22",
+      "source_url": null,
+      "source_reference": "PAMANA-PHASE5A-STREETVIEW-REVIEW",
+      "tool": "Google Maps Street View",
+      "privacy_note": "No browser profile, Street View camera coordinate, or unrelated screenshot metadata is stored.",
+      "proves": [
+        "The referenced SM location is visually identifiable as the SM City Pampanga main-gate area",
+        "The referenced Robinsons location is visually identifiable as the area in front of Robinsons Starmills Arayat Gate",
+        "Street View imagery reviewed by the team visibly shows public-transport vehicles/jeepneys in the Robinsons transport area"
+      ],
+      "does_not_prove": [
+        "A Street View camera coordinate is the passenger coordinate",
+        "Official or legal bay designation",
+        "Exclusive San Juan assignment",
+        "Current fare, schedule, or fleet availability"
+      ]
+    },
+    "ROBINSONS_OFFICIAL_LOCATION": {
+      "source_type": "OFFICIAL_MALL_DIRECTORY",
+      "source_name": "Robinsons Malls",
+      "source_date": null,
+      "source_url": "https://robinsonsmalls.com/mall-info/robinsons-starmills",
+      "source_reference": "Robinsons Starmills official mall information",
+      "proves": [
+        "Robinsons Starmills is in Barangay San Jose, City of San Fernando, Pampanga",
+        "The mall is along Gapan–Olongapo Road"
+      ],
+      "does_not_prove": [
+        "A San Juan passenger loading bay"
+      ]
+    },
+    "DOST_ARAYAT_GATE_REFERENCE": {
+      "source_type": "GOVERNMENT_LOCATION_REFERENCE",
+      "source_name": "Department of Science and Technology Region III",
+      "source_date": "2022-06-04",
+      "source_url": "https://region3.dost.gov.ph/market-launching-of-innovative-products/",
+      "source_reference": "Public event location identified as Robinsons Starmills (Arayat Gate)",
+      "proves": [
+        "Arayat Gate is a recognized named location at Robinsons Starmills"
+      ],
+      "does_not_prove": [
+        "A San Juan jeepney bay or route assignment"
+      ]
+    },
+    "CSF_BUSINESS_REGISTRY_2026": {
+      "source_type": "GOVERNMENT",
+      "source_name": "City of San Fernando Business Registry",
+      "source_date": "2026-02-27",
+      "source_url": "https://cityofsanfernando.gov.ph/wp-content/uploads/2026/03/BUSINESS-MASTERLIST-AS-OF-FEBRUARY-27-2026-1.pdf",
+      "source_reference": "SM City Pampanga entries in Barangay San Jose and public-transport-terminal research context",
+      "proves": [
+        "SM City Pampanga has documented City of San Fernando/Barangay San Jose context"
+      ],
+      "does_not_prove": [
+        "The official or exact unloading bay at the main gate"
+      ]
+    }
+  },
+  "transport_nodes": [
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "display_name": "SM City Pampanga Main Gate Drop-off Area",
+      "passenger_direction_role": "OUTBOUND_DROPOFF",
+      "node_type": "DROP_OFF",
+      "barangay": "San Jose",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "latitude": null,
+      "longitude": null,
+      "google_place_id": null,
+      "evidence": [
+        "COMMUTER_ACCOUNT_2026_09_22",
+        "REMOTE_STREET_VIEW_REVIEW_2026_09_22",
+        "CSF_BUSINESS_REGISTRY_2026"
+      ],
+      "evidence_notes": [
+        "A regular San Juan/PSU Mexico commuter reports that passengers commonly alight at the SM City Pampanga main-gate area.",
+        "A PAMANA team member remotely reviewed Google Maps Street View on 2026-09-22 and visually confirmed the referenced SM main-gate location."
+      ],
+      "does_not_prove": [
+        "Official designated jeepney bay",
+        "Exact legal unloading bay",
+        "Exact stopping coordinates",
+        "Exact terminal assignment"
+      ],
+      "unresolved_questions": [
+        "Exact transport GPS point at the SM main gate",
+        "Current on-site confirmation of the San Juan service drop-off",
+        "Official or legal unloading designation"
+      ]
+    },
+    {
+      "record_type": "TRANSPORT_NODE",
+      "internal_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "display_name": "Robinsons Starmills – Arayat Gate Return Loading Area",
+      "passenger_direction_role": "INBOUND_LOADING",
+      "node_type": "LOADING_BAY",
+      "barangay": "San Jose",
+      "municipality_city": "City of San Fernando",
+      "province": "Pampanga",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "latitude": null,
+      "longitude": null,
+      "google_place_id": null,
+      "evidence": [
+        "COMMUTER_ACCOUNT_2026_09_22",
+        "REMOTE_STREET_VIEW_REVIEW_2026_09_22",
+        "ROBINSONS_OFFICIAL_LOCATION",
+        "DOST_ARAYAT_GATE_REFERENCE"
+      ],
+      "evidence_notes": [
+        "A regular commuter reports that return trips toward San Juan are boarded from the Robinsons Starmills terminal area.",
+        "A PAMANA team member remotely reviewed Google Maps Street View on 2026-09-22 and identified the referenced location as the area in front of Robinsons Starmills Arayat Gate.",
+        "The reviewed imagery visibly shows public-transport vehicles/jeepneys in the transport area."
+      ],
+      "does_not_prove": [
+        "Exact San Juan bay number",
+        "Exclusive San Juan terminal assignment",
+        "Current operating schedule",
+        "Current fare",
+        "Current fleet availability"
+      ],
+      "unresolved_questions": [
+        "Exact San Juan jeepney bay at Arayat Gate",
+        "Current on-site confirmation that San Juan service still boards there",
+        "Exact transport GPS point"
+      ]
+    }
+  ],
+  "route_variant_endpoint_policy": {
+    "outbound_variant_code": "RCH-SJ-SMROB-OUT",
+    "outbound_endpoint_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+    "inbound_variant_code": "RCH-SJ-SMROB-IN",
+    "inbound_start_node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+    "policy": "Associate only if these research variants already exist and remain planning-disabled. Do not create variants or incomplete RouteVariantStop sequences in this seed.",
+    "current_result": "No matching RouteVariants existed before Phase 5A; no relation or stop sequence is created."
+  },
+  "operational_facts": {
+    "fare_rules": [],
+    "service_patterns": [],
+    "route_geometry": [],
+    "route_variant_stops": [],
+    "reason": "Phase 5A evidence does not establish fare, schedule, geometry, exact coordinates, or a complete directional stop sequence."
+  }
+}

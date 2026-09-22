@@ -40,7 +40,10 @@ const count = async (client, table) =>
     }
 
     assert.strictEqual(await count(client, 'routes'), 2 + manifest.route_candidates.length);
-    assert.strictEqual(await count(client, 'transport_nodes'), manifest.transport_node_candidates.length);
+    assert.ok(
+      (await count(client, 'transport_nodes')) >= manifest.transport_node_candidates.length,
+      'Phase 4 transport nodes were removed'
+    );
     for (const table of ['route_variants', 'route_variant_stops', 'fare_rules', 'service_patterns']) {
       assert.strictEqual(await count(client, table), 0, `${table} must remain empty`);
     }
