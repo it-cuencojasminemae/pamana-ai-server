@@ -13,7 +13,6 @@ const EXPECTED_LEGACY_COUNTS = Object.freeze({
 });
 
 const NEW_TABLES = [
-  'route_variants',
   'route_variant_stops',
   'fare_rules',
   'service_patterns',
@@ -54,6 +53,12 @@ async function count(client, table) {
     for (const table of NEW_TABLES) {
       assert.strictEqual(await count(client, table), 0, `${table} was unexpectedly seeded`);
     }
+    // Phase 5B adds research variants, never passenger-ready geometry/service.
+    const unsafeVariants = await client.query(`select count(*)::int as count from route_variants
+      where planning_enabled is true or verification_status <> 'CORROBORATED_RESEARCH'
+      or operating_status <> 'UNKNOWN' or geometry_source <> 'UNKNOWN'
+      or encoded_polyline is not null or geometry_geojson is not null`);
+    assert.strictEqual(unsafeVariants.rows[0].count, 0);
 
     const unsafeRoutes = await client.query(
       `select count(*)::int as count

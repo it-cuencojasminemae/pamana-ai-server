@@ -12,6 +12,13 @@ This checklist is intentionally blank on operational facts. Phase 4 research ide
 
 ## Boarding and destination evidence
 
+- [~] PSU Mexico campus-front boarding area — local testimony and remote review; not field-verified
+- [~] PSU campus-front return drop-off — same research node, not a duplicate
+- [~] Mexico Bayan / Sta. Monica transfer area — local testimony and remote review; temporary municipal evidence is not proof of a permanent terminal
+- [ ] Exact PSU transport GPS coordinate
+- [ ] Exact permanent Mexico Bayan jeep loading point
+- [ ] Exact Arayat-jeep boarding location in Mexico Bayan
+- [ ] Exact SM/Rob alighting behavior for transfer service
 - [ ] Exact San Juan boarding point
 - [ ] Boarding latitude and longitude captured at the actual passenger point
 - [ ] Passenger-facing signboard text photographed/transcribed
@@ -37,6 +44,11 @@ This checklist is intentionally blank on operational facts. Phase 4 research ide
 
 ## Fare and operations
 
+- [~] Leave-when-full behavior — reported at campus/waiting area, not a verified headway
+- [~] Service usually unavailable after ~4:30 PM — testimony, not a scheduled last trip
+- [ ] Direct service operating days/times
+- [ ] Relative frequency of direct vs transfer journey
+- [ ] Regular fares for each leg
 - [ ] Current regular fare observed and operator-confirmed
 - [ ] Student discount behavior observed/confirmed
 - [ ] Senior/PWD discount behavior observed/confirmed

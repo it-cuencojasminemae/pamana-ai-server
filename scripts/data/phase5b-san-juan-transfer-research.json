@@ -1,0 +1,200 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "5B",
+  "recorded_on": "2026-09-23",
+  "internal_code_policy": "RCH- codes are PAMANA internal research identifiers, not official LTFRB route codes.",
+  "evidence_limit": "Local testimony and team-reported remote visual review; not physical field verification. No source establishes universal service availability.",
+  "sources": {
+    "LOCAL_2026_09_23": {
+      "name": "PAMANA local commuter testimony",
+      "date": "2026-09-23",
+      "url": null,
+      "reference": "User-supplied Phase 5B testimony; interview date and respondent identity not supplied. Recorded date is not an interview date.",
+      "supports": "Campus waiting/return alighting, transfer via Mexico Bayan, reported dispatch and approximate service end.",
+      "limits": "No GPS, guaranteed availability, regular fare, precise bay or schedule. No personal data stored."
+    },
+    "REMOTE_2026_09_23": {
+      "name": "PAMANA team Google Maps Street View review",
+      "date": "2026-09-23",
+      "url": null,
+      "reference": "Review reported by the PAMANA team in the Phase 5B brief. Screenshots and imagery capture date were not supplied to this implementation.",
+      "supports": "Identity of the PSU Mexico campus-front road/waiting area and Sta. Monica/Mexico Bayan area.",
+      "limits": "Remote visual corroboration only; camera position is not passenger GPS. No screenshot or browser metadata stored."
+    },
+    "DIRECT_EARLIER": {
+      "name": "Earlier regular commuter account and Phase 4/5A evidence chain",
+      "date": null,
+      "url": null,
+      "reference": "phase5a-sm-robinsons-passenger-points.json; phase4-mexico-san-fernando-research.json; earlier outbound locality sequence supplied again in Phase 5B.",
+      "supports": "Reported direct San Juan/PSU to SM/Rob service and different outbound/return passenger points.",
+      "limits": "Direct-service operating conditions and relative availability remain unresolved."
+    },
+    "LPTRP": {
+      "name": "City of San Fernando LPTRP 2023–2026 research copy",
+      "date": null,
+      "url": "https://www.scribd.com/document/863526648/Final-Draft-LPTRP-CSF-Rev-compressed",
+      "reference": "Table 16, PUJ routes touching the LGU, printed page 41; inventory attributed to LTFRB Region III. Cover says 2024–2026 while body headers say 2023–2026; publication date not established.",
+      "supports": "Arayat – San Fernando via Sta. Ana, Mexico is listed as a through-route candidate.",
+      "limits": "Research copy is not city-hosted. Authorized units are not a current active fleet count; exact boarding, stops, fare and service are unknown."
+    },
+    "LIBRENG_SAKAY": {
+      "name": "Municipality of Mexico",
+      "date": "2026-03-23",
+      "url": "https://www.mexicopampanga.gov.ph/libreng-sakay-continues-for-affected-communities/",
+      "reference": "Transport-strike temporary Libreng Sakay advisory naming Mexico Bayan in front of Sta. Monica Parish Church.",
+      "supports": "Official temporary transport pickup/drop context at the named area.",
+      "limits": "Does not establish a permanent everyday jeepney terminal, current normal service, or San Juan/Arayat bay. Event hours are not regular service hours."
+    },
+    "RA11314": {
+      "name": "Republic Act No. 11314, Student Fare Discount Act",
+      "date": "2019-04-17",
+      "url": "https://lawphil.net/statutes/repacts/ra2019/ra_11314_2019.html",
+      "reference": "Sections 3–5: covered students/public transport and discount on domestic regular fares, subject to eligibility and documentation requirements.",
+      "supports": "20% student discount policy for eligible public transportation regular fares.",
+      "limits": "Does not establish any route-specific regular fare. Remembered student payments cannot establish the current regular fare."
+    }
+  },
+  "nodes": [
+    {
+      "node_code": "RCH-PSU-MEXICO-FRONT",
+      "name": "Pampanga State University Mexico Campus – Front Waiting Area",
+      "node_type": "DESIGNATED_STOP",
+      "barangay": "San Juan",
+      "municipality_city": "Mexico",
+      "province": "Pampanga",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "latitude": null,
+      "longitude": null,
+      "google_place_id": null,
+      "evidence": ["LOCAL_2026_09_23", "REMOTE_2026_09_23"],
+      "notes": "Commuters report jeepneys and tricycles waiting directly in front of PSU Mexico Campus. The university reportedly provides waiting space; formal terminal status is unconfirmed. Team reports Street View review on 2026-09-23 confirming the campus-front road/waiting area. Also reported as the normal return drop-off from San Fernando/Robinsons. One shared node represents both uses. Node type is a research classification, not proof of formal designation. Exact GPS, pickup/dropoff behavior and legal designation need on-site confirmation."
+    },
+    {
+      "node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "name": "Mexico Bayan – Sta. Monica Parish Church Transfer Area",
+      "node_type": "TRANSFER_POINT",
+      "municipality_city": "Mexico",
+      "province": "Pampanga",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "latitude": null,
+      "longitude": null,
+      "google_place_id": null,
+      "evidence": ["LOCAL_2026_09_23", "REMOTE_2026_09_23", "LIBRENG_SAKAY"],
+      "notes": "Local testimony reports that PSU/San Juan passengers may alight in Mexico Bayan and transfer to a San Fernando-bound jeep. Team reports remote Street View review of the Sta. Monica Parish Church/Mexico Bayan area. Official 2026 Libreng Sakay evidence supports temporary pickup/drop activity here, not a permanent formal everyday terminal. Exact permanent loading location and the Arayat-jeep boarding point are unresolved."
+    }
+  ],
+  "routes": [
+    {
+      "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO",
+      "route_name": "Arayat – San Fernando via Sta. Ana, Mexico",
+      "origin": "Arayat, Pampanga",
+      "destination": "City of San Fernando, Pampanga",
+      "active": false,
+      "route_status": "inactive",
+      "planning_enabled": false,
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "base_fare": null,
+      "estimated_travel_time": null,
+      "evidence": ["LPTRP", "LOCAL_2026_09_23"],
+      "notes": "PAMANA internal research identifier; not an official LTFRB route code. LPTRP Table 16 lists this through-route. Local testimony suggests passengers may use a segment after transferring in Mexico Bayan. Exact boarding point, direction, SM/Rob alighting behavior, fare, timetable and current availability remain unresolved. No active fleet count inferred."
+    }
+  ],
+  "variant_note": "Direct SM/Rob service reported by regular commuter, but later local evidence indicates a transfer-via-Mexico-Bayan journey is also commonly used. Current service pattern and relative availability remain unresolved. No universal availability is asserted; the return direction is separately modeled. Reported dispatch and approximate campus service end are contextual testimony, not a verified schedule for either variant.",
+  "variants": [
+    {
+      "variant_code": "RCH-SJ-SMROB-OUT",
+      "display_name": "Research: PSU Mexico / San Juan to SM Pampanga main gate",
+      "direction": "OUTBOUND",
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "start_node_code": "RCH-PSU-MEXICO-FRONT",
+      "end_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "signboard_text": "SM/Rob",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "operating_status": "UNKNOWN",
+      "geometry_source": "UNKNOWN",
+      "encoded_polyline": null,
+      "geometry_geojson": null,
+      "evidence": ["DIRECT_EARLIER", "LOCAL_2026_09_23", "REMOTE_2026_09_23"]
+    },
+    {
+      "variant_code": "RCH-SJ-SMROB-IN",
+      "display_name": "Research: Robinsons Arayat Gate to PSU Mexico / San Juan",
+      "direction": "INBOUND",
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "start_node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "end_node_code": "RCH-PSU-MEXICO-FRONT",
+      "signboard_text": null,
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "operating_status": "UNKNOWN",
+      "geometry_source": "UNKNOWN",
+      "encoded_polyline": null,
+      "geometry_geojson": null,
+      "evidence": ["DIRECT_EARLIER", "LOCAL_2026_09_23", "REMOTE_2026_09_23"]
+    }
+  ],
+  "journey_candidates": [
+    {
+      "code": "RCH-JOURNEY-SJ-SMROB-DIRECT",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "pattern": "Direct PSU Mexico / San Juan → SM/Rob service",
+      "variant_codes": ["RCH-SJ-SMROB-OUT", "RCH-SJ-SMROB-IN"],
+      "availability": "Unresolved; could depend on time, school demand or operating days. These explanations are hypotheses, not established facts."
+    },
+    {
+      "code": "RCH-JOURNEY-SJ-VIA-MEXICO-BAYAN",
+      "verification_status": "CORROBORATED_RESEARCH",
+      "data_mode": "REAL",
+      "planning_enabled": false,
+      "pattern": "Two-leg journey via Mexico Bayan",
+      "legs": [
+        { "from": "PSU Mexico / San Juan", "reported_vehicle": "local jeep", "to": "Mexico Bayan / Sta. Monica area" },
+        { "from": "Mexico Bayan", "reported_vehicle": "mostly Arayat/San Fernando-bound jeep", "destination_candidates": ["SM Pampanga", "Robinsons", "San Fernando Palengke"] }
+      ],
+      "transfer_node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "through_route_candidate": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO",
+      "availability": "Reported as commonly used; exact boarding/alighting, service overlap and relative frequency remain unresolved. Manifest/documentation only; no executable passenger journey."
+    }
+  ],
+  "reported_outbound_locality_sequence": {
+    "sequence": ["PSU / San Juan", "Santa Cruz", "Laput", "Balas", "San Carlos", "Mexico Bayan", "Sto. Cristo", "Lagundi", "SM/Rob"],
+    "verification_status": "CORROBORATED_RESEARCH",
+    "interpretation": "Earlier commuter testimony; candidate waypoints/landmarks only. Pickup/dropoff behavior is unknown, so no RouteVariantStops are created."
+  },
+  "reported_operations": {
+    "verification_status": "CORROBORATED_RESEARCH",
+    "reported_dispatch_type": "LEAVE_WHEN_FULL",
+    "scope": "Campus/waiting-area testimony; not established independently for every direct or transfer leg.",
+    "reported_service_end": "approximately 16:30",
+    "service_end_meaning": "Campus jeepneys are reported usually unavailable from around 4:30 PM onward; not a guaranteed scheduled last trip.",
+    "headway_min_minutes": null,
+    "headway_max_minutes": null,
+    "last_trip_time": null
+  },
+  "fare_policy": {
+    "legal_basis": "RA 11314",
+    "source": "RA11314",
+    "student_discount_percent": 20,
+    "storage": "Documentation/policy only; no FareRule or computed fare.",
+    "regular_fares": null,
+    "reason": "Current regular fares for each leg remain unverified; remembered student fares and road distances are insufficient."
+  },
+  "road_reference": {
+    "tool": "Google Maps driving directions",
+    "scope": "Team-reported review between Robinsons Starmills and PSU Mexico Campus; geographic road-reference only.",
+    "geometry_source": "UNKNOWN",
+    "geometry": null,
+    "restriction": "Car navigation is not public-transport route evidence; do not import its geometry or derive fares from road distance."
+  },
+  "operational_records": { "route_variant_stops": [], "fare_rules": [], "service_patterns": [] }
+}

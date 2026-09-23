@@ -26,9 +26,9 @@ const count = async (client, table) =>
   await client.connect();
 
   try {
-    assert.strictEqual(await count(client, 'routes'), 6, 'route count changed');
-    assert.strictEqual(await count(client, 'transport_nodes'), 8, 'unexpected node count');
-    for (const table of ['route_variants', 'route_variant_stops', 'fare_rules', 'service_patterns']) {
+    assert.ok((await count(client, 'routes')) >= 6, 'earlier routes removed');
+    assert.ok((await count(client, 'transport_nodes')) >= 8, 'earlier nodes removed');
+    for (const table of ['route_variant_stops', 'fare_rules', 'service_patterns']) {
       assert.strictEqual(await count(client, table), 0, `${table} must remain empty`);
     }
 
@@ -95,9 +95,9 @@ const count = async (client, table) =>
     assert.strictEqual(unsafe, 0);
 
     const variants = await client.query(
-      `select variant_code from route_variants where variant_code in ('RCH-SJ-SMROB-OUT', 'RCH-SJ-SMROB-IN')`
+      `select variant_code, planning_enabled from route_variants where variant_code in ('RCH-SJ-SMROB-OUT', 'RCH-SJ-SMROB-IN') order by variant_code`
     );
-    assert.strictEqual(variants.rowCount, 0, 'Phase 5A must not fabricate route variants');
+    assert.ok(variants.rows.every((row) => row.planning_enabled === false));
 
     // Verify the real upsert protects future field verification, then roll
     // back so the Phase 5A research database remains unchanged.
@@ -111,6 +111,8 @@ const count = async (client, table) =>
           where node_code = 'RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF'`
       );
       const reseed = await seed(client);
+      const variantsAfter = await client.query(`select variant_code, planning_enabled from route_variants where variant_code in ('RCH-SJ-SMROB-OUT', 'RCH-SJ-SMROB-IN') order by variant_code`);
+      assert.deepStrictEqual(variantsAfter.rows, variants.rows, 'Phase 5A must not create or promote variants');
       const protectedNode = reseed.nodes.find(
         (node) => node.code === 'RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF'
       );
@@ -134,7 +136,7 @@ const count = async (client, table) =>
 
     console.log('ok - both Phase 5A passenger points exist as separate database records');
     console.log('ok - both remain research-only, planning-disabled, and coordinate-null');
-    console.log('ok - fare, schedule, geometry, variants, and stop sequences remain absent');
+    console.log('ok - fare, schedule and stop sequences remain absent; Phase 5A reseed does not change variants');
     console.log('ok - transactional reseed cannot downgrade field-verified endpoint data');
   } finally {
     await client.end();
