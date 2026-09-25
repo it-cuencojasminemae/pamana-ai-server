@@ -11,6 +11,7 @@ const {
   enrichJourneyInformation,
   enrichVerifiedJourneyInformation,
 } = require('./journey-information-enricher');
+const { availabilityForLeg, summarizeJourneyAvailability } = require('./availability-engine');
 
 async function planVerifiedTransportJourneys({
   candidateBoardingNodeIds,
@@ -25,9 +26,11 @@ async function planVerifiedTransportJourneys({
 }
 
 module.exports = {
+  availabilityForLeg,
   enrichJourneyInformation,
   enrichVerifiedJourneyInformation,
   planJourneysWithWalkingCandidates,
   planVerifiedTransportJourneys,
   planVerifiedJourneysWithWalking,
+  summarizeJourneyAvailability,
 };
