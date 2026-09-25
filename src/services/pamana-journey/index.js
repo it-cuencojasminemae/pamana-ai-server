@@ -3,6 +3,10 @@
 const { buildTransportGraph } = require('./graph-builder');
 const { planJourneys } = require('./journey-planner');
 const { loadEligibleTransportGraphData } = require('./transport-data-loader');
+const {
+  planJourneysWithWalkingCandidates,
+  planVerifiedJourneysWithWalking,
+} = require('./walking-journey-service');
 
 async function planVerifiedTransportJourneys({
   candidateBoardingNodeIds,
@@ -17,5 +21,7 @@ async function planVerifiedTransportJourneys({
 }
 
 module.exports = {
+  planJourneysWithWalkingCandidates,
   planVerifiedTransportJourneys,
+  planVerifiedJourneysWithWalking,
 };
