@@ -7,6 +7,10 @@ const {
   planJourneysWithWalkingCandidates,
   planVerifiedJourneysWithWalking,
 } = require('./walking-journey-service');
+const {
+  enrichJourneyInformation,
+  enrichVerifiedJourneyInformation,
+} = require('./journey-information-enricher');
 
 async function planVerifiedTransportJourneys({
   candidateBoardingNodeIds,
@@ -21,6 +25,8 @@ async function planVerifiedTransportJourneys({
 }
 
 module.exports = {
+  enrichJourneyInformation,
+  enrichVerifiedJourneyInformation,
   planJourneysWithWalkingCandidates,
   planVerifiedTransportJourneys,
   planVerifiedJourneysWithWalking,

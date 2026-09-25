@@ -11,6 +11,12 @@ const nodeReference = (node) => Object.freeze({
 });
 
 function legFromEdge(edge, sequence) {
+  const boardDistance = edge.boardStop.distanceFromVariantStartMeters;
+  const alightDistance = edge.alightStop.distanceFromVariantStartMeters;
+  const segmentDistanceMeters = boardDistance !== null && alightDistance !== null
+    && alightDistance >= boardDistance
+    ? alightDistance - boardDistance
+    : null;
   return Object.freeze({
     sequence,
     type: LEG_TYPE.TRANSIT,
@@ -20,10 +26,12 @@ function legFromEdge(edge, sequence) {
     routeVariantId: edge.variant.id,
     variantCode: edge.variant.variantCode,
     direction: edge.variant.direction,
+    operatingStatus: edge.variant.operatingStatus,
     boardAt: nodeReference(edge.boardStop.node),
     alightAt: nodeReference(edge.alightStop.node),
     boardSequence: edge.boardStop.sequence,
     alightSequence: edge.alightStop.sequence,
+    segmentDistanceMeters,
     signboard: edge.variant.signboard,
     intermediateNodes: Object.freeze(edge.intermediateNodes.map(nodeReference)),
     verificationStatus: edge.variant.verificationStatus,

@@ -122,6 +122,12 @@ function normalizeVariant(rawVariant) {
       return Object.freeze({
         id: identity(rawStop) || `${id}-sequence-${rawStop.sequence}`,
         sequence: rawStop.sequence,
+        distanceFromVariantStartMeters: rawStop.distance_from_variant_start_m !== null
+          && rawStop.distance_from_variant_start_m !== undefined
+          && rawStop.distance_from_variant_start_m !== ''
+          && Number.isFinite(Number(rawStop.distance_from_variant_start_m))
+          ? Number(rawStop.distance_from_variant_start_m)
+          : null,
         pickupAllowed: rawStop.pickup_allowed === true,
         dropoffAllowed: rawStop.dropoff_allowed === true,
         transferAllowed: rawStop.transfer_allowed === true,

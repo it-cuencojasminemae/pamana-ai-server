@@ -34,7 +34,10 @@ function transportGraphQuery({ demoMode = false } = {}) {
         ],
       },
       route_variant_stops: {
-        fields: ['sequence', 'pickup_allowed', 'dropoff_allowed', 'transfer_allowed'],
+        fields: [
+          'sequence', 'pickup_allowed', 'dropoff_allowed', 'transfer_allowed',
+          'distance_from_variant_start_m',
+        ],
         sort: ['sequence:asc'],
         populate: {
           transport_node: {

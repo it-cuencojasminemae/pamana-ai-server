@@ -35,6 +35,8 @@
     "test:phase-11": "node scripts/test-phase-11-walking-connectors.js",
     "test:phase-11-db": "node --env-file=.env scripts/test-phase-11-database.js",
     "smoke:phase-11-geoapify": "node --env-file=.env scripts/smoke-phase-11-geoapify.js",
+    "test:phase-12": "node scripts/test-phase-12-fare-service-engine.js",
+    "test:phase-12-db": "node --env-file=.env scripts/test-phase-12-database.js",
     "test:legacy-trip-search-route-data": "node --env-file=.env scripts/test-trip-search-route-data.js",
     "legacy:update:pilot-corridor-reference-anchors": "node --env-file=.env scripts/update-pilot-corridor-reference-anchors.js",
     "test:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",
