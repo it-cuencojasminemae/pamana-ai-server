@@ -18,6 +18,7 @@ const ACTIONS = [
   'api::pamana-ai.pamana-ai.demand',
   'api::pamana-ai.pamana-ai.supplyDemand',
   'api::pamana-ai.pamana-ai.dashboardSummary',
+  'api::pamana-ai.trip-plan.create',
 ];
 
 const ROLE_IDS = [3, 5, 6]; // Passenger, LGU, Administrator

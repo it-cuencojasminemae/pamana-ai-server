@@ -7,6 +7,14 @@
 module.exports = {
   routes: [
     {
+      method: 'POST',
+      path: '/pamana-ai/trip-plan',
+      handler: 'trip-plan.create',
+      // Strapi authentication remains enabled by default. Access is granted
+      // only to selected authenticated roles during bootstrap.
+      config: { policies: [] },
+    },
+    {
       method: 'GET',
       path: '/pamana-ai/wait-time',
       handler: 'pamana-ai.waitTime',

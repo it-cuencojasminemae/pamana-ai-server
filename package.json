@@ -39,6 +39,8 @@
     "test:phase-12-db": "node --env-file=.env scripts/test-phase-12-database.js",
     "test:phase-13": "node scripts/test-phase-13-wait-availability.js",
     "test:phase-13-db": "node --env-file=.env scripts/test-phase-13-database.js",
+    "test:phase-14": "node scripts/test-phase-14-unified-trip-plan.js",
+    "test:phase-14-db": "node --env-file=.env scripts/test-phase-14-database.js",
     "test:legacy-trip-search-route-data": "node --env-file=.env scripts/test-trip-search-route-data.js",
     "legacy:update:pilot-corridor-reference-anchors": "node --env-file=.env scripts/update-pilot-corridor-reference-anchors.js",
     "test:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",
