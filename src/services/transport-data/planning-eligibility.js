@@ -31,7 +31,7 @@ const hasValidVerificationDate = (value) => {
  * and future RouteVariant/TransportNode records). `planning_enabled` is an
  * explicit human decision, never inferred from a promising research status.
  */
-function planningEligibilityFor(record, { requireActive = false } = {}) {
+function planningEligibilityFor(record, { requireActive = false, allowSimulated = false } = {}) {
   const reasons = [];
 
   if (!record) {
@@ -46,11 +46,14 @@ function planningEligibilityFor(record, { requireActive = false } = {}) {
     reasons.push('PLANNING_DISABLED');
   }
 
-  if (!PLANNING_ELIGIBLE_STATUSES.has(record.verification_status)) {
+  const verificationEligible = PLANNING_ELIGIBLE_STATUSES.has(record.verification_status)
+    || (allowSimulated && record.verification_status === VERIFICATION_STATUS.SIMULATED_DEMO);
+  if (!verificationEligible) {
     reasons.push('VERIFICATION_STATUS_NOT_ELIGIBLE');
   }
 
-  if (record.data_mode !== DATA_MODE.REAL) {
+  if (record.data_mode !== DATA_MODE.REAL
+    && !(allowSimulated && record.data_mode === DATA_MODE.SIMULATED)) {
     reasons.push('NOT_REAL_DATA');
   }
 
@@ -99,10 +102,17 @@ const isPlanningEligible = (record, options) =>
 const isRoutePlanningEligible = (route) =>
   routePlanningEligibilityFor(route).eligible;
 
-const planningCandidateFilters = ({ requireActive = false } = {}) => ({
+const planningCandidateFilters = ({ requireActive = false, allowSimulated = false } = {}) => ({
   planning_enabled: true,
-  verification_status: { $in: Array.from(PLANNING_ELIGIBLE_STATUSES) },
-  data_mode: DATA_MODE.REAL,
+  verification_status: {
+    $in: [
+      ...PLANNING_ELIGIBLE_STATUSES,
+      ...(allowSimulated ? [VERIFICATION_STATUS.SIMULATED_DEMO] : []),
+    ],
+  },
+  data_mode: allowSimulated
+    ? { $in: [DATA_MODE.REAL, DATA_MODE.SIMULATED] }
+    : DATA_MODE.REAL,
   ...(requireActive ? { route_status: 'active' } : {}),
 });
 
