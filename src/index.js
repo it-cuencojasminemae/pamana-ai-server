@@ -54,6 +54,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::trip-search.trip-search.search',
     'api::pamana-ai.trip-plan.create',
     'api::live-vehicle.live-vehicle.list',
+    'api::pamana-demo.pamana-demo.liveVehicles',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   Driver: [
@@ -64,6 +65,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::trip.trip.update',
     'api::vehicle.vehicle.update',
     'api::vehicle-location.vehicle-location.create',
+    'api::pamana-demo.pamana-demo.liveVehicles',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   LGU: [
@@ -74,6 +76,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::pamana-ai.pamana-ai.dashboardSummary',
     'api::pamana-ai.trip-plan.create',
     'api::live-vehicle.live-vehicle.list',
+    'api::pamana-demo.pamana-demo.liveVehicles',
     'api::disruption.disruption.create',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
@@ -87,6 +90,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::pamana-ai.pamana-ai.dashboardSummary',
     'api::pamana-ai.trip-plan.create',
     'api::live-vehicle.live-vehicle.list',
+    'api::pamana-demo.pamana-demo.liveVehicles',
     'api::disruption.disruption.create',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
