@@ -494,6 +494,15 @@ export interface ApiDisruptionDisruption extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    affected_route: Schema.Attribute.Relation<'manyToOne', 'api::route.route'>;
+    affected_route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    >;
+    affected_transport_node: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transport-node.transport-node'
+    >;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -506,7 +515,32 @@ export interface ApiDisruptionDisruption extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'active'>;
+    effect: Schema.Attribute.Enumeration<
+      [
+        'WARNING_ONLY',
+        'LIMITED_SERVICE',
+        'ROUTE_SUSPENDED',
+        'VARIANT_SUSPENDED',
+        'NODE_CLOSED',
+        'BOARDING_CLOSED',
+        'ALIGHTING_CLOSED',
+        'TRANSFER_BLOCKED',
+      ]
+    >;
     ends_at: Schema.Attribute.DateTime;
+    geometry_geojson: Schema.Attribute.JSON;
+    geometry_source: Schema.Attribute.Enumeration<
+      [
+        'FIELD_GPS',
+        'AUTHORITATIVE',
+        'GOOGLE_ROAD_MATCHED',
+        'MANUAL_VERIFIED',
+        'SIMULATED',
+        'UNKNOWN',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'UNKNOWN'>;
     latitude: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -515,12 +549,21 @@ export interface ApiDisruptionDisruption extends Struct.CollectionTypeSchema {
     > &
       Schema.Attribute.Private;
     longitude: Schema.Attribute.Float;
+    notes: Schema.Attribute.Text;
+    planning_enabled: Schema.Attribute.Boolean &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<false>;
     publishedAt: Schema.Attribute.DateTime;
+    resolution_notes: Schema.Attribute.Text;
+    resolved_at: Schema.Attribute.DateTime;
     severity: Schema.Attribute.Enumeration<
       ['low', 'moderate', 'high', 'critical']
     > &
       Schema.Attribute.Required;
     source: Schema.Attribute.String & Schema.Attribute.Required;
+    source_name: Schema.Attribute.String;
+    source_reference: Schema.Attribute.Text;
+    source_url: Schema.Attribute.Text;
     starts_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
     title: Schema.Attribute.String & Schema.Attribute.Required;
     type: Schema.Attribute.Enumeration<
@@ -537,6 +580,19 @@ export interface ApiDisruptionDisruption extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    verification_status: Schema.Attribute.Enumeration<
+      [
+        'AUTHORITATIVE_CURRENT',
+        'FIELD_VERIFIED',
+        'CORROBORATED_RESEARCH',
+        'HISTORICAL_UNVERIFIED',
+        'SIMULATED_DEMO',
+        'RESEARCH_CANDIDATE',
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'RESEARCH_CANDIDATE'>;
+    verified_at: Schema.Attribute.DateTime;
   };
 }
 

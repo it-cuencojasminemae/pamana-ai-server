@@ -80,6 +80,9 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::live-vehicle.live-vehicle.list',
     'api::pamana-demo.pamana-demo.liveVehicles',
     'api::disruption.disruption.create',
+    'api::disruption.disruption.find',
+    'api::disruption.disruption.findOne',
+    'api::disruption.disruption.options',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
@@ -94,6 +97,9 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::live-vehicle.live-vehicle.list',
     'api::pamana-demo.pamana-demo.liveVehicles',
     'api::disruption.disruption.create',
+    'api::disruption.disruption.find',
+    'api::disruption.disruption.findOne',
+    'api::disruption.disruption.options',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
     ...TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS,
@@ -152,6 +158,32 @@ async function hardenDataTrustColumns(strapi) {
       await trx(tableName).whereNull('data_mode').update({ data_mode: DATA_MODE.SIMULATED });
       await trx.schema.alterTable(tableName, (table) => {
         table.string('data_mode').notNullable().defaultTo(DATA_MODE.SIMULATED).alter();
+      });
+    }
+
+    const disruptionColumns = [
+      'planning_enabled',
+      'verification_status',
+      'geometry_source',
+    ];
+    const disruptionColumnChecks = await Promise.all(
+      disruptionColumns.map((column) => trx.schema.hasColumn('disruptions', column))
+    );
+    if (disruptionColumnChecks.every(Boolean)) {
+      // Existing disruption rows remain conservative. No effect, target, or
+      // geometry is inferred from their text or coordinates.
+      await trx('disruptions').whereNull('planning_enabled').update({ planning_enabled: false });
+      await trx('disruptions')
+        .whereNull('verification_status')
+        .update({ verification_status: VERIFICATION_STATUS.RESEARCH_CANDIDATE });
+      await trx('disruptions').whereNull('geometry_source').update({ geometry_source: 'UNKNOWN' });
+      await trx.schema.alterTable('disruptions', (table) => {
+        table.boolean('planning_enabled').notNullable().defaultTo(false).alter();
+        table.string('verification_status')
+          .notNullable()
+          .defaultTo(VERIFICATION_STATUS.RESEARCH_CANDIDATE)
+          .alter();
+        table.string('geometry_source').notNullable().defaultTo('UNKNOWN').alter();
       });
     }
   });
