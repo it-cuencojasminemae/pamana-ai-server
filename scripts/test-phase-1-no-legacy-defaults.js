@@ -72,8 +72,10 @@ const driverDashboard = fs.readFileSync(
   path.join(workspaceRoot, 'pamana-frontend', 'app', 'pages', 'driver', 'index.vue'),
   'utf8'
 );
-assert.match(driverDashboard, /selectedRouteId = ref<number \| null>\(null\)/);
-assert.match(driverDashboard, /route: selectedRouteId\.value/);
+assert.match(driverDashboard, /selectedRouteDocumentId = ref<string \| null>\(null\)/);
+assert.match(driverDashboard, /selectedVariantDocumentId = ref<string \| null>\(null\)/);
+assert.match(driverDashboard, /route_variant: selectedVariantDocumentId\.value/);
+assert.doesNotMatch(driverDashboard, /\/api\/routes|startDirection|route: selectedRoute/);
 
 console.log('ok - active source contains no former-corridor defaults');
 console.log('ok - prediction APIs require an explicit active route');

@@ -63,6 +63,8 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::trip.trip.findOne',
     'api::trip.trip.create',
     'api::trip.trip.update',
+    'api::trip.trip.active',
+    'api::trip.trip.options',
     'api::vehicle.vehicle.update',
     'api::vehicle-location.vehicle-location.create',
     'api::pamana-demo.pamana-demo.liveVehicles',

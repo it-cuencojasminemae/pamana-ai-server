@@ -1,37 +1,49 @@
 'use strict';
 
-/**
- * vehicle controller
- *
- * A Driver caller may only update the vehicle assigned to them, and only
- * its occupancy_level (Stage 10.4) - everything else (plate number,
- * capacity, cooperative/route assignment, etc.) stays admin-only.
- * Administrator callers (no linked driver profile) keep the default,
- * unrestricted update behavior.
- */
-
 const { createCoreController } = require('@strapi/strapi').factories;
+const { occupancyForCount } = require('../../../services/driver-trip/driver-trip-policy');
 
 module.exports = createCoreController('api::vehicle.vehicle', ({ strapi }) => ({
   async update(ctx) {
-    const driver = await strapi
-      .documents('api::driver.driver')
-      .findFirst({ filters: { user: { id: ctx.state.user.id } }, populate: ['vehicle'] });
+    const userId = ctx.state.user?.id;
+    const driver = userId ? await strapi.documents('api::driver.driver').findFirst({
+      filters: { user: { id: userId } }, populate: ['vehicle'],
+    }) : null;
 
-    if (driver) {
-      if (!driver.vehicle || driver.vehicle.documentId !== ctx.params.id) {
-        return ctx.notFound();
-      }
+    // Administrator/LGU behavior remains governed by Strapi permissions and
+    // the core controller. Driver writes use the restricted branch below.
+    if (!driver) return super.update(ctx);
+    if (!driver.vehicle || driver.vehicle.documentId !== ctx.params.id) return ctx.notFound();
 
-      const { occupancy_level } = ctx.request.body?.data || {};
+    const activeTrip = await strapi.documents('api::trip.trip').findFirst({
+      filters: {
+        driver: { id: driver.id },
+        vehicle: { id: driver.vehicle.id },
+        trip_status: 'active',
+      },
+      populate: ['route_variant'],
+    });
+    if (!activeTrip?.route_variant) return ctx.badRequest('Start a directional trip before updating occupancy.');
 
-      if (!occupancy_level) {
-        return ctx.badRequest('"occupancy_level" is required.');
-      }
+    const occupancy = occupancyForCount(ctx.request.body?.data?.current_occupancy, driver.vehicle.capacity);
+    if (!occupancy.valid) return ctx.badRequest('Occupancy must be a whole number within vehicle capacity.');
 
-      ctx.request.body.data = { occupancy_level };
-    }
-
-    return super.update(ctx);
+    const updated = await strapi.documents('api::vehicle.vehicle').update({
+      documentId: driver.vehicle.documentId,
+      data: {
+        current_occupancy: occupancy.count,
+        occupancy_level: occupancy.level,
+        vehicle_status: occupancy.normalized === 'FULL' ? 'full' : 'in_transit',
+      },
+    });
+    ctx.body = {
+      data: {
+        documentId: updated.documentId,
+        current_occupancy: updated.current_occupancy,
+        occupancy_level: updated.occupancy_level,
+        vehicle_status: updated.vehicle_status,
+      },
+      meta: { occupancy: occupancy.normalized },
+    };
   },
 }));

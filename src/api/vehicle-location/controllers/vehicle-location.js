@@ -1,57 +1,71 @@
 'use strict';
 
-/**
- * vehicle-location controller
- *
- * A driver can only post GPS pings for their own active trip/vehicle -
- * the client-supplied vehicle/trip (if any) is always ignored in favor
- * of the caller's actual active trip, to prevent spoofing pings for a
- * vehicle the driver doesn't operate.
- */
-
 const { createCoreController } = require('@strapi/strapi').factories;
-const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
+const {
+  validateCoordinates,
+  validateRecordedAt,
+} = require('../../../services/driver-trip/driver-trip-policy');
 
 module.exports = createCoreController('api::vehicle-location.vehicle-location', ({ strapi }) => ({
   async create(ctx) {
-    const driver = await strapi
-      .documents('api::driver.driver')
-      .findFirst({ filters: { user: { id: ctx.state.user.id } }, populate: ['vehicle'] });
-
-    if (!driver) {
-      return ctx.badRequest('No driver profile linked to this account.');
-    }
+    const userId = ctx.state.user?.id;
+    if (!userId) return ctx.unauthorized('Authentication is required.');
+    const driver = await strapi.documents('api::driver.driver').findFirst({
+      filters: { user: { id: userId } },
+      populate: ['vehicle'],
+    });
+    if (!driver) return ctx.badRequest('No driver profile linked to this account.');
 
     const activeTrip = await strapi.documents('api::trip.trip').findFirst({
       filters: { driver: { id: driver.id }, trip_status: 'active' },
-      populate: ['vehicle'],
+      populate: { vehicle: { populate: ['active_route_variant'] }, route_variant: true },
     });
-
-    if (!activeTrip) {
-      return ctx.badRequest('No active trip. Start a trip before sending GPS updates.');
+    if (!activeTrip?.vehicle || !activeTrip.route_variant) {
+      return ctx.badRequest('No directional active trip. Start a route variant before sending GPS updates.');
+    }
+    if (!driver.vehicle || activeTrip.vehicle.id !== driver.vehicle.id) {
+      return ctx.forbidden('The active trip does not belong to this driver vehicle.');
+    }
+    if (!activeTrip.vehicle.active_route_variant || activeTrip.vehicle.active_route_variant.id !== activeTrip.route_variant.id) {
+      return ctx.forbidden('The active vehicle route variant does not match this trip.');
     }
 
-    const { latitude, longitude, speed, heading, recorded_at } =
-      ctx.request.body?.data || {};
+    const { latitude, longitude, speed, heading, recorded_at } = ctx.request.body?.data || {};
+    const coordinates = validateCoordinates(latitude, longitude);
+    if (!coordinates.valid) return ctx.badRequest('A valid non-zero latitude and longitude are required.');
+    const timestamp = validateRecordedAt(recorded_at, { tripStartedAt: activeTrip.started_at });
+    if (!timestamp.valid) return ctx.badRequest('The GPS timestamp is invalid for this active trip.');
 
-    if (latitude === undefined || longitude === undefined) {
-      return ctx.badRequest('"latitude" and "longitude" are required.');
+    const numericSpeed = speed == null ? null : Number(speed);
+    const numericHeading = heading == null ? null : Number(heading);
+    if (numericSpeed != null && (!Number.isFinite(numericSpeed) || numericSpeed < 0)) {
+      return ctx.badRequest('"speed" must be a non-negative number.');
     }
+    if (numericHeading != null && (!Number.isFinite(numericHeading) || numericHeading < 0 || numericHeading > 360)) {
+      return ctx.badRequest('"heading" must be between 0 and 360.');
+    }
+    const modes = [activeTrip.data_mode, activeTrip.vehicle.data_mode, activeTrip.route_variant.data_mode];
+    if (new Set(modes).size !== 1) return ctx.forbidden('Trip, vehicle, and route variant data modes do not match.');
 
-    ctx.request.body.data = {
-      latitude,
-      longitude,
-      speed,
-      heading,
-      recorded_at: recorded_at || new Date().toISOString(),
-      data_mode:
-        activeTrip.data_mode === DATA_MODE.REAL
-          ? DATA_MODE.REAL
-          : DATA_MODE.SIMULATED,
-      trip: activeTrip.id,
-      vehicle: activeTrip.vehicle.id,
-    };
-
-    return super.create(ctx);
+    const created = await strapi.documents('api::vehicle-location.vehicle-location').create({
+      data: {
+        latitude: coordinates.latitude,
+        longitude: coordinates.longitude,
+        speed: numericSpeed,
+        heading: numericHeading,
+        recorded_at: timestamp.recordedAt,
+        data_mode: activeTrip.data_mode,
+        trip: activeTrip.id,
+        vehicle: activeTrip.vehicle.id,
+      },
+    });
+    ctx.status = 201;
+    ctx.body = { data: {
+      documentId: created.documentId,
+      latitude: created.latitude,
+      longitude: created.longitude,
+      recorded_at: created.recorded_at,
+      data_mode: created.data_mode,
+    } };
   },
 }));

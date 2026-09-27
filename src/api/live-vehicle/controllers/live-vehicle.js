@@ -24,12 +24,12 @@ module.exports = {
 
     const activeTrips = await strapi.documents('api::trip.trip').findMany({
       filters,
-      populate: { vehicle: true, route: true },
+      populate: { vehicle: true, route: true, route_variant: true },
     });
 
     const results = await Promise.all(
       activeTrips.map(async (trip) => {
-        if (!trip.vehicle || !trip.route) {
+        if (!trip.vehicle || !trip.route || !trip.route_variant) {
           return null;
         }
 
@@ -42,7 +42,7 @@ module.exports = {
           return null;
         }
 
-        const dataMode = [trip.data_mode, trip.vehicle.data_mode, location.data_mode]
+        const dataMode = [trip.data_mode, trip.vehicle.data_mode, trip.route_variant.data_mode, location.data_mode]
           .every((mode) => mode === DATA_MODE.REAL)
           ? DATA_MODE.REAL
           : DATA_MODE.SIMULATED;
@@ -67,6 +67,13 @@ module.exports = {
             route_code: trip.route.route_code,
           },
           direction: trip.direction,
+          route_variant: {
+            documentId: trip.route_variant.documentId,
+            variant_code: trip.route_variant.variant_code,
+            display_name: trip.route_variant.display_name,
+            direction: trip.route_variant.direction,
+            data_mode: trip.route_variant.data_mode,
+          },
           latitude: location.latitude,
           longitude: location.longitude,
           speed: location.speed,
