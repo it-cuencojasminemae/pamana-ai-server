@@ -141,7 +141,8 @@ assert.ok(enforceTrustManagementRole({ effect: 'WARNING_ONLY' }, { existing: tru
   .includes('PLANNING_ENABLED_DISRUPTION_ADMIN_ONLY'));
 
 const orchestrator = read('src/services/pamana-journey/trip-plan-orchestrator.js');
-assert.doesNotMatch(orchestrator, /disruption/i, 'Phase 18A must not integrate disruption filtering');
+assert.match(orchestrator, /loadEligibleDisruptions/,
+  'Phase 18B must consume the unchanged Phase 18A foundation through the unified planner');
 const bootstrap = read('src/index.js');
 assert.match(bootstrap, /whereNull\('planning_enabled'\)\.update\(\{ planning_enabled: false \}\)/);
 assert.match(bootstrap, /RESEARCH_CANDIDATE/);
@@ -155,4 +156,4 @@ assert.doesNotMatch(permissionsBlock.match(/Driver:[\s\S]*?LGU:/)?.[0] || '', /d
 console.log('ok - Phase 18A schema adds explicit optional targets and deterministic effects');
 console.log('ok - trust, data mode, evidence, time, resolution, and GeoJSON validation are conservative');
 console.log('ok - names, text, signboards, and nearby coordinates cannot satisfy target validation');
-console.log('ok - journey orchestration remains untouched and non-admin trust elevation is rejected');
+console.log('ok - Phase 18B consumes the Phase 18A foundation and non-admin trust elevation remains rejected');

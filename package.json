@@ -47,6 +47,8 @@
     "test:phase-17-db": "node --env-file=.env scripts/test-phase-17-database.js",
     "test:phase-18a": "node scripts/test-phase-18a-disruption-foundation.js",
     "test:phase-18a-db": "node --env-file=.env scripts/test-phase-18a-database.js",
+    "test:phase-18b": "node scripts/test-phase-18b-disruption-aware-routing.js",
+    "test:phase-18b-db": "node --env-file=.env scripts/test-phase-18b-database.js",
     "test:legacy-trip-search-route-data": "node --env-file=.env scripts/test-trip-search-route-data.js",
     "legacy:update:pilot-corridor-reference-anchors": "node --env-file=.env scripts/update-pilot-corridor-reference-anchors.js",
     "test:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",

@@ -29,6 +29,7 @@ async function main() {
       services: {
         loadEligibleCoordinateNodes: async () => [],
         loadEligibleTransportGraphData: async () => ({ variants: [] }),
+        loadEligibleDisruptions: async () => [],
       },
     });
     assert.equal(result.status, 'NO_ELIGIBLE_ACCESS_NODES');

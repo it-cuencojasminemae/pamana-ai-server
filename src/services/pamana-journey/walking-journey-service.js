@@ -6,6 +6,8 @@ const { findAccessNodes, loadEligibleCoordinateNodes } = require('./access-node-
 const { loadEligibleTransportGraphData } = require('./transport-data-loader');
 const { createWalkingRouter } = require('./walking-router');
 const { composeWalkingJourneys } = require('./walking-journey-composer');
+const { loadEligibleDisruptions } = require('./disruption-data-loader');
+const { applyDisruptionConstraints, attachDisruptionWarnings } = require('./disruption-engine');
 
 function graphNodeId(graph, node) {
   for (const candidate of [node?.documentId, node?.document_id, node?.id, node?.node_code]) {
@@ -95,12 +97,14 @@ async function planVerifiedJourneysWithWalking({
   config = {},
   signal,
 } = {}) {
-  const [nodes, graphData] = await Promise.all([
+  const [nodes, graphData, disruptions] = await Promise.all([
     loadEligibleCoordinateNodes({ strapiInstance }),
     loadEligibleTransportGraphData({ strapiInstance, demoMode: false, serviceDate }),
+    loadEligibleDisruptions({ strapiInstance, serviceDate, allowSimulated: false }),
   ]);
-  const graph = buildTransportGraph(graphData, { demoMode: false, serviceDate });
-  return planJourneysWithWalkingCandidates({
+  const constrained = applyDisruptionConstraints(graphData, disruptions);
+  const graph = buildTransportGraph(constrained.graphData, { demoMode: false, serviceDate });
+  const result = await planJourneysWithWalkingCandidates({
     origin,
     destination,
     nodes,
@@ -109,9 +113,16 @@ async function planVerifiedJourneysWithWalking({
     config,
     signal,
   });
+  return Object.freeze({
+    ...result,
+    journeys: Object.freeze((result.journeys || []).map((journey) =>
+      attachDisruptionWarnings(journey, disruptions))),
+    disruptionImpact: constrained.impact,
+  });
 }
 
 module.exports = {
   planJourneysWithWalkingCandidates,
   planVerifiedJourneysWithWalking,
+  roleEligibleNodes,
 };

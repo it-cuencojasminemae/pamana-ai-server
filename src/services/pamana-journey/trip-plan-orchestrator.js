@@ -9,6 +9,8 @@ const { loadFareAndServiceData } = require('./fare-service-data-loader');
 const { loadOperationalData } = require('./availability-data-loader');
 const { enrichJourneyInformation } = require('./journey-information-enricher');
 const { tripPlanConfig } = require('./trip-plan-config');
+const { loadEligibleDisruptions } = require('./disruption-data-loader');
+const { applyDisruptionConstraints, attachDisruptionWarnings } = require('./disruption-engine');
 
 const TRIP_PLAN_STATUS = Object.freeze({
   INVALID_REQUEST: 'INVALID_REQUEST',
@@ -110,10 +112,16 @@ function normalizeJourney(journey, options = {}) {
     .filter((leg) => leg.type === 'WALK' && Number.isFinite(leg.durationSeconds))
     .reduce((total, leg) => total + leg.durationSeconds, 0);
   const hasWalkingDuration = legs.some((leg) => leg.type === 'WALK' && Number.isFinite(leg.durationSeconds));
-  const warnings = [...new Set([
+  const warningValues = [
     ...(journey.warnings || []),
     ...journey.legs.flatMap(legWarnings),
-  ])];
+  ];
+  const warnings = [...new Map(warningValues.map((warning) => {
+    const key = typeof warning === 'string'
+      ? `code:${warning}`
+      : `disruption:${warning?.disruptionId || ''}:${warning?.effect || ''}:${warning?.code || ''}`;
+    return [key, warning];
+  })).values()];
   return Object.freeze({
     id: journey.id,
     transferCount: journey.transferCount,
@@ -131,12 +139,17 @@ function normalizeJourney(journey, options = {}) {
   });
 }
 
-function baseResponse(request, status, { journeys = [], failures = [], now, maxJourneys } = {}) {
+function baseResponse(request, status, {
+  journeys = [], failures = [], warningCodes = [], now, maxJourneys,
+} = {}) {
   return Object.freeze({
     request,
     status,
     journeys: Object.freeze(journeys),
-    warnings: Object.freeze([...new Set(failures.map((failure) => failure.code).filter(Boolean))]),
+    warnings: Object.freeze([...new Set([
+      ...failures.map((failure) => failure.code).filter(Boolean),
+      ...warningCodes.filter(Boolean),
+    ])]),
     meta: Object.freeze({
       journeyCount: journeys.length,
       generatedAt: now.toISOString(),
@@ -163,10 +176,12 @@ async function orchestrateTripPlan(request, {
   const planWalking = services.planJourneysWithWalkingCandidates || planJourneysWithWalkingCandidates;
   const loadInformation = services.loadFareAndServiceData || loadFareAndServiceData;
   const loadOperations = services.loadOperationalData || loadOperationalData;
+  const loadDisruptions = services.loadEligibleDisruptions || loadEligibleDisruptions;
 
-  const [nodes, graphData] = await Promise.all([
+  const [nodes, graphData, disruptions] = await Promise.all([
     loadNodes({ strapiInstance }),
     loadGraphData({ strapiInstance, demoMode: false, serviceDate }),
+    loadDisruptions({ strapiInstance, serviceDate, allowSimulated: false }),
   ]);
   if (!nodes.length) {
     return baseResponse(request, TRIP_PLAN_STATUS.NO_ELIGIBLE_ACCESS_NODES, {
@@ -178,8 +193,25 @@ async function orchestrateTripPlan(request, {
       now: generatedAt, maxJourneys: config.maxJourneys,
     });
   }
-  const graph = buildTransportGraph(graphData, { demoMode: false, serviceDate });
-  const transitGeometries = transitGeometryMap(graphData);
+  const constrained = applyDisruptionConstraints(graphData, disruptions);
+  let disruptionWarningCodes = [];
+  if (!constrained.graphData.variants.length) {
+    disruptionWarningCodes = constrained.impact.blockingApplied
+      ? ['NO_JOURNEY_DUE_TO_ACTIVE_DISRUPTION'] : [];
+    return baseResponse(request, TRIP_PLAN_STATUS.NO_TRANSPORT_JOURNEY, {
+      warningCodes: disruptionWarningCodes,
+      now: generatedAt,
+      maxJourneys: config.maxJourneys,
+    });
+  }
+  const graph = buildTransportGraph(constrained.graphData, { demoMode: false, serviceDate });
+  if (constrained.impact.blockingApplied && graph.outgoing.size === 0) {
+    const unconstrainedGraph = buildTransportGraph(graphData, { demoMode: false, serviceDate });
+    if (unconstrainedGraph.outgoing.size > 0) {
+      disruptionWarningCodes = ['NO_JOURNEY_DUE_TO_ACTIVE_DISRUPTION'];
+    }
+  }
+  const transitGeometries = transitGeometryMap(constrained.graphData);
   const walking = await planWalking({
     origin: request.origin,
     destination: request.destination,
@@ -201,7 +233,10 @@ async function orchestrateTripPlan(request, {
   const selected = sortJourneys(walking.journeys || []).slice(0, config.maxJourneys);
   if (!selected.length) {
     return baseResponse(request, TRIP_PLAN_STATUS.NO_TRANSPORT_JOURNEY, {
-      failures, now: generatedAt, maxJourneys: config.maxJourneys,
+      failures,
+      warningCodes: disruptionWarningCodes,
+      now: generatedAt,
+      maxJourneys: config.maxJourneys,
     });
   }
 
@@ -214,14 +249,16 @@ async function orchestrateTripPlan(request, {
     loadInformation({ journey: combinedJourney, requestedDeparture: request.departureAt, strapiInstance }),
     loadOperations({ journey: combinedJourney, strapiInstance, allowSimulated: false }),
   ]);
-  const journeys = selected.map((journey) => normalizeJourney(enrichJourneyInformation(journey, {
-    ...information,
-    ...operations,
-    passengerCategory: request.passengerCategory,
-    requestedDeparture: request.departureAt,
-    observedAt: generatedAt,
-    allowSimulated: false,
-  }), { transitGeometries }));
+  const journeys = selected.map((journey) => normalizeJourney(enrichJourneyInformation(
+    attachDisruptionWarnings(journey, disruptions), {
+      ...information,
+      ...operations,
+      passengerCategory: request.passengerCategory,
+      requestedDeparture: request.departureAt,
+      observedAt: generatedAt,
+      allowSimulated: false,
+    }
+  ), { transitGeometries }));
   return baseResponse(request, TRIP_PLAN_STATUS.JOURNEYS_FOUND, {
     journeys, failures, now: generatedAt, maxJourneys: config.maxJourneys,
   });

@@ -52,6 +52,7 @@ function fixtureServices(fixture, {
       capture.graphOptions = options;
       return { variants: fixture.variants || [] };
     },
+    loadEligibleDisruptions: async () => [],
     loadFareAndServiceData: async () => ({ fareRules, servicePatterns }),
     loadOperationalData: async (options) => {
       capture.operationOptions = options;
@@ -165,6 +166,7 @@ async function testUnknownsAndDomainResults() {
     services: {
       loadEligibleCoordinateNodes: async () => [],
       loadEligibleTransportGraphData: async () => ({ variants: [] }),
+      loadEligibleDisruptions: async () => [],
     },
   });
   assert.equal(noNodes.status, TRIP_PLAN_STATUS.NO_ELIGIBLE_ACCESS_NODES);
