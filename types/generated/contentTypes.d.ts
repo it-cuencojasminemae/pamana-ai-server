@@ -868,12 +868,18 @@ export interface ApiPassengerReportPassengerReport
     draftAndPublish: false;
   };
   attributes: {
+    context_source: Schema.Attribute.Enumeration<
+      ['NONE', 'SELECTED_JOURNEY', 'VISIBLE_NODE', 'ACTIVE_TRIP']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'NONE'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
       Schema.Attribute.Required &
       Schema.Attribute.DefaultTo<'SIMULATED'>;
+    description: Schema.Attribute.Text;
     latitude: Schema.Attribute.Float;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -881,6 +887,13 @@ export interface ApiPassengerReportPassengerReport
       'api::passenger-report.passenger-report'
     > &
       Schema.Attribute.Private;
+    location_accuracy_m: Schema.Attribute.Float &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0;
+        },
+        number
+      >;
     location_note: Schema.Attribute.String;
     longitude: Schema.Attribute.Float;
     passenger: Schema.Attribute.Relation<
@@ -896,12 +909,36 @@ export interface ApiPassengerReportPassengerReport
         'route_unavailable',
         'flood',
         'vehicle_breakdown',
+        'VEHICLE_FULL',
+        'LONG_WAIT',
+        'NO_SERVICE_OBSERVED',
+        'STOP_ISSUE',
+        'ROUTE_INFORMATION_ISSUE',
+        'ACCESSIBILITY_ISSUE',
+        'DISRUPTION',
+        'OTHER',
       ]
     > &
       Schema.Attribute.Required;
     reported_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    review_notes: Schema.Attribute.Text;
+    review_status: Schema.Attribute.Enumeration<
+      ['PENDING', 'REVIEWED', 'VERIFIED', 'DISMISSED']
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'PENDING'>;
+    reviewed_at: Schema.Attribute.DateTime;
     route: Schema.Attribute.Relation<'manyToOne', 'api::route.route'>;
+    route_variant: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::route-variant.route-variant'
+    >;
     stop: Schema.Attribute.Relation<'manyToOne', 'api::route-stop.route-stop'>;
+    transport_node: Schema.Attribute.Relation<
+      'manyToOne',
+      'api::transport-node.transport-node'
+    >;
+    trip: Schema.Attribute.Relation<'manyToOne', 'api::trip.trip'>;
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;

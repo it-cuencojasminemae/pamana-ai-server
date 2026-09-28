@@ -85,6 +85,9 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::disruption.disruption.options',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
+    'api::passenger-report.passenger-report.find',
+    'api::passenger-report.passenger-report.findOne',
+    'api::passenger-report.passenger-report.update',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
   ],
   Administrator: [
@@ -102,6 +105,9 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::disruption.disruption.options',
     'api::disruption.disruption.update',
     'api::report-confidence.report-confidence.list',
+    'api::passenger-report.passenger-report.find',
+    'api::passenger-report.passenger-report.findOne',
+    'api::passenger-report.passenger-report.update',
     ...TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS,
   ],
 };
@@ -189,6 +195,21 @@ async function hardenDataTrustColumns(strapi) {
   });
 }
 
+async function hardenPassengerReportColumns(strapi) {
+  if (strapi.db.dialect.client !== 'postgres') return;
+  const knex = strapi.db.connection;
+  const required = ['review_status', 'context_source'];
+  if (!(await Promise.all(required.map((column) => knex.schema.hasColumn('passenger_reports', column)))).every(Boolean)) return;
+  await knex.transaction(async (trx) => {
+    await trx('passenger_reports').whereNull('review_status').update({ review_status: 'PENDING' });
+    await trx('passenger_reports').whereNull('context_source').update({ context_source: 'NONE' });
+    await trx.schema.alterTable('passenger_reports', (table) => {
+      table.string('review_status').notNullable().defaultTo('PENDING').alter();
+      table.string('context_source').notNullable().defaultTo('NONE').alter();
+    });
+  });
+}
+
 /**
  * `/api/users/me?populate=role` is sanitized against the caller's content API
  * permissions. Without permission to read roles, Strapi silently removes the
@@ -271,6 +292,7 @@ module.exports = {
    */
   async bootstrap({ strapi }) {
     await hardenDataTrustColumns(strapi);
+    await hardenPassengerReportColumns(strapi);
     await ensureRequiredRolePermissions(strapi);
     await ensureDefaultRegistrationRole(strapi);
   },

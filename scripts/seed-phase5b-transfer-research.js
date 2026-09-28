@@ -144,7 +144,13 @@ async function snapshot(client) {
   const result = {};
   for (const table of TABLES) {
     // Return hashes only: no personal data or full record contents in receipts.
-    result[table] = (await client.query(`select id, md5(to_jsonb(t)::text) as hash from ${table} t order by id`)).rows;
+    // Phase 19 adds evidence-workflow columns to passenger reports. They are
+    // intentionally outside the transport-truth checkpoint so report review
+    // cannot appear to mutate the verified pilot network.
+    const rowJson = table === 'passenger_reports'
+      ? `to_jsonb(t) - array['description', 'location_accuracy_m', 'review_status', 'reviewed_at', 'review_notes', 'context_source']`
+      : 'to_jsonb(t)';
+    result[table] = (await client.query(`select id, md5((${rowJson})::text) as hash from ${table} t order by id`)).rows;
   }
   return result;
 }

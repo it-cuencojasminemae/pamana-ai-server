@@ -20,8 +20,19 @@
         "seats_available",
         "route_unavailable",
         "flood",
-        "vehicle_breakdown"
+        "vehicle_breakdown",
+        "VEHICLE_FULL",
+        "LONG_WAIT",
+        "NO_SERVICE_OBSERVED",
+        "STOP_ISSUE",
+        "ROUTE_INFORMATION_ISSUE",
+        "ACCESSIBILITY_ISSUE",
+        "DISRUPTION",
+        "OTHER"
       ]
+    },
+    "description": {
+      "type": "text"
     },
     "latitude": {
       "type": "float"
@@ -31,6 +42,10 @@
     },
     "location_note": {
       "type": "string"
+    },
+    "location_accuracy_m": {
+      "type": "float",
+      "min": 0
     },
     "reported_at": {
       "type": "datetime",
@@ -45,6 +60,34 @@
         "SIMULATED"
       ]
     },
+    "review_status": {
+      "type": "enumeration",
+      "required": true,
+      "default": "PENDING",
+      "enum": [
+        "PENDING",
+        "REVIEWED",
+        "VERIFIED",
+        "DISMISSED"
+      ]
+    },
+    "reviewed_at": {
+      "type": "datetime"
+    },
+    "review_notes": {
+      "type": "text"
+    },
+    "context_source": {
+      "type": "enumeration",
+      "required": true,
+      "default": "NONE",
+      "enum": [
+        "NONE",
+        "SELECTED_JOURNEY",
+        "VISIBLE_NODE",
+        "ACTIVE_TRIP"
+      ]
+    },
     "passenger": {
       "type": "relation",
       "relation": "manyToOne",
@@ -57,6 +100,16 @@
       "target": "api::route.route",
       "inversedBy": "passenger_reports"
     },
+    "route_variant": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::route-variant.route-variant"
+    },
+    "transport_node": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::transport-node.transport-node"
+    },
     "stop": {
       "type": "relation",
       "relation": "manyToOne",
@@ -68,6 +121,11 @@
       "relation": "manyToOne",
       "target": "api::vehicle.vehicle",
       "inversedBy": "passenger_reports"
+    },
+    "trip": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::trip.trip"
     }
   }
 }
