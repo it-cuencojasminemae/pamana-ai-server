@@ -41,6 +41,12 @@ const TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS = TRANSPORT_KNOWLEDGE_CONTENT_TYPES.flat
     `api::${contentType}.delete`,
   ]
 );
+const TRANSPORT_WORKBENCH_ACTIONS = [
+  'api::transport-workbench.transport-workbench.list',
+  'api::transport-workbench.transport-workbench.detail',
+  'api::transport-workbench.transport-workbench.create',
+  'api::transport-workbench.transport-workbench.update',
+];
 const REQUIRED_ROLE_PERMISSIONS = {
   Passenger: [
     ROLE_LOOKUP_ACTION,
@@ -90,6 +96,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::passenger-report.passenger-report.findOne',
     'api::passenger-report.passenger-report.update',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
+    ...TRANSPORT_WORKBENCH_ACTIONS,
   ],
   Administrator: [
     ROLE_LOOKUP_ACTION,
@@ -110,6 +117,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::passenger-report.passenger-report.findOne',
     'api::passenger-report.passenger-report.update',
     ...TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS,
+    ...TRANSPORT_WORKBENCH_ACTIONS,
   ],
 };
 
