@@ -53,6 +53,7 @@ const REQUIRED_ROLE_PERMISSIONS = {
     'api::passenger-profile.passenger-profile.update',
     'api::trip-search.trip-search.search',
     'api::pamana-ai.trip-plan.create',
+    'api::pamana-ai.journey-explanation.create',
     'api::live-vehicle.live-vehicle.list',
     'api::pamana-demo.pamana-demo.liveVehicles',
     ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,

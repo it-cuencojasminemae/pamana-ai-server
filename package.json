@@ -53,6 +53,7 @@
     "test:phase-19-db": "node --env-file=.env scripts/test-phase-19-database.js",
     "smoke:phase-19-api": "node --env-file=.env scripts/smoke-phase-19-api.js",
     "test:presentation-road-path": "node scripts/test-presentation-road-path-boundary.js",
+    "test:phase-20": "node scripts/test-phase-20-journey-explanation.js",
     "activate:pilot-mexico-san-fernando": "node --env-file=.env scripts/activate-pilot-field-verified.js",
     "test:pilot-mexico-san-fernando": "node scripts/test-pilot-field-verified.js",
     "test:pilot-mexico-san-fernando-db": "node --env-file=.env scripts/test-pilot-field-verified-database.js",

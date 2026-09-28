@@ -15,6 +15,13 @@ module.exports = {
       config: { policies: [] },
     },
     {
+      method: 'POST',
+      path: '/pamana-ai/journey-explanation',
+      handler: 'journey-explanation.create',
+      // Authenticated and granted explicitly to passenger-facing roles.
+      config: { policies: [] },
+    },
+    {
       method: 'GET',
       path: '/pamana-ai/wait-time',
       handler: 'pamana-ai.waitTime',
