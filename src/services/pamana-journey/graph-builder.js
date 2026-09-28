@@ -96,6 +96,8 @@ function normalizeNode(rawNode) {
   const id = identity(node);
   const nodeCode = text(node?.node_code);
   const name = text(node?.name);
+  const latitude = Number(node?.latitude);
+  const longitude = Number(node?.longitude);
   if (!id || !nodeCode || !name) return null;
   return Object.freeze({
     id,
@@ -104,6 +106,9 @@ function normalizeNode(rawNode) {
     nodeCode,
     name,
     nodeType: text(node.node_type),
+    ...(Number.isFinite(latitude) && Number.isFinite(longitude)
+      && latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180
+      ? { lat: latitude, lng: longitude } : {}),
     verificationStatus: node.verification_status,
     dataMode: node.data_mode,
   });

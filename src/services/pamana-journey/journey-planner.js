@@ -8,6 +8,8 @@ const nodeReference = (node) => Object.freeze({
   nodeId: node.id,
   nodeCode: node.nodeCode,
   name: node.name,
+  ...(Number.isFinite(node.lat) && Number.isFinite(node.lng)
+    ? { lat: node.lat, lng: node.lng } : {}),
 });
 
 function legFromEdge(edge, sequence) {

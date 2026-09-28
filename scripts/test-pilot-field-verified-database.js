@@ -138,8 +138,17 @@ async function main() {
     });
     const direct = directCandidates.find((journey) => journey.transferCount === 0);
     const transfer = directCandidates.find((journey) => journey.transferCount === 1);
-    assert.equal(transitLeg(direct, 'RCH-SJ-SMROB-OUT').boardAt.nodeCode, 'RCH-PSU-MEXICO-FRONT');
-    assert.equal(transitLeg(direct, 'RCH-SJ-SMROB-OUT').alightAt.nodeCode, 'RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF');
+    const directLeg = transitLeg(direct, 'RCH-SJ-SMROB-OUT');
+    assert.equal(directLeg.boardAt.nodeCode, 'RCH-PSU-MEXICO-FRONT');
+    assert.equal(directLeg.alightAt.nodeCode, 'RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF');
+    assert.deepEqual([directLeg.boardAt.lat, directLeg.boardAt.lng], [
+      Number(byNode['RCH-PSU-MEXICO-FRONT'].latitude_exact),
+      Number(byNode['RCH-PSU-MEXICO-FRONT'].longitude_exact),
+    ]);
+    assert.deepEqual([directLeg.alightAt.lat, directLeg.alightAt.lng], [
+      Number(byNode['RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF'].latitude_exact),
+      Number(byNode['RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF'].longitude_exact),
+    ]);
     assert.deepEqual(transfer.legs.map((leg) => leg.variantCode), [
       'PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT',
       'PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT',
@@ -151,6 +160,10 @@ async function main() {
     assert.equal(returns.length, 1);
     assert.equal(returns[0].legs[0].variantCode, 'RCH-SJ-SMROB-IN');
     assert.equal(returns[0].legs[0].signboard, 'SAN JUAN');
+    assert.deepEqual([returns[0].legs[0].boardAt.lat, returns[0].legs[0].boardAt.lng], [
+      Number(byNode['RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD'].latitude_exact),
+      Number(byNode['RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD'].longitude_exact),
+    ]);
 
     const fareRules = await loadFareRules(client);
     const directFare = evaluateFareForLeg(direct.legs[0], { fareRules, passengerCategory: 'REGULAR', requestedDate: REQUESTED_AT });

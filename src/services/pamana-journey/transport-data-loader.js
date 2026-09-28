@@ -44,6 +44,7 @@ function transportGraphQuery({ demoMode = false } = {}) {
           transport_node: {
             fields: [
               'node_code', 'name', 'node_type', 'planning_enabled',
+              'latitude', 'longitude',
               'verification_status', 'data_mode', 'verified_at',
               'source_name', 'source_url', 'source_reference',
             ],
