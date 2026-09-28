@@ -6,6 +6,8 @@ const path = require('node:path');
 const {
   SYSTEM_PROMPT, sanitizeJourneyExplanationRequest, createJourneyExplanationService,
 } = require('../src/services/pamana-ai/journey-explanation');
+const { getAIExplainProvider } = require('../src/services/pamana-ai/providers');
+const { createGeminiProvider } = require('../src/services/pamana-ai/providers/gemini-client');
 const { createOpenAIProvider } = require('../src/services/pamana-ai/providers/openai-client');
 const { createJourneyExplanationHandler } = require('../src/api/pamana-ai/controllers/journey-explanation');
 
@@ -81,6 +83,21 @@ async function main() {
   assert.doesNotMatch(captured.options.systemPrompt, /MAGALANG EXPRESS/);
   console.log('ok - prompt injection remains untrusted JSON data under a fixed factual system prompt');
 
+  const selected = [];
+  const factories = {
+    gemini: () => { selected.push('gemini'); return { name: 'gemini' }; },
+    openai: () => { selected.push('openai'); return { name: 'openai' }; },
+  };
+  assert.equal(getAIExplainProvider({ providerName: 'gemini', factories }).name, 'gemini');
+  assert.deepEqual(selected, ['gemini']);
+  selected.length = 0;
+  assert.equal(getAIExplainProvider({ providerName: ' OPENAI ', factories }).name, 'openai');
+  assert.deepEqual(selected, ['openai']);
+  const invalidProvider = getAIExplainProvider({ providerName: 'unsupported', factories });
+  assert.equal(invalidProvider.name, null);
+  assert.deepEqual(await invalidProvider.explainJourney({}), { ok: false, reason: 'INVALID_PROVIDER' });
+  console.log('ok - AI_PROVIDER selects exactly Gemini or OpenAI and unsupported values fail safely');
+
   let openAIRequest;
   const openAI = createOpenAIProvider({
     apiKey: 'test-only-key', model: 'test-model',
@@ -95,8 +112,27 @@ async function main() {
   assert.doesNotMatch(JSON.stringify(openAIRequest), /test-only-key/);
   console.log('ok - Responses API request is server-only, non-stored, structured, and contains no API key');
 
+  let geminiRequest;
+  const gemini = createGeminiProvider({
+    apiKey: 'test-only-gemini-key', model: 'test-gemini-model',
+    client: { models: { async generateContent(body) { geminiRequest = body; return { text: '{"explanation":"Board at PSU Mexico Front."}' }; } } },
+  });
+  const geminiResult = await gemini.explainJourney(validation.value, { systemPrompt: SYSTEM_PROMPT });
+  assert.deepEqual(geminiResult, { ok: true, explanation: 'Board at PSU Mexico Front.' });
+  assert.equal(geminiRequest.model, 'test-gemini-model');
+  assert.equal(geminiRequest.config.systemInstruction, SYSTEM_PROMPT);
+  assert.equal(geminiRequest.config.responseMimeType, 'application/json');
+  assert.equal(geminiRequest.config.responseJsonSchema.additionalProperties, false);
+  assert.doesNotMatch(JSON.stringify(geminiRequest), /test-only-gemini-key/);
+  assert.equal(geminiRequest.contents[0].parts[0].text, openAIRequest.input[0].content[0].text);
+  assert.match(geminiRequest.contents[0].parts[0].text, /"payableFare":null/);
+  assert.match(geminiRequest.contents[0].parts[0].text, /"totalJourneyDurationSeconds":null/);
+  console.log('ok - Gemini and OpenAI receive the same sanitized factual journey semantics and structured output contract');
+
   const notConfigured = createOpenAIProvider({ apiKey: '' });
   assert.deepEqual(await notConfigured.explainJourney({}, { systemPrompt: SYSTEM_PROMPT }), { ok: false, reason: 'NOT_CONFIGURED' });
+  const geminiNotConfigured = createGeminiProvider({ apiKey: '' });
+  assert.deepEqual(await geminiNotConfigured.explainJourney({}, { systemPrompt: SYSTEM_PROMPT }), { ok: false, reason: 'NOT_CONFIGURED' });
   const rateLimited = createOpenAIProvider({
     apiKey: 'test', client: { responses: { async create() { const error = new Error('raw provider body'); error.status = 429; throw error; } } },
   });
@@ -108,15 +144,45 @@ async function main() {
     client: { responses: { create(_body, options) { return new Promise((_resolve, reject) => options.signal.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))); } } },
   });
   assert.deepEqual(await timeout.explainJourney({}, { systemPrompt: SYSTEM_PROMPT }), { ok: false, reason: 'TIMEOUT' });
-  console.log('ok - not configured, rate limit, timeout and malformed responses are sanitized domain failures');
+  const geminiUnavailable = createGeminiProvider({
+    apiKey: 'test',
+    client: { models: { async generateContent() { const error = new Error('raw provider body'); error.status = 429; throw error; } } },
+  });
+  assert.deepEqual(await geminiUnavailable.explainJourney({}, { systemPrompt: SYSTEM_PROMPT }), { ok: false, reason: 'RATE_LIMITED' });
+  console.log('ok - both providers map missing configuration and provider failures to sanitized domain results');
 
-  const unavailable = await createJourneyExplanationService({ provider: { async explainJourney() { return { ok: false, reason: 'PROVIDER_ERROR' }; } } })(request);
+  const unavailable = await createJourneyExplanationService({ provider: { name: 'gemini', async explainJourney() { return { ok: false, reason: 'PROVIDER_ERROR' }; } } })(request);
   assert.equal(unavailable.status, 'PROVIDER_UNAVAILABLE');
+  assert.equal(unavailable.provider, 'gemini');
   assert.equal(unavailable.explanation, null);
   const thrownFailure = await createJourneyExplanationService({ provider: { async explainJourney() { throw new Error('provider failed'); } } })(request);
   assert.equal(thrownFailure.status, 'PROVIDER_UNAVAILABLE');
   const invalid = await serviceCall({ journey: { legs: [] } });
   assert.equal(invalid.status, 'INVALID_JOURNEY');
+
+  const missingGemini = await createJourneyExplanationService({ provider: createGeminiProvider({ apiKey: '' }) })(request);
+  assert.equal(missingGemini.status, 'NOT_CONFIGURED');
+  assert.equal(missingGemini.provider, 'gemini');
+  const missingOpenAI = await createJourneyExplanationService({ provider: createOpenAIProvider({ apiKey: '' }) })(request);
+  assert.equal(missingOpenAI.status, 'NOT_CONFIGURED');
+  assert.equal(missingOpenAI.provider, 'openai');
+  const unsupported = await createJourneyExplanationService({ provider: invalidProvider })(request);
+  assert.equal(unsupported.status, 'NOT_CONFIGURED');
+  assert.equal(unsupported.provider, null);
+
+  let geminiCalls = 0;
+  let openAICalls = 0;
+  const selectedFailure = getAIExplainProvider({
+    providerName: 'gemini',
+    factories: {
+      gemini: () => ({ name: 'gemini', async explainJourney() { geminiCalls += 1; return { ok: false, reason: 'PROVIDER_ERROR' }; } }),
+      openai: () => ({ name: 'openai', async explainJourney() { openAICalls += 1; return { ok: true, explanation: 'must not run' }; } }),
+    },
+  });
+  assert.equal((await createJourneyExplanationService({ provider: selectedFailure })(request)).status, 'PROVIDER_UNAVAILABLE');
+  assert.equal(geminiCalls, 1);
+  assert.equal(openAICalls, 0);
+  console.log('ok - failures retain the factual journey, normalize responses, and never fall back to another provider');
 
   let called = false;
   const handler = createJourneyExplanationHandler({ explain: async () => { called = true; return available; } });
@@ -133,11 +199,23 @@ async function main() {
   const routes = read('src/api/pamana-ai/routes/pamana-ai.js');
   const bootstrap = read('src/index.js');
   const planner = read('src/services/pamana-journey/trip-plan-orchestrator.js');
-  const phase20 = [read('src/services/pamana-ai/journey-explanation.js'), read('src/api/pamana-ai/controllers/journey-explanation.js')].join('\n');
+  const envExample = read('.env.example');
+  const phase20 = [
+    read('src/services/pamana-ai/journey-explanation.js'),
+    read('src/services/pamana-ai/providers/gemini-client.js'),
+    read('src/services/pamana-ai/providers/openai-client.js'),
+    read('src/api/pamana-ai/controllers/journey-explanation.js'),
+  ].join('\n');
   assert.match(routes, /POST[\s\S]*\/pamana-ai\/journey-explanation/);
   assert.match(bootstrap, /api::pamana-ai\.journey-explanation\.create/);
   assert.doesNotMatch(planner, /OpenAI|journey-explanation|pamana-ai/);
   assert.doesNotMatch(phase20, /predictWaitTime|predictDemand|analyzeSupplyDemand|San Luis/i);
+  assert.doesNotMatch(phase20, /NUXT_PUBLIC|password|passengerEmail/);
+  assert.match(envExample, /^AI_PROVIDER=gemini$/m);
+  assert.match(envExample, /^GEMINI_API_KEY=$/m);
+  assert.match(envExample, /^GEMINI_MODEL=gemini-3\.6-flash$/m);
+  assert.match(envExample, /^OPENAI_API_KEY=$/m);
+  assert.match(envExample, /^OPENAI_MODEL=gpt-4o-mini$/m);
   console.log('ok - deterministic planning has no AI dependency, ML prediction input, or San Luis fallback');
 }
 

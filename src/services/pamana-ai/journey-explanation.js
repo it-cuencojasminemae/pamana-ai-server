@@ -1,6 +1,6 @@
 'use strict';
 
-const { createOpenAIProvider } = require('./providers/openai-client');
+const { getAIExplainProvider } = require('./providers');
 
 const EXPLANATION_STATUS = Object.freeze({
   AVAILABLE: 'AVAILABLE',
@@ -191,12 +191,13 @@ function sanitizeJourneyExplanationRequest(body) {
 }
 
 function createJourneyExplanationService({
-  provider = createOpenAIProvider(),
+  provider = getAIExplainProvider(),
   now = () => new Date(),
 } = {}) {
   return async function explainJourney(body, signal) {
+    const providerName = provider?.name || null;
     const validation = sanitizeJourneyExplanationRequest(body);
-    if (!validation.ok) return { status: EXPLANATION_STATUS.INVALID_JOURNEY, explanation: null, generatedAt: now().toISOString(), warning: 'Review the selected journey and try again.' };
+    if (!validation.ok) return { status: EXPLANATION_STATUS.INVALID_JOURNEY, provider: providerName, explanation: null, generatedAt: now().toISOString(), warning: 'Review the selected journey and try again.' };
     let result;
     try {
       result = await provider.explainJourney(validation.value, { systemPrompt: SYSTEM_PROMPT, signal });
@@ -205,13 +206,14 @@ function createJourneyExplanationService({
     }
     if (!result.ok) {
       return {
-        status: result.reason === 'NOT_CONFIGURED' ? EXPLANATION_STATUS.NOT_CONFIGURED : EXPLANATION_STATUS.PROVIDER_UNAVAILABLE,
+        status: ['NOT_CONFIGURED', 'INVALID_PROVIDER'].includes(result.reason) ? EXPLANATION_STATUS.NOT_CONFIGURED : EXPLANATION_STATUS.PROVIDER_UNAVAILABLE,
+        provider: providerName,
         explanation: null,
         generatedAt: now().toISOString(),
-        warning: result.reason === 'NOT_CONFIGURED' ? 'Trip explanation is not configured.' : 'Trip explanation is temporarily unavailable.',
+        warning: ['NOT_CONFIGURED', 'INVALID_PROVIDER'].includes(result.reason) ? 'Trip explanation is not configured.' : 'Trip explanation is temporarily unavailable.',
       };
     }
-    return { status: EXPLANATION_STATUS.AVAILABLE, explanation: result.explanation, generatedAt: now().toISOString() };
+    return { status: EXPLANATION_STATUS.AVAILABLE, provider: providerName, explanation: result.explanation, generatedAt: now().toISOString() };
   };
 }
 

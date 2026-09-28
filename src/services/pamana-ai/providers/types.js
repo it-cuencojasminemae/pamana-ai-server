@@ -12,7 +12,9 @@
  * throw. Any failure or timeout resolves to a fixed fallback string instead.
  *
  * @typedef {Object} AIExplainProvider
+ * @property {'gemini'|'openai'|null} name
  * @property {(prompt: string) => Promise<string>} explain
+ * @property {(facts: Object, options?: {systemPrompt?: string, signal?: AbortSignal}) => Promise<{ok: boolean, explanation?: string, reason?: string}>} explainJourney
  */
 
 module.exports = {};
