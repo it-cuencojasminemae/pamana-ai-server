@@ -6,7 +6,7 @@ const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 const { orchestrateTripPlan } = require('../src/services/pamana-journey/trip-plan-orchestrator');
 const { validateTripPlanRequest } = require('../src/services/pamana-journey/trip-plan-request-validator');
 
-const EXPECTED_TRANSPORT_DIGEST = '77776e1a08d971a39b2718a10a116c7748e452900f26931dfbc90acd0377fdae';
+const EXPECTED_TRANSPORT_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
 
 async function main() {
   const client = await connect();
@@ -17,7 +17,7 @@ async function main() {
         (select count(*)::int from routes where planning_enabled is true) as planning_routes,
         (select count(*)::int from route_variants where planning_enabled is true) as planning_variants,
         (select count(*)::int from transport_nodes where planning_enabled is true) as planning_nodes`)).rows[0];
-    assert.deepEqual(counts, { planning_routes: 0, planning_variants: 0, planning_nodes: 0 });
+    assert.deepEqual(counts, { planning_routes: 3, planning_variants: 4, planning_nodes: 4 });
 
     const request = validateTripPlanRequest({
       origin: { lat: 15.05, lng: 120.65, source: 'USER_GPS' },
@@ -38,7 +38,7 @@ async function main() {
     const state = await snapshot(client);
     const digest = crypto.createHash('sha256').update(JSON.stringify(state)).digest('hex');
     assert.equal(digest, EXPECTED_TRANSPORT_DIGEST);
-    console.log('ok - current PostgreSQL state has zero planning routes, variants and nodes; unified planning returns no fabricated journey');
+    console.log('ok - pilot PostgreSQL planning counts are exact; injected empty dependencies still return no fabricated journey');
     console.log('ok - Phase 14 performs zero persistent database writes');
     console.log(`Transport row digest: ${digest}`);
   } finally {

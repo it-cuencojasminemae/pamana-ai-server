@@ -1,0 +1,131 @@
+{
+  "manifest_version": "1.0.0",
+  "activation": "PILOT-MEXICO-SAN-FERNANDO-2026-09-27",
+  "verification": {
+    "status": "FIELD_VERIFIED",
+    "data_mode": "REAL",
+    "verified_at": "2026-09-27T00:00:00.000+08:00",
+    "source_name": "PAMANA project-team prototype field verification",
+    "source_reference": "PILOT-MEXICO-SAN-FERNANDO-2026-09-27; manually supplied transport-point coordinates and regular-commuter confirmation; not AUTHORITATIVE_CURRENT"
+  },
+  "nodes": [
+    {
+      "node_code": "RCH-PSU-MEXICO-FRONT",
+      "latitude": 15.128026422211173,
+      "longitude": 120.69826461388278,
+      "notes": "Field-verified prototype boarding point for direct SM Pampanga jeepney service and tricycle service to Mexico Bayan, and return alighting point for SAN JUAN service. This is not an official terminal designation."
+    },
+    {
+      "node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "latitude": 15.064333794084051,
+      "longitude": 120.72025022065026,
+      "notes": "Field-verified prototype transfer area: alight from PSU-side local transport and board an SM Pampanga-bound Arayat jeepney service. This is not an official terminal designation."
+    },
+    {
+      "node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "latitude": 15.05158520927461,
+      "longitude": 120.69885494898818,
+      "notes": "Field-verified prototype outbound passenger drop-off point at SM City Pampanga Main Gate. No pickup behavior is asserted."
+    },
+    {
+      "node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "latitude": 15.050605637995128,
+      "longitude": 120.69778203294244,
+      "notes": "Field-verified prototype return loading point. Passengers bound for San Juan or PSU Mexico board a SAN JUAN jeepney here; Magalang service is not used as the PSU return service."
+    }
+  ],
+  "routes": [
+    {
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "create": false,
+      "transport_mode": "PUJ_TRADITIONAL",
+      "notes": "Field-verified prototype direct service between PSU Mexico frontage and the SM/Robinsons area. Outbound signboard: SM Pampanga. Return boarding is at Robinsons Starmills Arayat Gate on a SAN JUAN jeepney. Direct regular outbound fare is PHP 30; student payment was reported around PHP 25 and is not encoded as an exact discount. Service was reported generally available only until around 4:30 PM and difficult or unavailable from around 4:30 PM onward; no exact timetable is asserted. Vehicles may leave when full, but no ServicePattern is created because operating days and exact schedule are unknown."
+    },
+    {
+      "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO",
+      "create": false,
+      "transport_mode": "PUJ_TRADITIONAL",
+      "notes": "Existing Arayat–San Fernando via Sta. Ana/Mexico research route reused for the field-verified prototype Mexico Bayan to SM Pampanga segment. Activation applies only to the modeled segment and does not assert every stop, timetable, fleet, or modern-jeep alternative on the full through-route."
+    },
+    {
+      "route_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE",
+      "create": true,
+      "route_name": "PSU Mexico – Mexico Bayan Tricycle Service",
+      "transport_mode": "TRICYCLE",
+      "origin": "Pampanga State University Mexico Campus frontage",
+      "destination": "Mexico Bayan / Sta. Monica Parish Church transfer area",
+      "notes": "Functional PAMANA prototype service identifier for a field-verified tricycle leg. It is not an official LTFRB or LGU route name. Fare, timetable, headway, fleet, and geometry remain unknown."
+    }
+  ],
+  "variants": [
+    {
+      "variant_code": "RCH-SJ-SMROB-OUT",
+      "create": false,
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "display_name": "PSU Mexico / San Juan to SM City Pampanga",
+      "direction": "OUTBOUND",
+      "signboard_text": "SM Pampanga",
+      "start_node_code": "RCH-PSU-MEXICO-FRONT",
+      "end_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "notes": "Field-verified prototype direct outbound service. No intermediate stops, road geometry, travel time, schedule, vehicle availability, wait time, or ETA is asserted."
+    },
+    {
+      "variant_code": "RCH-SJ-SMROB-IN",
+      "create": false,
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "display_name": "Robinsons Starmills Arayat Gate to PSU Mexico / San Juan",
+      "direction": "INBOUND",
+      "signboard_text": "SAN JUAN",
+      "start_node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "end_node_code": "RCH-PSU-MEXICO-FRONT",
+      "notes": "Field-verified prototype return service modeled independently from outbound. The passenger boards a SAN JUAN jeepney; Magalang service is not a PSU Mexico return service. Return fare and schedule remain unknown."
+    },
+    {
+      "variant_code": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT",
+      "create": true,
+      "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO",
+      "display_name": "Mexico Bayan to SM Pampanga segment",
+      "direction": "OUTBOUND",
+      "signboard_text": "SM Pampanga",
+      "start_node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "end_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "notes": "Field-verified prototype segment on the existing Arayat–San Fernando through-route. Regular fare is PHP 14. Exact student payment of PHP 11 is retained as evidence because the current FareRule schema cannot store an exact category amount without inventing a percentage. The reported Palengke San Fernando signboard and modern-jeep alternative remain evidence only and are not collapsed into this selected service."
+    },
+    {
+      "variant_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT",
+      "create": true,
+      "route_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE",
+      "display_name": "PSU Mexico frontage to Mexico Bayan",
+      "direction": "OUTBOUND",
+      "signboard_text": null,
+      "start_node_code": "RCH-PSU-MEXICO-FRONT",
+      "end_node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "notes": "Field-verified functional prototype tricycle leg. Fare, signboard, schedule, wait time, ETA, intermediate stops, and geometry remain unknown."
+    }
+  ],
+  "stops": [
+    { "variant_code": "RCH-SJ-SMROB-OUT", "sequence": 1, "node_code": "RCH-PSU-MEXICO-FRONT", "pickup_allowed": true, "dropoff_allowed": true, "transfer_allowed": false, "instruction_template": "Board the SM Pampanga jeepney at PSU Mexico frontage." },
+    { "variant_code": "RCH-SJ-SMROB-OUT", "sequence": 2, "node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF", "pickup_allowed": false, "dropoff_allowed": true, "transfer_allowed": false, "instruction_template": "Alight at the SM City Pampanga Main Gate drop-off area." },
+    { "variant_code": "RCH-SJ-SMROB-IN", "sequence": 1, "node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD", "pickup_allowed": true, "dropoff_allowed": false, "transfer_allowed": false, "instruction_template": "Board a SAN JUAN jeepney at Robinsons Starmills Arayat Gate." },
+    { "variant_code": "RCH-SJ-SMROB-IN", "sequence": 2, "node_code": "RCH-PSU-MEXICO-FRONT", "pickup_allowed": false, "dropoff_allowed": true, "transfer_allowed": false, "instruction_template": "Alight at PSU Mexico frontage." },
+    { "variant_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT", "sequence": 1, "node_code": "RCH-PSU-MEXICO-FRONT", "pickup_allowed": true, "dropoff_allowed": false, "transfer_allowed": false, "instruction_template": "Board a tricycle at PSU Mexico frontage for Mexico Bayan." },
+    { "variant_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT", "sequence": 2, "node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER", "pickup_allowed": false, "dropoff_allowed": true, "transfer_allowed": true, "instruction_template": "Alight at Mexico Bayan / Sta. Monica and transfer to an SM-bound jeepney." },
+    { "variant_code": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT", "sequence": 1, "node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER", "pickup_allowed": true, "dropoff_allowed": false, "transfer_allowed": true, "instruction_template": "Board the SM Pampanga-bound Arayat jeepney at Mexico Bayan / Sta. Monica." },
+    { "variant_code": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT", "sequence": 2, "node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF", "pickup_allowed": false, "dropoff_allowed": true, "transfer_allowed": false, "instruction_template": "Alight at the SM City Pampanga Main Gate drop-off area." }
+  ],
+  "fare_rules": [
+    {
+      "key": "DIRECT-OUTBOUND-REGULAR-30",
+      "variant_code": "RCH-SJ-SMROB-OUT",
+      "regular_base_fare": 30,
+      "notes": "Exact field-verified prototype regular fare: PHP 30. Student payment was reported around PHP 25; no exact student amount or derived discount percentage is encoded."
+    },
+    {
+      "key": "MEXICO-BAYAN-SM-REGULAR-14",
+      "variant_code": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT",
+      "regular_base_fare": 14,
+      "notes": "Exact field-verified prototype regular fare: PHP 14. Exact reported student payment: PHP 11. The current FareRule schema supports percentages rather than exact category amounts, so no student percentage is invented and computed student fare remains unavailable."
+    }
+  ],
+  "service_patterns": []
+}

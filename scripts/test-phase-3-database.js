@@ -12,10 +12,19 @@ const EXPECTED_LEGACY_COUNTS = Object.freeze({
   passenger_reports: 4,
 });
 
-const NEW_TABLES = [
-  'route_variant_stops',
-  'fare_rules',
-  'service_patterns',
+const PILOT_OPERATIONAL_COUNTS = Object.freeze({
+  route_variant_stops: 8,
+  fare_rules: 2,
+  service_patterns: 0,
+});
+const PILOT_VARIANTS = [
+  'RCH-SJ-SMROB-OUT', 'RCH-SJ-SMROB-IN',
+  'PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT',
+  'PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT',
+];
+const PILOT_ROUTES = [
+  'RCH-SJ-CSF-SM-ROB', 'RCH-ARAYAT-SF-VIA-STAANA-MEXICO',
+  'PILOT-PSU-MEXICO-BAYAN-TRICYCLE',
 ];
 
 function config() {
@@ -46,25 +55,28 @@ async function count(client, table) {
     }
 
     const legacyRoutes = await client.query(
-      `select count(*)::int as count from routes where route_code not like 'RCH-%'`
+      `select count(*)::int as count from routes
+       where route_code not like 'RCH-%' and route_code not like 'PILOT-%'`
     );
     assert.strictEqual(legacyRoutes.rows[0].count, 2, 'legacy route count changed');
 
-    for (const table of NEW_TABLES) {
-      assert.strictEqual(await count(client, table), 0, `${table} was unexpectedly seeded`);
+    for (const [table, expected] of Object.entries(PILOT_OPERATIONAL_COUNTS)) {
+      assert.strictEqual(await count(client, table), expected, `${table} pilot count changed`);
     }
     // Phase 5B adds research variants, never passenger-ready geometry/service.
     const unsafeVariants = await client.query(`select count(*)::int as count from route_variants
-      where planning_enabled is true or verification_status <> 'CORROBORATED_RESEARCH'
+      where variant_code <> all($1::text[]) and (
+      planning_enabled is true or verification_status <> 'CORROBORATED_RESEARCH'
       or operating_status <> 'UNKNOWN' or geometry_source <> 'UNKNOWN'
-      or encoded_polyline is not null or geometry_geojson is not null`);
+      or encoded_polyline is not null or geometry_geojson is not null)`, [PILOT_VARIANTS]);
     assert.strictEqual(unsafeVariants.rows[0].count, 0);
 
     const unsafeRoutes = await client.query(
       `select count(*)::int as count
          from routes
-        where planning_enabled is true
-           or verification_status in ('AUTHORITATIVE_CURRENT', 'FIELD_VERIFIED')`
+        where route_code <> all($1::text[]) and (
+          planning_enabled is true
+          or verification_status in ('AUTHORITATIVE_CURRENT', 'FIELD_VERIFIED'))`, [PILOT_ROUTES]
     );
     assert.strictEqual(unsafeRoutes.rows[0].count, 0, 'legacy routes became planning-ready');
 
@@ -140,8 +152,8 @@ async function count(client, table) {
     assert.strictEqual(permissionByRole.Public, undefined, 'Public must have no Phase 3 permissions');
 
     console.log('ok - legacy rows and San Luis records remain intact');
-    console.log('ok - operational transport knowledge tables remain unseeded');
-    console.log('ok - compatibility records are not planning-ready or authoritative');
+    console.log('ok - operational transport knowledge tables contain only the approved pilot rows');
+    console.log('ok - unrelated compatibility records are not planning-ready or authoritative');
     console.log('ok - accessibility columns support unknown/null');
     console.log('ok - role permissions preserve read-only and administrator boundaries');
   } finally {

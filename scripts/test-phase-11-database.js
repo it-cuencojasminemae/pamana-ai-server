@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 const { findAccessNodes } = require('../src/services/pamana-journey/access-node-finder');
 
-const EXPECTED_PHASE_10_DIGEST = '77776e1a08d971a39b2718a10a116c7748e452900f26931dfbc90acd0377fdae';
+const EXPECTED_PHASE_10_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
 const PROTECTED_NODE_CODES = [
   'RCH-PSU-MEXICO-FRONT',
   'RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER',
@@ -29,12 +29,12 @@ async function main() {
         and latitude is not null
         and longitude is not null
       order by node_code`)).rows;
-    assert.equal(eligibleNodes.length, 0);
+    assert.equal(eligibleNodes.length, 4);
 
     const discovery = await findAccessNodes({
       point: { lat: 14.6, lng: 120.98 },
       nodes: eligibleNodes,
-      router: { routeWalk: async () => { throw new Error('No routing call is expected without eligible nodes'); } },
+      router: { routeWalk: async () => { throw new Error('No routing call is expected outside the pilot radius'); } },
     });
     assert.deepEqual(discovery.candidates, []);
     assert.deepEqual(discovery.failures, []);
@@ -46,10 +46,10 @@ async function main() {
       order by node_code`, [PROTECTED_NODE_CODES])).rows;
     assert.equal(protectedNodes.length, PROTECTED_NODE_CODES.length);
     for (const record of protectedNodes) {
-      assert.equal(record.latitude, null);
-      assert.equal(record.longitude, null);
-      assert.equal(record.planning_enabled, false);
-      assert.equal(record.verification_status, 'CORROBORATED_RESEARCH');
+      assert.notEqual(record.latitude, null);
+      assert.notEqual(record.longitude, null);
+      assert.equal(record.planning_enabled, true);
+      assert.equal(record.verification_status, 'FIELD_VERIFIED');
       assert.equal(record.data_mode, 'REAL');
     }
 
@@ -61,9 +61,9 @@ async function main() {
       order by variant_code`, [PROTECTED_VARIANT_CODES])).rows;
     assert.equal(protectedVariants.length, PROTECTED_VARIANT_CODES.length);
     for (const record of protectedVariants) {
-      assert.equal(record.planning_enabled, false);
-      assert.equal(record.verification_status, 'CORROBORATED_RESEARCH');
-      assert.equal(record.operating_status, 'UNKNOWN');
+      assert.equal(record.planning_enabled, true);
+      assert.equal(record.verification_status, 'FIELD_VERIFIED');
+      assert.equal(record.operating_status, 'ACTIVE');
       assert.equal(record.encoded_polyline, null);
       assert.equal(record.geometry_geojson, null);
     }
@@ -71,8 +71,8 @@ async function main() {
     const state = await snapshot(client);
     const digest = crypto.createHash('sha256').update(JSON.stringify(state)).digest('hex');
     assert.equal(digest, EXPECTED_PHASE_10_DIGEST, 'Phase 11 must not modify PostgreSQL transport rows');
-    console.log('ok - current PostgreSQL data has zero eligible coordinate-bearing access nodes');
-    console.log('ok - Phase 5A/5B research coordinates, geometry and planning flags remain unresolved');
+    console.log('ok - current PostgreSQL data has exactly four eligible coordinate-bearing pilot access nodes');
+    console.log('ok - approved variants are active while transit geometry remains unresolved');
     console.log(`Transport row digest: ${digest}`);
   } finally {
     await client.query('rollback');

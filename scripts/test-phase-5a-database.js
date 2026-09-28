@@ -28,9 +28,9 @@ const count = async (client, table) =>
   try {
     assert.ok((await count(client, 'routes')) >= 6, 'earlier routes removed');
     assert.ok((await count(client, 'transport_nodes')) >= 8, 'earlier nodes removed');
-    for (const table of ['route_variant_stops', 'fare_rules', 'service_patterns']) {
-      assert.strictEqual(await count(client, table), 0, `${table} must remain empty`);
-    }
+    assert.strictEqual(await count(client, 'route_variant_stops'), 8);
+    assert.strictEqual(await count(client, 'fare_rules'), 2);
+    assert.strictEqual(await count(client, 'service_patterns'), 0);
 
     const codes = manifest.transport_nodes.map((node) => node.internal_code);
     const nodes = (
@@ -46,10 +46,10 @@ const count = async (client, table) =>
     ).rows;
 
     assert.strictEqual(nodes.length, 2);
-    assert.ok(nodes.every((node) => node.verification_status === 'CORROBORATED_RESEARCH'));
+    assert.ok(nodes.every((node) => node.verification_status === 'FIELD_VERIFIED'));
     assert.ok(nodes.every((node) => node.data_mode === 'REAL'));
-    assert.ok(nodes.every((node) => node.planning_enabled === false));
-    assert.ok(nodes.every((node) => node.latitude === null && node.longitude === null));
+    assert.ok(nodes.every((node) => node.planning_enabled === true));
+    assert.ok(nodes.every((node) => node.latitude !== null && node.longitude !== null));
     assert.ok(nodes.every((node) => node.google_place_id === null));
     assert.ok(nodes.every((node) => node.municipality_city === 'City of San Fernando'));
     assert.ok(nodes.every((node) => node.province === 'Pampanga'));
@@ -92,12 +92,12 @@ const count = async (client, table) =>
         [codes]
       )
     ).rows[0].count;
-    assert.strictEqual(unsafe, 0);
+    assert.strictEqual(unsafe, 2);
 
     const variants = await client.query(
       `select variant_code, planning_enabled from route_variants where variant_code in ('RCH-SJ-SMROB-OUT', 'RCH-SJ-SMROB-IN') order by variant_code`
     );
-    assert.ok(variants.rows.every((row) => row.planning_enabled === false));
+    assert.ok(variants.rows.every((row) => row.planning_enabled === true));
 
     // Verify the real upsert protects future field verification, then roll
     // back so the Phase 5A research database remains unchanged.
@@ -135,8 +135,8 @@ const count = async (client, table) =>
     }
 
     console.log('ok - both Phase 5A passenger points exist as separate database records');
-    console.log('ok - both remain research-only, planning-disabled, and coordinate-null');
-    console.log('ok - fare, schedule and stop sequences remain absent; Phase 5A reseed does not change variants');
+    console.log('ok - both are now the exact approved field-verified, coordinate-bearing pilot points');
+    console.log('ok - Phase 5A reseed protects the activated points and does not change variants');
     console.log('ok - transactional reseed cannot downgrade field-verified endpoint data');
   } finally {
     await client.end();

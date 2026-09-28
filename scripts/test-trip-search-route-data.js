@@ -91,9 +91,9 @@ async function main() {
       'The direct route must use only the agreed reference map anchors.'
     );
 
-    // Exercise the real controller with the audited records and an empty
-    // observed-trip/location history. That intentionally makes wait time a
-    // fallback, while proving each comparison card retains its own stop list.
+    // Exercise the real controller with the audited compatibility records.
+    // They remain available for historical regression checks, but the shared
+    // planning gate must keep them out of passenger results.
     const vehiclesByRoute = Object.groupBy(vehicleResult.rows, (vehicle) => vehicle.route_code);
     const controllerRoutes = routeResult.rows.map((route) => ({
       id: route.id,
@@ -138,26 +138,10 @@ async function main() {
     };
     await controller.search(ctx);
 
-    const options = ctx.body.data.options;
-    const optionFor = (field) => options.find((option) => option[field]);
-    const cheapest = optionFor('is_cheapest');
-    const fastest = optionFor('is_fastest');
-    const mostReliable = optionFor('is_most_reliable');
-    assert.strictEqual(cheapest.route_code, 'SL-SF-02');
-    assert.strictEqual(fastest.route_code, 'SL-SF-01');
-    assert.strictEqual(mostReliable.route_code, 'SL-SF-01');
-    assert.strictEqual(mostReliable.vehicle.vehicle_number, 'SL-SF-JEEP-03');
-    assert.strictEqual(mostReliable.transfer_count, 0);
-    assert.ok(mostReliable.stops.every((stop) => !/transfer/i.test(stop.name)));
     assert.deepStrictEqual(
-      mostReliable.stops.map((stop) => [stop.documentId, stop.latitude, stop.longitude]),
-      directStops.map((stop) => [stop.document_id, Number(stop.latitude), Number(stop.longitude)])
-    );
-    assert.strictEqual(cheapest.transfer_count, 1);
-    assert.ok(cheapest.stops.some((stop) => /transfer/i.test(stop.name)));
-    assert.ok(
-      !fastest.stops.some((stop) => stop.documentId === cheapest.transfer_stop.documentId),
-      'Fastest map stops must not leak the Cheapest transfer stop.'
+      ctx.body.data.options,
+      [],
+      'Historical San Luis compatibility routes must remain excluded from passenger planning.'
     );
 
     console.log('ok - direct route uses three non-transfer reference anchors in sequence');
@@ -165,7 +149,7 @@ async function main() {
     console.log('ok - direct and transfer routes do not share Route Stop rows');
     console.log('ok - every pilot stop has finite map coordinates');
     console.log('ok - direct route coordinates match the agreed reference anchors');
-    console.log('ok - Cheapest/Fastest/Most Reliable controller results retain their own route-stop coordinates');
+    console.log('ok - historical San Luis compatibility routes remain excluded by the planning gate');
   } finally {
     await client.end();
   }

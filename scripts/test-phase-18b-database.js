@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 
-const EXPECTED_TRANSPORT_DIGEST = '77776e1a08d971a39b2718a10a116c7748e452900f26931dfbc90acd0377fdae';
+const EXPECTED_TRANSPORT_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
 
 async function main() {
   const client = await connect();
@@ -18,12 +18,12 @@ async function main() {
         (select count(*)::int from disruptions) as disruptions,
         (select count(*)::int from disruptions where planning_enabled is true) as planning_disruptions`)).rows[0];
     assert.deepEqual(counts, {
-      planning_routes: 0, planning_variants: 0, planning_nodes: 0,
+      planning_routes: 3, planning_variants: 4, planning_nodes: 4,
       disruptions: 0, planning_disruptions: 0,
     });
     const digest = crypto.createHash('sha256').update(JSON.stringify(await snapshot(client))).digest('hex');
     assert.equal(digest, EXPECTED_TRANSPORT_DIGEST);
-    console.log('ok - production data remains empty for planning and disruptions; no journey can be fabricated');
+    console.log('ok - pilot planning rows are active while disruption data remains empty');
     console.log(`Transport row digest: ${digest}`);
   } finally {
     await client.query('rollback');

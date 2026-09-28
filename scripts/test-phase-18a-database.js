@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 
-const EXPECTED_TRANSPORT_DIGEST = '77776e1a08d971a39b2718a10a116c7748e452900f26931dfbc90acd0377fdae';
+const EXPECTED_TRANSPORT_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
 
 async function main() {
   const client = await connect();
@@ -90,16 +90,16 @@ async function main() {
         (select count(*)::int from route_variants where planning_enabled is true) planning_variants,
         (select count(*)::int from transport_nodes where planning_enabled is true) planning_nodes`)).rows[0];
     assert.equal(counts.planning_disruptions, 0);
-    assert.equal(counts.planning_routes, 0);
-    assert.equal(counts.planning_variants, 0);
-    assert.equal(counts.planning_nodes, 0);
+    assert.equal(counts.planning_routes, 3);
+    assert.equal(counts.planning_variants, 4);
+    assert.equal(counts.planning_nodes, 4);
 
     const transportDigest = crypto.createHash('sha256').update(JSON.stringify(await snapshot(client))).digest('hex');
     assert.equal(transportDigest, EXPECTED_TRANSPORT_DIGEST);
     assert.deepEqual((await client.query('select * from disruptions order by id')).rows, disruptionRows);
     console.log(`Disruption rows: ${counts.disruptions}; digest: ${disruptionDigest}`);
     console.log(`Transport row digest: ${transportDigest}`);
-    console.log('ok - Phase 18A schema is additive, disruption rows are preserved, and planning remains disabled');
+    console.log('ok - Phase 18A schema is additive, disruption rows are preserved, and pilot planning remains unchanged');
     console.log('ok - only LGU and Administrator can use structured options or manage disruptions');
   } finally {
     await client.query('rollback');

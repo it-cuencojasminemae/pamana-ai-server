@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 const { enrichJourneyInformation } = require('../src/services/pamana-journey/journey-information-enricher');
 
-const EXPECTED_TRANSPORT_DIGEST = '77776e1a08d971a39b2718a10a116c7748e452900f26931dfbc90acd0377fdae';
+const EXPECTED_TRANSPORT_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
 
 async function main() {
   const client = await connect();
@@ -18,9 +18,9 @@ async function main() {
         (select count(*)::int from fare_rules) as fare_rules,
         (select count(*)::int from service_patterns) as service_patterns`)).rows[0];
     assert.deepEqual(counts, {
-      planning_variants: 0,
-      planning_nodes: 0,
-      fare_rules: 0,
+      planning_variants: 4,
+      planning_nodes: 4,
+      fare_rules: 2,
       service_patterns: 0,
     });
     const unresolved = enrichJourneyInformation({
@@ -35,7 +35,7 @@ async function main() {
     const state = await snapshot(client);
     const digest = crypto.createHash('sha256').update(JSON.stringify(state)).digest('hex');
     assert.equal(digest, EXPECTED_TRANSPORT_DIGEST);
-    console.log('ok - production has no eligible journey evidence and produces no fabricated wait');
+    console.log('ok - activated pilot journeys still produce no fabricated wait without operational evidence');
     console.log('ok - Phase 13 performs zero database writes');
     console.log(`Transport row digest: ${digest}`);
   } finally {

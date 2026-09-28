@@ -10,9 +10,9 @@ async function main() {
     await client.query('begin');
     const before = await snapshot(client);
     const first = await seed(client);
-    assert.ok(first.records.every((record) => record.action === 'unchanged'), 'Run seed:phase5b before the database regression test');
+    assert.ok(first.records.every((record) => record.action === 'protected'), 'Pilot activation must protect Phase 5B rows');
     const second = await seed(client);
-    assert.ok(second.records.every((record) => record.action === 'unchanged'));
+    assert.ok(second.records.every((record) => record.action === 'protected'));
     assert.deepEqual(await snapshot(client), before, 'Reseeding changed existing data (including San Luis and Phase 5A endpoints)');
 
     for (const [table, key, records] of [
@@ -24,20 +24,21 @@ async function main() {
       assert.equal(rows.length, records.length);
       assert.equal(new Set(rows.map((row) => row[key])).size, records.length);
       for (const row of rows) {
-        assert.equal(row.planning_enabled, false);
-        assert.equal(row.verification_status, 'CORROBORATED_RESEARCH');
+        assert.equal(row.planning_enabled, true);
+        assert.equal(row.verification_status, 'FIELD_VERIFIED');
         assert.equal(row.data_mode, 'REAL');
-        assert.equal(planningEligibilityFor(row).eligible, false);
+        assert.equal(planningEligibilityFor(row, { requireActive: table === 'routes' }).eligible, true);
         if (table === 'transport_nodes') {
-          for (const field of ['latitude', 'longitude', 'google_place_id', 'covered_waiting_area', 'wheelchair_accessible']) assert.equal(row[field], null);
+          for (const field of ['latitude', 'longitude']) assert.notEqual(row[field], null);
+          for (const field of ['google_place_id', 'covered_waiting_area', 'wheelchair_accessible']) assert.equal(row[field], null);
         }
         if (table === 'routes') {
           assert.equal(row.base_fare, null);
           assert.equal(row.estimated_travel_time, null);
-          assert.equal(row.active, false);
+          assert.equal(row.active, true);
         }
         if (table === 'route_variants') {
-          assert.equal(row.operating_status, 'UNKNOWN');
+          assert.equal(row.operating_status, 'ACTIVE');
           assert.equal(row.geometry_source, 'UNKNOWN');
           assert.equal(row.encoded_polyline, null);
           assert.equal(row.geometry_geojson, null);
@@ -54,10 +55,11 @@ async function main() {
         assert.deepEqual(await snapshot(client), protectedBefore);
         await client.query('rollback to savepoint verified_fixture');
       }
-      // Manual edits with weak status are also not overwritten silently.
+      // Activated field evidence is protected from every older research seed.
       await client.query('savepoint edited_fixture');
       await client.query(`update ${table} set notes = 'Manual research edit' where ${key} = $1`, [records[0][key]]);
-      await assert.rejects(seed(client), /reconcile evidence/);
+      const protectedResult = await seed(client);
+      assert.equal(protectedResult.records.find((record) => record.code === records[0][key]).action, 'protected');
       await client.query('rollback to savepoint edited_fixture');
     }
 
@@ -73,7 +75,9 @@ async function main() {
       where v.variant_code = any($1::text[]) order by v.variant_code`, [manifest.variants.map((record) => record.variant_code)])).rows;
     const expected = manifest.variants.map(({ variant_code, route_code, start_node_code, end_node_code }) => ({ variant_code, route_code, start_node_code, end_node_code })).sort((a, b) => a.variant_code.localeCompare(b.variant_code));
     assert.deepEqual(endpoints, expected);
-    for (const table of ['route_variant_stops', 'fare_rules', 'service_patterns']) assert.equal(before[table].length, 0);
+    assert.equal(before.route_variant_stops.length, 8);
+    assert.equal(before.fare_rules.length, 2);
+    assert.equal(before.service_patterns.length, 0);
 
     // Exercise the actual compatibility controller with actual PostgreSQL research
     // rows. Intentionally return them even though its storage filter excludes them.
@@ -89,15 +93,14 @@ async function main() {
     for (const origin of ['San Juan, Mexico', 'Arayat, Pampanga']) {
       const ctx = { query: { origin, destination: 'SM City Pampanga' }, badRequest(message) { throw new Error(message); } };
       await controller.search(ctx);
-      assert.deepEqual(ctx.body.data.options, []);
       assert.equal(filters.planning_enabled, true);
       assert.ok(!filters.verification_status.$in.includes('CORROBORATED_RESEARCH'));
     }
     assert.deepEqual(await snapshot(client), before);
     console.log('ok - real DB seed is idempotent; every prior row and endpoint relation unchanged');
-    console.log('ok - strong evidence protected; manual research edits rejected without overwrite');
-    console.log('ok - two asymmetric variants; no fare, schedule, geometry, coordinates or stop sequence');
-    console.log('ok - actual trip-search controller rejects actual PostgreSQL research routes');
+    console.log('ok - strong evidence and later manual edits remain protected from the research seed');
+    console.log('ok - two asymmetric variants remain protected after controlled pilot activation');
+    console.log('ok - actual trip-search controller retains its strict planning filter');
   } finally {
     await client.query('rollback');
     await client.end();

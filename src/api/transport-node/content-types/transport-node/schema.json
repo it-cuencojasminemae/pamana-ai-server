@@ -22,11 +22,19 @@
     },
     "latitude": {
       "type": "decimal",
+      "columnType": {
+        "type": "decimal",
+        "args": [20, 15]
+      },
       "min": -90,
       "max": 90
     },
     "longitude": {
       "type": "decimal",
+      "columnType": {
+        "type": "decimal",
+        "args": [20, 15]
+      },
       "min": -180,
       "max": 180
     },

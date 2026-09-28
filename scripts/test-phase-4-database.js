@@ -44,9 +44,9 @@ const count = async (client, table) =>
       (await count(client, 'transport_nodes')) >= manifest.transport_node_candidates.length,
       'Phase 4 transport nodes were removed'
     );
-    for (const table of ['route_variant_stops', 'fare_rules', 'service_patterns']) {
-      assert.strictEqual(await count(client, table), 0, `${table} must remain empty`);
-    }
+    assert.strictEqual(await count(client, 'route_variant_stops'), 8);
+    assert.strictEqual(await count(client, 'fare_rules'), 2);
+    assert.strictEqual(await count(client, 'service_patterns'), 0);
 
     const routeCodes = manifest.route_candidates.map((record) => record.internal_code);
     const routes = (
@@ -61,13 +61,20 @@ const count = async (client, table) =>
       )
     ).rows;
     assert.strictEqual(routes.length, routeCodes.length);
-    assert.ok(routes.every((route) => route.planning_enabled === false));
-    assert.ok(routes.every((route) => route.active === false && route.route_status === 'inactive'));
-    assert.ok(routes.every((route) => route.verification_status === 'CORROBORATED_RESEARCH'));
+    const activatedRoute = routes.find((route) => route.route_code === 'RCH-SJ-CSF-SM-ROB');
+    const researchRoutes = routes.filter((route) => route.route_code !== activatedRoute.route_code);
+    assert.equal(activatedRoute.planning_enabled, true);
+    assert.equal(activatedRoute.active, true);
+    assert.equal(activatedRoute.route_status, 'active');
+    assert.equal(activatedRoute.verification_status, 'FIELD_VERIFIED');
+    assert.ok(researchRoutes.every((route) => route.planning_enabled === false));
+    assert.ok(researchRoutes.every((route) => route.active === false && route.route_status === 'inactive'));
+    assert.ok(researchRoutes.every((route) => route.verification_status === 'CORROBORATED_RESEARCH'));
     assert.ok(routes.every((route) => route.data_mode === 'REAL'));
     assert.ok(routes.every((route) => route.base_fare === null));
     assert.ok(routes.every((route) => route.estimated_travel_time === null));
-    assert.ok(routes.every((route) => route.transport_mode === null));
+    assert.equal(activatedRoute.transport_mode, 'PUJ_TRADITIONAL');
+    assert.ok(researchRoutes.every((route) => route.transport_mode === null));
     assert.ok(routes.every((route) => !/San Luis/i.test(JSON.stringify(route))));
 
     const duplicateRoutes = await client.query(
@@ -115,7 +122,7 @@ const count = async (client, table) =>
          (select count(*)::int from routes where route_code like 'RCH-%' and planning_enabled is true) as routes,
          (select count(*)::int from transport_nodes where node_code like 'RCH-%' and planning_enabled is true) as nodes`
     );
-    assert.deepStrictEqual(unsafe.rows[0], { routes: 0, nodes: 0 });
+    assert.deepStrictEqual(unsafe.rows[0], { routes: 2, nodes: 4 });
 
     // Exercise the protection rule against the real database without leaving
     // test data behind. The outer rollback restores the original research row.
@@ -150,9 +157,9 @@ const count = async (client, table) =>
       await client.query('rollback');
     }
 
-    console.log('ok - Phase 4 database rows are unique and planning-disabled');
+    console.log('ok - Phase 4 rows remain unique; only the approved pilot subset is planning-enabled');
     console.log('ok - no fare, travel time, geometry proxy, coordinates, or accessibility guess was stored');
-    console.log('ok - legacy rows remain present and operational tables remain empty');
+    console.log('ok - legacy rows remain present and pilot operational counts are exact');
     console.log('ok - transactional reseed cannot downgrade a field-verified record');
   } finally {
     await client.end();
