@@ -123,6 +123,10 @@ async function main() {
   assert.equal(geminiRequest.config.systemInstruction, SYSTEM_PROMPT);
   assert.equal(geminiRequest.config.responseMimeType, 'application/json');
   assert.equal(geminiRequest.config.responseJsonSchema.additionalProperties, false);
+  assert.equal(geminiRequest.config.maxOutputTokens, 1200);
+  assert.equal(geminiRequest.config.thinkingConfig.thinkingLevel, 'minimal');
+  assert.equal(geminiRequest.config.httpOptions.retryOptions.attempts, 3);
+  assert.deepEqual(geminiRequest.config.httpOptions.retryOptions.httpStatusCodes, [408, 429, 500, 502, 503, 504]);
   assert.doesNotMatch(JSON.stringify(geminiRequest), /test-only-gemini-key/);
   assert.equal(geminiRequest.contents[0].parts[0].text, openAIRequest.input[0].content[0].text);
   assert.match(geminiRequest.contents[0].parts[0].text, /"payableFare":null/);

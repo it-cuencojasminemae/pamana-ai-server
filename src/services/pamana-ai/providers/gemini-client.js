@@ -12,7 +12,16 @@
 // requests start failing with a model-not-found error, check
 // https://ai.google.dev/gemini-api/docs/models for the current free-tier name.
 const DEFAULT_MODEL = 'gemini-3.6-flash';
-const REQUEST_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = 20000;
+const JOURNEY_MAX_OUTPUT_TOKENS = 1200;
+const TRANSIENT_RETRY_OPTIONS = Object.freeze({
+  attempts: 3,
+  initialDelay: 0.5,
+  maxDelay: 2,
+  expBase: 2,
+  jitter: 0.2,
+  httpStatusCodes: [408, 429, 500, 502, 503, 504],
+});
 const FALLBACK_MESSAGE = 'Explanation unavailable right now. Please check the numbers shown above directly.';
 const {
   JOURNEY_OUTPUT_SCHEMA, journeyInput, parseJourneyExplanation, providerFailureReason,
@@ -77,8 +86,12 @@ function createGeminiProvider(options = {}) {
             systemInstruction: systemPrompt,
             responseMimeType: 'application/json',
             responseJsonSchema: JOURNEY_OUTPUT_SCHEMA,
-            maxOutputTokens: 700,
+            maxOutputTokens: JOURNEY_MAX_OUTPUT_TOKENS,
             temperature: 0.2,
+            // Journey explanation is constrained formatting, so keep Gemini
+            // 3.x reasoning minimal and reserve tokens for the JSON result.
+            thinkingConfig: { thinkingLevel: 'minimal' },
+            httpOptions: { retryOptions: TRANSIENT_RETRY_OPTIONS },
             abortSignal: abort.signal,
           },
         });
@@ -97,4 +110,10 @@ function createGeminiProvider(options = {}) {
   };
 }
 
-module.exports = { createGeminiProvider, FALLBACK_MESSAGE, DEFAULT_MODEL };
+module.exports = {
+  createGeminiProvider,
+  FALLBACK_MESSAGE,
+  DEFAULT_MODEL,
+  JOURNEY_MAX_OUTPUT_TOKENS,
+  TRANSIENT_RETRY_OPTIONS,
+};
