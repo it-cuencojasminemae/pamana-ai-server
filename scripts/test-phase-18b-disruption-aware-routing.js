@@ -202,7 +202,7 @@ async function testLoaderAndFailureHandling() {
     validate: () => ({ ok: true, value: {} }),
     orchestrate: async () => { throw new Error('database path and SQL must stay private'); },
   });
-  const ctx = { state: { user: { id: 1 } }, request: { body: {} } };
+  const ctx = { state: { user: { id: 1, role: { name: 'Passenger' } } }, request: { body: {} } };
   await handler(ctx);
   assert.equal(ctx.status, 503);
   assert.deepEqual(ctx.body, { status: 'SERVICE_UNAVAILABLE', message: 'Trip planning is temporarily unavailable.' });

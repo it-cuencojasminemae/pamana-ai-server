@@ -25,6 +25,8 @@ const {
   filterPlanningEligibleRoutes,
   planningCandidateFilters,
 } = require('../../../services/transport-data/planning-eligibility');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit } = require('../../../services/security/request-guard');
 
 // Assumed overhead (wait + walk between legs) added to total journey time
 // for every transfer in a candidate's route - not real headway data, a
@@ -329,9 +331,13 @@ const reasonFor = (option, isRecommended) => {
 
 module.exports = {
   async search(ctx) {
+    if (!enforceRole(ctx, [ROLE.PASSENGER])) return;
+    if (!consumeRateLimit(ctx, 'legacy-trip-search', { limit: 30, windowMs: 60_000 })) return;
     const { origin, destination } = ctx.query;
 
-    if (!origin || !destination) {
+    if (Object.keys(ctx.query || {}).some((key) => !['origin', 'destination', 'explain'].includes(key))
+      || typeof origin !== 'string' || typeof destination !== 'string'
+      || !origin.trim() || !destination.trim() || origin.length > 200 || destination.length > 200) {
       return ctx.badRequest('Both "origin" and "destination" query parameters are required.');
     }
 

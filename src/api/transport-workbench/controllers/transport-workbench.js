@@ -8,6 +8,7 @@ const {
   summarizeRecord,
   validateWorkbenchRecord,
 } = require('../../../services/transport-data/workbench');
+const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
 
 const TRUST_DEFAULTS = Object.freeze({
   planning_enabled: false,
@@ -33,6 +34,19 @@ function entityConfig(ctx) {
   const config = ENTITY_CONFIG[ctx.params.entity];
   if (!config) reject(ctx, ['ENTITY_NOT_SUPPORTED'], 404);
   return config;
+}
+
+function workbenchEnvelope(ctx, config) {
+  const validation = validateDataEnvelope(ctx.request.body, {
+    allowedFields: config.writable, maxBytes: 64 * 1024, allowConfirmations: true,
+  });
+  const confirmations = ctx.request.body?.confirmations;
+  if (!validation.ok || (confirmations && Object.keys(confirmations).some((key) =>
+    !['coordinate', 'geometry', 'order'].includes(key) || typeof confirmations[key] !== 'boolean'))) {
+    reject(ctx, ['REQUEST_SHAPE_INVALID']);
+    return null;
+  }
+  return validation;
 }
 
 function buildFilters(entity, query = {}) {
@@ -138,7 +152,10 @@ function createTransportWorkbenchController({ strapi }) {
       if (!user) return ctx.forbidden('Transport workbench access is limited to LGU and Administrator roles.');
       const config = entityConfig(ctx);
       if (!config) return;
-      const input = pickWritable(ctx.params.entity, ctx.request.body?.data || {});
+      if (!consumeRateLimit(ctx, 'transport-workbench-write', { limit: 30, windowMs: 60_000 })) return;
+      const envelope = workbenchEnvelope(ctx, config);
+      if (!envelope) return;
+      const input = pickWritable(ctx.params.entity, envelope.data);
       const supportsTrust = config.writable.includes('planning_enabled');
       const candidate = { ...(supportsTrust ? TRUST_DEFAULTS : {}), ...input };
       try {
@@ -161,9 +178,12 @@ function createTransportWorkbenchController({ strapi }) {
       if (!user) return ctx.forbidden('Transport workbench access is limited to LGU and Administrator roles.');
       const config = entityConfig(ctx);
       if (!config) return;
+      if (!consumeRateLimit(ctx, 'transport-workbench-write', { limit: 30, windowMs: 60_000 })) return;
+      const envelope = workbenchEnvelope(ctx, config);
+      if (!envelope) return;
       const existing = await strapi.documents(config.uid).findOne({ documentId: ctx.params.documentId, populate: config.populate });
       if (!existing) return ctx.notFound();
-      const input = pickWritable(ctx.params.entity, ctx.request.body?.data || {});
+      const input = pickWritable(ctx.params.entity, envelope.data);
       const candidate = { ...existing, ...input };
       try {
         var relations = await ensureRelations(strapi, ctx.params.entity, candidate);

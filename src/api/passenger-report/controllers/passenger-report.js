@@ -5,6 +5,8 @@ const { DATA_MODE } = require('../../../services/transport-data/planning-eligibi
 const {
   REVIEW_STATUSES, redactReport, validateReportInput, validateTransportContext,
 } = require('../../../services/passenger-report/report-policy');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
 
 const DUPLICATE_WINDOW_MINUTES = 5;
 const SAFE_POPULATE = ['route', 'route_variant', 'transport_node', 'vehicle', 'trip'];
@@ -34,10 +36,13 @@ function contextError(ctx, error) {
 
 module.exports = createCoreController('api::passenger-report.passenger-report', ({ strapi }) => ({
   async create(ctx) {
-    if (!ctx.state.user) return ctx.unauthorized();
+    if (!enforceRole(ctx, [ROLE.PASSENGER])) return;
+    if (!consumeRateLimit(ctx, 'passenger-report', { limit: 6, windowMs: 5 * 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: [...CREATE_FIELDS], maxBytes: 16 * 1024 });
+    if (!envelope.ok) return ctx.badRequest('Report contains unsupported or oversized data.');
     const passengerProfile = await getOwnPassengerProfile(strapi, ctx.state.user.id);
     if (!passengerProfile) return ctx.badRequest('No passenger profile linked to this account.');
-    const input = ctx.request.body?.data;
+    const input = envelope.data;
     if (!input || typeof input !== 'object' || Array.isArray(input)) return ctx.badRequest('Report data is required.');
     if (invalidFields(input, CREATE_FIELDS).length) return ctx.badRequest('Report contains unsupported fields.');
 
@@ -84,7 +89,7 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
   },
 
   async find(ctx) {
-    if (!ctx.state.user) return ctx.unauthorized();
+    if (!enforceRole(ctx, [ROLE.PASSENGER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const reviewer = isReviewer(ctx.state.user);
     const profile = reviewer ? null : await getOwnPassengerProfile(strapi, ctx.state.user.id);
     await this.validateQuery(ctx);
@@ -99,7 +104,7 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
   },
 
   async findOne(ctx) {
-    if (!ctx.state.user) return ctx.unauthorized();
+    if (!enforceRole(ctx, [ROLE.PASSENGER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const reviewer = isReviewer(ctx.state.user);
     const report = await strapi.documents('api::passenger-report.passenger-report').findOne({
       documentId: ctx.params.id, populate: [...SAFE_POPULATE, 'passenger'],
@@ -114,9 +119,12 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
   },
 
   async update(ctx) {
-    if (!ctx.state.user) return ctx.unauthorized();
-    if (!isReviewer(ctx.state.user)) return ctx.forbidden('Only LGU or Administrator reviewers may update report status.');
-    const input = ctx.request.body?.data;
+    if (!enforceRole(ctx, [ROLE.LGU, ROLE.ADMINISTRATOR])) return;
+    const envelope = validateDataEnvelope(ctx.request.body, {
+      allowedFields: ['review_status', 'review_notes'], maxBytes: 4096,
+    });
+    if (!envelope.ok) return ctx.badRequest('Report review contains unsupported or oversized data.');
+    const input = envelope.data;
     if (!input || typeof input !== 'object' || Array.isArray(input)
       || invalidFields(input, new Set(['review_status', 'review_notes'])).length) {
       return ctx.badRequest('Only review status and review notes may be updated.');

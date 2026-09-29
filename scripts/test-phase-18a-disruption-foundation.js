@@ -144,14 +144,14 @@ const orchestrator = read('src/services/pamana-journey/trip-plan-orchestrator.js
 assert.match(orchestrator, /loadEligibleDisruptions/,
   'Phase 18B must consume the unchanged Phase 18A foundation through the unified planner');
 const bootstrap = read('src/index.js');
+const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
 assert.match(bootstrap, /whereNull\('planning_enabled'\)\.update\(\{ planning_enabled: false \}\)/);
 assert.match(bootstrap, /RESEARCH_CANDIDATE/);
 assert.doesNotMatch(bootstrap, /disruptions[\s\S]{0,500}planning_enabled[^\n]*true/i);
-const permissionsBlock = bootstrap.slice(bootstrap.indexOf('const REQUIRED_ROLE_PERMISSIONS'), bootstrap.indexOf('/**', bootstrap.indexOf('const REQUIRED_ROLE_PERMISSIONS')));
-assert.match(permissionsBlock, /LGU:[\s\S]*disruption\.disruption\.create/);
-assert.match(permissionsBlock, /Administrator:[\s\S]*disruption\.disruption\.update/);
-assert.doesNotMatch(permissionsBlock.match(/Passenger:[\s\S]*?Driver:/)?.[0] || '', /disruption\.disruption\.(create|update)/);
-assert.doesNotMatch(permissionsBlock.match(/Driver:[\s\S]*?LGU:/)?.[0] || '', /disruption\.disruption\.(create|update)/);
+assert.ok(ROLE_PERMISSION_MATRIX.LGU.includes('api::disruption.disruption.create'));
+assert.ok(ROLE_PERMISSION_MATRIX.Administrator.includes('api::disruption.disruption.update'));
+assert.ok(!ROLE_PERMISSION_MATRIX.Passenger.some((action) => /disruption\.disruption\.(create|update)/.test(action)));
+assert.ok(!ROLE_PERMISSION_MATRIX.Driver.some((action) => /disruption\.disruption\.(create|update)/.test(action)));
 
 console.log('ok - Phase 18A schema adds explicit optional targets and deterministic effects');
 console.log('ok - trust, data mode, evidence, time, resolution, and GeoJSON validation are conservative');

@@ -4,6 +4,7 @@ const {
   DATA_MODE,
   VERIFICATION_STATUS,
 } = require('./services/transport-data/planning-eligibility');
+const { reconcileRolePermissions } = require('./services/security/access-control');
 
 const ROUTE_TRUTH_TABLES = ['routes', 'route_stops'];
 const OPERATIONAL_DATA_TABLES = [
@@ -18,108 +19,6 @@ const OPERATIONAL_DATA_TABLES = [
   'predictions',
 ];
 
-const ROLE_LOOKUP_ACTION = 'plugin::users-permissions.role.find';
-const TRANSPORT_KNOWLEDGE_CONTENT_TYPES = [
-  'route-variant.route-variant',
-  'route-variant-stop.route-variant-stop',
-  'transport-node.transport-node',
-  'fare-rule.fare-rule',
-  'service-pattern.service-pattern',
-];
-const TRANSPORT_KNOWLEDGE_READ_ACTIONS = TRANSPORT_KNOWLEDGE_CONTENT_TYPES.flatMap(
-  (contentType) => [
-    `api::${contentType}.find`,
-    `api::${contentType}.findOne`,
-  ]
-);
-const TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS = TRANSPORT_KNOWLEDGE_CONTENT_TYPES.flatMap(
-  (contentType) => [
-    `api::${contentType}.find`,
-    `api::${contentType}.findOne`,
-    `api::${contentType}.create`,
-    `api::${contentType}.update`,
-    `api::${contentType}.delete`,
-  ]
-);
-const TRANSPORT_WORKBENCH_ACTIONS = [
-  'api::transport-workbench.transport-workbench.list',
-  'api::transport-workbench.transport-workbench.detail',
-  'api::transport-workbench.transport-workbench.create',
-  'api::transport-workbench.transport-workbench.update',
-];
-const REQUIRED_ROLE_PERMISSIONS = {
-  Passenger: [
-    ROLE_LOOKUP_ACTION,
-    'api::passenger-report.passenger-report.find',
-    'api::passenger-report.passenger-report.findOne',
-    'api::passenger-report.passenger-report.create',
-    'api::passenger-profile.passenger-profile.create',
-    'api::passenger-profile.passenger-profile.find',
-    'api::passenger-profile.passenger-profile.findOne',
-    'api::passenger-profile.passenger-profile.update',
-    'api::trip-search.trip-search.search',
-    'api::pamana-ai.trip-plan.create',
-    'api::pamana-ai.journey-explanation.create',
-    'api::live-vehicle.live-vehicle.list',
-    'api::pamana-demo.pamana-demo.liveVehicles',
-    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
-  ],
-  Driver: [
-    ROLE_LOOKUP_ACTION,
-    'api::trip.trip.find',
-    'api::trip.trip.findOne',
-    'api::trip.trip.create',
-    'api::trip.trip.update',
-    'api::trip.trip.active',
-    'api::trip.trip.options',
-    'api::vehicle.vehicle.update',
-    'api::vehicle-location.vehicle-location.create',
-    'api::pamana-demo.pamana-demo.liveVehicles',
-    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
-  ],
-  LGU: [
-    ROLE_LOOKUP_ACTION,
-    'api::pamana-ai.pamana-ai.waitTime',
-    'api::pamana-ai.pamana-ai.demand',
-    'api::pamana-ai.pamana-ai.supplyDemand',
-    'api::pamana-ai.pamana-ai.dashboardSummary',
-    'api::pamana-ai.trip-plan.create',
-    'api::live-vehicle.live-vehicle.list',
-    'api::pamana-demo.pamana-demo.liveVehicles',
-    'api::disruption.disruption.create',
-    'api::disruption.disruption.find',
-    'api::disruption.disruption.findOne',
-    'api::disruption.disruption.options',
-    'api::disruption.disruption.update',
-    'api::report-confidence.report-confidence.list',
-    'api::passenger-report.passenger-report.find',
-    'api::passenger-report.passenger-report.findOne',
-    'api::passenger-report.passenger-report.update',
-    ...TRANSPORT_KNOWLEDGE_READ_ACTIONS,
-    ...TRANSPORT_WORKBENCH_ACTIONS,
-  ],
-  Administrator: [
-    ROLE_LOOKUP_ACTION,
-    'api::pamana-ai.pamana-ai.waitTime',
-    'api::pamana-ai.pamana-ai.demand',
-    'api::pamana-ai.pamana-ai.supplyDemand',
-    'api::pamana-ai.pamana-ai.dashboardSummary',
-    'api::pamana-ai.trip-plan.create',
-    'api::live-vehicle.live-vehicle.list',
-    'api::pamana-demo.pamana-demo.liveVehicles',
-    'api::disruption.disruption.create',
-    'api::disruption.disruption.find',
-    'api::disruption.disruption.findOne',
-    'api::disruption.disruption.options',
-    'api::disruption.disruption.update',
-    'api::report-confidence.report-confidence.list',
-    'api::passenger-report.passenger-report.find',
-    'api::passenger-report.passenger-report.findOne',
-    'api::passenger-report.passenger-report.update',
-    ...TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS,
-    ...TRANSPORT_WORKBENCH_ACTIONS,
-  ],
-};
 
 /**
  * Strapi sync adds these columns without database-level NOT NULL/default
@@ -227,37 +126,6 @@ async function hardenPassengerReportColumns(strapi) {
  * Keep this idempotent so fresh databases and restored databases behave the
  * same way without requiring a manual permissions change in the admin panel.
  */
-async function ensureRequiredRolePermissions(strapi) {
-  const roleQuery = strapi.db.query('plugin::users-permissions.role');
-  const permissionQuery = strapi.db.query(
-    'plugin::users-permissions.permission'
-  );
-
-  const roles = await roleQuery.findMany({
-    where: { name: { $in: Object.keys(REQUIRED_ROLE_PERMISSIONS) } },
-  });
-
-  for (const role of roles) {
-    for (const action of REQUIRED_ROLE_PERMISSIONS[role.name]) {
-      const existingPermission = await permissionQuery.findOne({
-        where: {
-          action,
-          role: { id: role.id },
-        },
-      });
-
-      if (!existingPermission) {
-        await permissionQuery.create({
-          data: {
-            action,
-            role: role.id,
-          },
-        });
-      }
-    }
-  }
-}
-
 /**
  * `POST /api/auth/local/register` (used by the passenger self-service
  * register flow, see useAuth.ts) assigns whatever role is configured as
@@ -302,7 +170,7 @@ module.exports = {
   async bootstrap({ strapi }) {
     await hardenDataTrustColumns(strapi);
     await hardenPassengerReportColumns(strapi);
-    await ensureRequiredRolePermissions(strapi);
+    await reconcileRolePermissions(strapi);
     await ensureDefaultRegistrationRole(strapi);
   },
 };

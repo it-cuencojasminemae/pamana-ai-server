@@ -11,7 +11,14 @@ module.exports = ({ env }) => [
   },
   'strapi::poweredBy',
   'strapi::query',
-  'strapi::body',
+  {
+    name: 'strapi::body',
+    config: {
+      jsonLimit: '256kb',
+      formLimit: '256kb',
+      textLimit: '256kb',
+    },
+  },
   'strapi::session',
   'strapi::favicon',
   'strapi::public',

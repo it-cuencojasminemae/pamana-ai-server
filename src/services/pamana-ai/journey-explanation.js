@@ -1,6 +1,13 @@
 'use strict';
 
 const { getAIExplainProvider } = require('./providers');
+const { bodyBytes } = require('../security/request-guard');
+
+const MAX_EXPLANATION_REQUEST_BYTES = 64 * 1024;
+const TOP_LEVEL_FIELDS = new Set(['originLabel', 'destinationLabel', 'journey']);
+const JOURNEY_FIELDS = new Set([
+  'transferCount', 'modes', 'legs', 'fareSummary', 'availabilitySummary', 'durationSummary', 'warnings',
+]);
 
 const EXPLANATION_STATUS = Object.freeze({
   AVAILABLE: 'AVAILABLE',
@@ -151,6 +158,9 @@ function sanitizeWarning(value) {
 
 function sanitizeJourneyExplanationRequest(body) {
   if (!plainObject(body) || !plainObject(body.journey)) return { ok: false };
+  if (bodyBytes(body) > MAX_EXPLANATION_REQUEST_BYTES
+    || Object.keys(body).some((key) => !TOP_LEVEL_FIELDS.has(key))
+    || Object.keys(body.journey).some((key) => !JOURNEY_FIELDS.has(key))) return { ok: false };
   const originLabel = safeText(body.originLabel, 200);
   const destinationLabel = safeText(body.destinationLabel, 200);
   const rawLegs = body.journey.legs;
@@ -219,6 +229,7 @@ function createJourneyExplanationService({
 
 module.exports = {
   EXPLANATION_STATUS,
+  MAX_EXPLANATION_REQUEST_BYTES,
   SYSTEM_PROMPT,
   sanitizeJourneyExplanationRequest,
   createJourneyExplanationService,

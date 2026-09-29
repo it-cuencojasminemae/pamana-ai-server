@@ -92,19 +92,19 @@ async function testEndpoint() {
   });
   assert.equal(unauthorized, true);
 
-  const disabled = { state: { user: { id: 1 } }, query: {} };
+  const disabled = { state: { user: { id: 1, role: { name: 'Passenger' } } }, query: {} };
   await createLiveVehiclesHandler({ enabled: () => false })(disabled);
   assert.equal(disabled.status, 403);
   assert.equal(disabled.body.status, 'SIMULATION_DISABLED');
   assert.deepEqual(disabled.body.vehicles, []);
 
-  const enabled = { state: { user: { id: 1 } }, query: { elapsedSeconds: '15' } };
+  const enabled = { state: { user: { id: 2, role: { name: 'Passenger' } } }, query: { elapsedSeconds: '15' } };
   await createLiveVehiclesHandler({ enabled: () => true, now: () => NOW })(enabled);
   assert.equal(enabled.status, 200);
   assert.equal(enabled.body.status, 'SIMULATION_READY');
   assert.equal(enabled.body.vehicles.length, 3);
 
-  const invalid = { state: { user: { id: 1 } }, query: { scenario: 'not-allowed' } };
+  const invalid = { state: { user: { id: 3, role: { name: 'Passenger' } } }, query: { scenario: 'not-allowed' } };
   await createLiveVehiclesHandler({ enabled: () => true, now: () => NOW })(invalid);
   assert.equal(invalid.status, 400);
   assert.equal(invalid.body.status, 'INVALID_SCENARIO');

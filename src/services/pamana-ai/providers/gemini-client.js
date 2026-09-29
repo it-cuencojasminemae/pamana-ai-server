@@ -62,8 +62,8 @@ function createGeminiProvider(options = {}) {
         // SDK's response, but handled defensively in case that changes.
         const text = typeof response?.text === 'function' ? response.text() : response?.text;
         return (text && String(text).trim()) || FALLBACK_MESSAGE;
-      } catch (error) {
-        console.error(`[pamana-ai] Gemini provider failed: ${error.message}`);
+      } catch {
+        console.error('[pamana-ai] Gemini provider unavailable');
         return FALLBACK_MESSAGE;
       }
     },

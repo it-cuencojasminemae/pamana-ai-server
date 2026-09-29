@@ -3,6 +3,8 @@
 const { isDemoModeEnabled } = require('../../../services/pamana-demo/demo-config');
 const { listScenarios } = require('../../../services/pamana-demo/scenario-loader');
 const { simulateScenarioSnapshot } = require('../../../services/pamana-demo/vehicle-simulator');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit } = require('../../../services/security/request-guard');
 
 const serverStartedAt = new Date();
 
@@ -13,7 +15,12 @@ function createLiveVehiclesHandler({
   simulate = simulateScenarioSnapshot,
 } = {}) {
   return async function liveVehicles(ctx) {
-    if (!ctx.state?.user) return ctx.unauthorized('Authentication is required.');
+    if (!enforceRole(ctx, [ROLE.PASSENGER, ROLE.DRIVER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
+    if (!consumeRateLimit(ctx, 'demo-live-vehicles', { limit: 60, windowMs: 60_000 })) return;
+    if (Object.keys(ctx.query || {}).some((key) => !['scenario', 'elapsedSeconds'].includes(key))
+      || (ctx.query?.scenario !== undefined && (typeof ctx.query.scenario !== 'string' || ctx.query.scenario.length > 80))) {
+      return ctx.badRequest('Simulation query is invalid.');
+    }
     if (!enabled()) {
       ctx.status = 403;
       ctx.body = Object.freeze({

@@ -273,8 +273,8 @@ async function testAuthenticationAndDependencyBoundary() {
   assert.equal(called, true);
   assert.equal(ctx.status, 200);
 
-  const bootstrapSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'index.js'), 'utf8');
-  assert.match(bootstrapSource, /Passenger:[\s\S]*api::pamana-ai\.trip-plan\.create/);
+  const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
+  assert.ok(ROLE_PERMISSION_MATRIX.Passenger.includes('api::pamana-ai.trip-plan.create'));
   const dependencyFiles = [
     'src/api/pamana-ai/controllers/trip-plan.js',
     ...fs.readdirSync(path.join(__dirname, '..', 'src', 'services', 'pamana-journey'))

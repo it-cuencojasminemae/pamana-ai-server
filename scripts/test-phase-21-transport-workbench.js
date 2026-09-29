@@ -106,15 +106,15 @@ assert.ok(validateServicePattern({
 const controller = read('src/api/transport-workbench/controllers/transport-workbench.js');
 const routes = read('src/api/transport-workbench/routes/transport-workbench.js');
 const bootstrap = read('src/index.js');
+const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
 const graph = read('src/services/pamana-journey/graph-builder.js');
 const controllerModule = require('../src/api/transport-workbench/controllers/transport-workbench');
 assert.match(controller, /authenticatedWorkbenchUser/);
 assert.match(controller, /ctx\.forbidden/);
 assert.match(routes, /transport-workbench\/:entity/);
-assert.match(bootstrap, /TRANSPORT_WORKBENCH_ACTIONS/);
-assert.doesNotMatch(bootstrap.match(/Passenger:[\s\S]*?Driver:/)?.[0] || '', /transport-workbench/);
-assert.doesNotMatch(bootstrap.match(/Driver:[\s\S]*?LGU:/)?.[0] || '', /transport-workbench/);
-assert.match(bootstrap.match(/LGU:[\s\S]*?Administrator:/)?.[0] || '', /TRANSPORT_WORKBENCH_ACTIONS/);
+assert.ok(!ROLE_PERMISSION_MATRIX.Passenger.some((action) => action.includes('transport-workbench')));
+assert.ok(!ROLE_PERMISSION_MATRIX.Driver.some((action) => action.includes('transport-workbench')));
+assert.ok(ROLE_PERMISSION_MATRIX.LGU.some((action) => action.includes('transport-workbench')));
 assert.match(graph, /forward-only ride edges/);
 assert.doesNotMatch(controller, /reverse.*stop|auto.*reverse/i);
 

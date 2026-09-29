@@ -146,10 +146,13 @@ assert.doesNotMatch(backfill, /\b(insert into|delete from|truncate|drop table|dr
 assert.doesNotMatch(backfill, /planning_enabled\s*=\s*true/i);
 assert.doesNotMatch(backfill, /San Juan/i);
 
-const bootstrap = read('src', 'index.js');
-assert.match(bootstrap, /TRANSPORT_KNOWLEDGE_READ_ACTIONS/);
-assert.match(bootstrap, /TRANSPORT_KNOWLEDGE_ADMIN_ACTIONS/);
-assert.doesNotMatch(bootstrap, /Public\s*:/);
+const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
+for (const role of ['Passenger', 'Driver', 'LGU']) {
+  assert.ok(ROLE_PERMISSION_MATRIX[role].includes('api::transport-node.transport-node.find'));
+  assert.ok(!ROLE_PERMISSION_MATRIX[role].includes('api::transport-node.transport-node.update'));
+}
+assert.ok(ROLE_PERMISSION_MATRIX.Administrator.includes('api::transport-node.transport-node.update'));
+assert.equal(ROLE_PERMISSION_MATRIX.Public, undefined);
 
 console.log('ok - legacy Route, RouteStop, Vehicle, Trip, and Driver schemas remain compatible');
 console.log('ok - directional transport knowledge content types and relations exist');

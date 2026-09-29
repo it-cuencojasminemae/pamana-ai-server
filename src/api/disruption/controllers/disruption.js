@@ -7,6 +7,8 @@ const {
   relationDocumentId,
   validateDisruption,
 } = require('../../../services/disruption/disruption-foundation');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
 
 const ROLE_SOURCE_LABELS = Object.freeze({
   lgu: 'lgu',
@@ -66,6 +68,7 @@ function rejectValidation(ctx, errors) {
 
 module.exports = createCoreController('api::disruption.disruption', ({ strapi }) => ({
   async options(ctx) {
+    if (!enforceRole(ctx, [ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const [routes, variants, nodes] = await Promise.all([
       strapi.documents('api::route.route').findMany({
         fields: ['route_name', 'route_code', 'route_status', 'planning_enabled'],
@@ -113,7 +116,11 @@ module.exports = createCoreController('api::disruption.disruption', ({ strapi })
   },
 
   async create(ctx) {
-    const requested = normalizeRelationValues(pickWritable(ctx.request.body?.data));
+    if (!enforceRole(ctx, [ROLE.LGU, ROLE.ADMINISTRATOR])) return;
+    if (!consumeRateLimit(ctx, 'disruption-write', { limit: 30, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: WRITABLE_FIELDS, maxBytes: 64 * 1024 });
+    if (!envelope.ok) return ctx.badRequest('Disruption request contains unsupported or oversized data.');
+    const requested = normalizeRelationValues(pickWritable(envelope.data));
     const isAdministrator = roleIsAdministrator(ctx.state.user);
     const roleErrors = enforceTrustManagementRole(requested, { isAdministrator });
     if (roleErrors.length) return rejectValidation(ctx, roleErrors);
@@ -140,13 +147,17 @@ module.exports = createCoreController('api::disruption.disruption', ({ strapi })
   },
 
   async update(ctx) {
+    if (!enforceRole(ctx, [ROLE.LGU, ROLE.ADMINISTRATOR])) return;
+    if (!consumeRateLimit(ctx, 'disruption-write', { limit: 30, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: WRITABLE_FIELDS, maxBytes: 64 * 1024 });
+    if (!envelope.ok) return ctx.badRequest('Disruption request contains unsupported or oversized data.');
     const existing = await strapi.documents('api::disruption.disruption').findOne({
       documentId: ctx.params.id,
       populate: ['affected_route', 'affected_route_variant', 'affected_transport_node'],
     });
     if (!existing) return ctx.notFound('Disruption not found.');
 
-    const requested = normalizeRelationValues(pickWritable(ctx.request.body?.data));
+    const requested = normalizeRelationValues(pickWritable(envelope.data));
     const isAdministrator = roleIsAdministrator(ctx.state.user);
     const roleErrors = enforceTrustManagementRole(requested, { isAdministrator, existing });
     if (roleErrors.length) return rejectValidation(ctx, roleErrors);

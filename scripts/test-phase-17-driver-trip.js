@@ -109,7 +109,7 @@ const inbound = { ...outbound, id: 41, documentId: 'variant-in', direction: 'INB
     trip: fs.readFileSync(path.join(__dirname, '..', 'src/api/trip/controllers/trip.js'), 'utf8'),
     location: fs.readFileSync(path.join(__dirname, '..', 'src/api/vehicle-location/controllers/vehicle-location.js'), 'utf8'),
     vehicle: fs.readFileSync(path.join(__dirname, '..', 'src/api/vehicle/controllers/vehicle.js'), 'utf8'),
-    permissions: fs.readFileSync(path.join(__dirname, '..', 'src/index.js'), 'utf8'),
+    permissions: fs.readFileSync(path.join(__dirname, '..', 'src/services/security/access-control.js'), 'utf8'),
   };
   assert.match(files.trip, /vehicleConflict/);
   assert.match(files.trip, /route_variant: variant\.id/);

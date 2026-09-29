@@ -116,6 +116,29 @@ function validateDisruption(record, {
   const variantId = relationDocumentId(record.affected_route_variant);
   const nodeId = relationDocumentId(record.affected_transport_node);
 
+  const boundedText = (value, maximum, required = false) => {
+    if (value == null || value === '') return !required;
+    return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= maximum;
+  };
+  if (!boundedText(record.title, 160, true)) errors.push('TITLE_INVALID');
+  if (!boundedText(record.description, 2000)) errors.push('DESCRIPTION_INVALID');
+  if (!boundedText(record.notes, 2000)) errors.push('NOTES_INVALID');
+  if (!boundedText(record.resolution_notes, 1000)) errors.push('RESOLUTION_NOTES_INVALID');
+  if (!boundedText(record.source_name, 160)) errors.push('SOURCE_NAME_INVALID');
+  if (!boundedText(record.source_reference, 500)) errors.push('SOURCE_REFERENCE_INVALID');
+  if (!boundedText(record.source_url, 1000)) errors.push('SOURCE_URL_INVALID');
+  const hasLatitude = record.latitude !== null && record.latitude !== undefined && record.latitude !== '';
+  const hasLongitude = record.longitude !== null && record.longitude !== undefined && record.longitude !== '';
+  if (hasLatitude !== hasLongitude) errors.push('COORDINATE_PAIR_REQUIRED');
+  if (hasLatitude && hasLongitude) {
+    const lat = Number(record.latitude);
+    const lng = Number(record.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)
+      || lat < -90 || lat > 90 || lng < -180 || lng > 180 || (lat === 0 && lng === 0)) {
+      errors.push('COORDINATES_INVALID');
+    }
+  }
+
   if ((requireEffect || record.effect != null) && !effectValues.has(record.effect)) {
     errors.push('EFFECT_INVALID_OR_MISSING');
   }

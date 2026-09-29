@@ -20,6 +20,9 @@ const { predictWaitTime } = require('../../../services/pamana-ai/wait-time');
 const { predictDemand } = require('../../../services/pamana-ai/demand');
 const { analyzeSupplyDemand } = require('../../../services/pamana-ai/supply-demand');
 const { explainWaitTime } = require('../../../services/pamana-ai/explain');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+
+const ANALYTICS_ROLES = [ROLE.LGU, ROLE.ADMINISTRATOR];
 
 const truthy = (value) => value === 'true' || value === '1';
 
@@ -45,6 +48,7 @@ async function resolveStopId(strapi, stopParam) {
 
 module.exports = {
   async waitTime(ctx) {
+    if (!enforceRole(ctx, ANALYTICS_ROLES)) return;
     const routeId = await resolveRouteId(strapi, ctx.query.route);
     if (!routeId) return ctx.badRequest('"route" (documentId) is required and must exist.');
 
@@ -58,6 +62,7 @@ module.exports = {
   },
 
   async demand(ctx) {
+    if (!enforceRole(ctx, ANALYTICS_ROLES)) return;
     const routeId = await resolveRouteId(strapi, ctx.query.route);
     if (!routeId) return ctx.badRequest('"route" (documentId) is required and must exist.');
     const stopId = await resolveStopId(strapi, ctx.query.stop);
@@ -68,6 +73,7 @@ module.exports = {
   },
 
   async supplyDemand(ctx) {
+    if (!enforceRole(ctx, ANALYTICS_ROLES)) return;
     const routeId = await resolveRouteId(strapi, ctx.query.route);
     if (!routeId) return ctx.badRequest('"route" (documentId) is required and must exist.');
     const stopId = await resolveStopId(strapi, ctx.query.stop);
@@ -78,6 +84,7 @@ module.exports = {
   },
 
   async dashboardSummary(ctx) {
+    if (!enforceRole(ctx, ANALYTICS_ROLES)) return;
     const routeId = await resolveRouteId(strapi, ctx.query.route);
     if (!routeId) return ctx.badRequest('"route" (documentId) is required and must exist.');
     const hour = ctx.query.hour !== undefined ? Number(ctx.query.hour) : undefined;

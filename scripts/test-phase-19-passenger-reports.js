@@ -54,12 +54,12 @@ async function contextTests() {
 async function main() {
   await contextTests();
   const controller = read('src/api/passenger-report/controllers/passenger-report.js');
-  const index = read('src/index.js');
-  assert.match(controller, /if \(!ctx\.state\.user\) return ctx\.unauthorized/);
-  assert.match(controller, /Only LGU or Administrator reviewers/);
-  assert.match(index, /Passenger[\s\S]*passenger-report\.passenger-report\.create/);
-  assert.match(index, /LGU[\s\S]*passenger-report\.passenger-report\.update/);
-  assert.match(index, /Administrator[\s\S]*passenger-report\.passenger-report\.update/);
+  const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
+  assert.match(controller, /enforceRole\(ctx, \[ROLE\.PASSENGER\]\)/);
+  assert.match(controller, /enforceRole\(ctx, \[ROLE\.LGU, ROLE\.ADMINISTRATOR\]\)/);
+  assert.ok(ROLE_PERMISSION_MATRIX.Passenger.includes('api::passenger-report.passenger-report.create'));
+  assert.ok(ROLE_PERMISSION_MATRIX.LGU.includes('api::passenger-report.passenger-report.update'));
+  assert.ok(ROLE_PERMISSION_MATRIX.Administrator.includes('api::passenger-report.passenger-report.update'));
   assert.doesNotMatch(controller, /documents\('api::disruption\.disruption'\).*create/s);
   assert.doesNotMatch(controller, /documents\('api::vehicle\.vehicle'\).*update/s);
   assert.doesNotMatch(controller, /planning_enabled\s*:/);

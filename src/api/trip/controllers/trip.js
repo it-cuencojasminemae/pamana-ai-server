@@ -6,6 +6,8 @@ const {
   endTripData,
   startTripData,
 } = require('../../../services/driver-trip/driver-trip-policy');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
 
 const ownDriver = (strapi, userId) => strapi.documents('api::driver.driver').findFirst({
   filters: { user: { id: userId } },
@@ -21,6 +23,7 @@ const endpointLabel = (node, fallback) => node?.name || node?.node_name || fallb
 
 module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   async active(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication is required.');
     const driver = await ownDriver(strapi, userId);
@@ -91,6 +94,7 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   },
 
   async options(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication is required.');
     const driver = await ownDriver(strapi, userId);
@@ -153,13 +157,17 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   },
 
   async create(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
+    if (!consumeRateLimit(ctx, 'driver-trip-lifecycle', { limit: 20, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: ['route_variant'], maxBytes: 2048 });
+    if (!envelope.ok) return ctx.badRequest('Trip request contains unsupported or oversized data.');
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication is required.');
     const driver = await ownDriver(strapi, userId);
     if (!driver) return ctx.badRequest('No driver profile linked to this account.');
     if (!driver.vehicle) return ctx.badRequest('No vehicle assigned to this driver.');
 
-    const routeVariantDocumentId = ctx.request.body?.data?.route_variant;
+    const routeVariantDocumentId = envelope.data.route_variant;
     if (typeof routeVariantDocumentId !== 'string' || !routeVariantDocumentId.trim()) {
       return ctx.badRequest('A directional "route_variant" is required.');
     }
@@ -199,6 +207,10 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   },
 
   async update(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
+    if (!consumeRateLimit(ctx, 'driver-trip-lifecycle', { limit: 20, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: ['trip_status'], maxBytes: 1024 });
+    if (!envelope.ok) return ctx.badRequest('Trip update contains unsupported or oversized data.');
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication is required.');
     const driver = await ownDriver(strapi, userId);
@@ -210,7 +222,7 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
     if (!trip || trip.driver?.id !== driver.id) return ctx.notFound();
     if (trip.trip_status !== 'active') return ctx.badRequest('Only an active trip can be ended.');
 
-    const ending = endTripData(ctx.request.body?.data?.trip_status);
+    const ending = endTripData(envelope.data.trip_status);
     if (!ending.valid) {
       return ctx.badRequest('"trip_status" must be "completed" or "cancelled".');
     }
@@ -230,6 +242,7 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   },
 
   async find(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const driver = ctx.state.user?.id ? await ownDriver(strapi, ctx.state.user.id) : null;
     if (driver) {
       const ownTrips = await strapi.documents('api::trip.trip').findMany({
@@ -242,6 +255,7 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
   },
 
   async findOne(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const driver = ctx.state.user?.id ? await ownDriver(strapi, ctx.state.user.id) : null;
     if (driver) {
       const trip = await strapi.documents('api::trip.trip').findOne({ documentId: ctx.params.id, populate: ['driver'] });

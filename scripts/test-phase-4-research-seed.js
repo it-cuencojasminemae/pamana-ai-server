@@ -128,6 +128,7 @@ async function main() {
   };
   const controller = require('../src/api/trip-search/controllers/trip-search');
   const ctx = {
+    state: { user: { id: 1, role: { name: 'Passenger' } } },
     query: {
       origin: 'San Juan, Mexico, Pampanga',
       destination: 'City of San Fernando, Pampanga',

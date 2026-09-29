@@ -49,8 +49,8 @@ function createOpenAIProvider(options = {}) {
 
         const text = response?.choices?.[0]?.message?.content?.trim();
         return text || FALLBACK_MESSAGE;
-      } catch (error) {
-        console.error(`[pamana-ai] OpenAI provider failed: ${error.message}`);
+      } catch {
+        console.error('[pamana-ai] OpenAI provider unavailable');
         return FALLBACK_MESSAGE;
       }
     },

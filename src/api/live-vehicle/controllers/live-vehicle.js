@@ -1,6 +1,7 @@
 'use strict';
 
 const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
 
 /**
  * live-vehicle controller
@@ -14,7 +15,12 @@ const { DATA_MODE } = require('../../../services/transport-data/planning-eligibi
 
 module.exports = {
   async list(ctx) {
+    if (!enforceRole(ctx, [ROLE.PASSENGER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const { route } = ctx.query;
+    if (Object.keys(ctx.query || {}).some((key) => key !== 'route')
+      || (route !== undefined && (typeof route !== 'string' || !/^[A-Za-z0-9_-]{8,80}$/.test(route)))) {
+      return ctx.badRequest('Live vehicle query is invalid.');
+    }
 
     const filters = { trip_status: 'active' };
 

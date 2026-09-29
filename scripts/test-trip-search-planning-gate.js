@@ -79,6 +79,7 @@ global.strapi = {
 async function main() {
   const controller = require('../src/api/trip-search/controllers/trip-search');
   const ctx = {
+    state: { user: { id: 1, role: { name: 'Passenger' } } },
     query: { origin: 'Origin, Pampanga', destination: 'Destination, Pampanga' },
     badRequest(message) {
       throw new Error(message);

@@ -91,7 +91,7 @@ async function main() {
     } };
     const controller = require('../src/api/trip-search/controllers/trip-search');
     for (const origin of ['San Juan, Mexico', 'Arayat, Pampanga']) {
-      const ctx = { query: { origin, destination: 'SM City Pampanga' }, badRequest(message) { throw new Error(message); } };
+      const ctx = { state: { user: { id: 1, role: { name: 'Passenger' } } }, query: { origin, destination: 'SM City Pampanga' }, badRequest(message) { throw new Error(message); } };
       await controller.search(ctx);
       assert.equal(filters.planning_enabled, true);
       assert.ok(!filters.verification_status.$in.includes('CORROBORATED_RESEARCH'));

@@ -2,6 +2,8 @@
 
 const { validateTripPlanRequest } = require('../../../services/pamana-journey/trip-plan-request-validator');
 const { orchestrateTripPlan } = require('../../../services/pamana-journey/trip-plan-orchestrator');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit } = require('../../../services/security/request-guard');
 
 function createTripPlanHandler({
   validate = validateTripPlanRequest,
@@ -9,7 +11,8 @@ function createTripPlanHandler({
   now = () => new Date(),
 } = {}) {
   return async function tripPlan(ctx) {
-    if (!ctx.state?.user) return ctx.unauthorized('Authentication is required.');
+    if (!enforceRole(ctx, [ROLE.PASSENGER, ROLE.LGU, ROLE.ADMINISTRATOR])) return;
+    if (!consumeRateLimit(ctx, 'trip-plan', { limit: 30, windowMs: 60_000 })) return;
     const validation = validate(ctx.request?.body, { now });
     if (!validation.ok) {
       ctx.status = 400;

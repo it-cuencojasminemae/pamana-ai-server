@@ -5,9 +5,17 @@ const {
   validateCoordinates,
   validateRecordedAt,
 } = require('../../../services/driver-trip/driver-trip-policy');
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
+
+const GPS_FIELDS = ['latitude', 'longitude', 'speed', 'heading', 'recorded_at'];
 
 module.exports = createCoreController('api::vehicle-location.vehicle-location', ({ strapi }) => ({
   async create(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
+    if (!consumeRateLimit(ctx, 'driver-gps', { limit: 120, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: GPS_FIELDS, maxBytes: 4096 });
+    if (!envelope.ok) return ctx.badRequest('GPS update contains unsupported or oversized data.');
     const userId = ctx.state.user?.id;
     if (!userId) return ctx.unauthorized('Authentication is required.');
     const driver = await strapi.documents('api::driver.driver').findFirst({
@@ -30,7 +38,7 @@ module.exports = createCoreController('api::vehicle-location.vehicle-location', 
       return ctx.forbidden('The active vehicle route variant does not match this trip.');
     }
 
-    const { latitude, longitude, speed, heading, recorded_at } = ctx.request.body?.data || {};
+    const { latitude, longitude, speed, heading, recorded_at } = envelope.data;
     const coordinates = validateCoordinates(latitude, longitude);
     if (!coordinates.valid) return ctx.badRequest('A valid non-zero latitude and longitude are required.');
     const timestamp = validateRecordedAt(recorded_at, { tripStartedAt: activeTrip.started_at });

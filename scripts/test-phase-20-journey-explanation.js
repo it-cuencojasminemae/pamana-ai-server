@@ -28,9 +28,9 @@ const fare = {
   discountType: null, sourceSummary: null, verificationStatus: null, warnings: ['Fare unavailable'],
 };
 const request = {
-  originLabel: 'PSU Mexico', destinationLabel: 'SM Pampanga', email: 'must-not-leak@example.com',
+  originLabel: 'PSU Mexico', destinationLabel: 'SM Pampanga',
   journey: {
-    id: 'internal-id', transferCount: 0, modes: ['PUJ_TRADITIONAL'], geometry: { type: 'LineString' },
+    transferCount: 0, modes: ['PUJ_TRADITIONAL'],
     legs: [{
       sequence: 1, type: 'TRANSIT', transportMode: 'PUJ_TRADITIONAL',
       route: { id: 'internal-route-id', code: 'RCH-SJ-CSF-SM-ROB' },
@@ -49,7 +49,6 @@ const request = {
       message: 'Expect limited service', severity: 'MEDIUM', startsAt: '2026-09-28T00:00:00Z', endsAt: null,
       geometry: { type: 'Point', coordinates: [120.7, 15.1] },
     }],
-    passengerEmail: 'must-not-leak@example.com',
   },
 };
 
@@ -57,7 +56,7 @@ async function main() {
   const validation = sanitizeJourneyExplanationRequest(request);
   assert.equal(validation.ok, true);
   const serialized = JSON.stringify(validation.value);
-  assert.doesNotMatch(serialized, /internal-id|secret-node|must-not-leak|latitude|longitude|geometry|disruptionId/);
+  assert.doesNotMatch(serialized, /internal-route-id|secret-node|latitude|longitude|geometry|disruptionId/);
   assert.match(serialized, /RCH-SJ-SMROB-OUT/);
   assert.equal(validation.value.legs[0].fare.status, 'UNKNOWN');
   assert.equal(validation.value.legs[0].fare.payableFare, null);
@@ -194,14 +193,14 @@ async function main() {
   await handler(unauthorized);
   assert.equal(unauthorized.status, 401);
   assert.equal(called, false);
-  const authorized = { state: { user: { id: 1 } }, request: { body: request } };
+  const authorized = { state: { user: { id: 1, role: { name: 'Passenger' } } }, request: { body: request } };
   await handler(authorized);
   assert.equal(authorized.status, 200);
   assert.equal(called, true);
   console.log('ok - endpoint is authenticated and provider failure never affects the deterministic journey');
 
   const routes = read('src/api/pamana-ai/routes/pamana-ai.js');
-  const bootstrap = read('src/index.js');
+  const { ROLE_PERMISSION_MATRIX } = require('../src/services/security/access-control');
   const planner = read('src/services/pamana-journey/trip-plan-orchestrator.js');
   const envExample = read('.env.example');
   const phase20 = [
@@ -211,7 +210,7 @@ async function main() {
     read('src/api/pamana-ai/controllers/journey-explanation.js'),
   ].join('\n');
   assert.match(routes, /POST[\s\S]*\/pamana-ai\/journey-explanation/);
-  assert.match(bootstrap, /api::pamana-ai\.journey-explanation\.create/);
+  assert.ok(ROLE_PERMISSION_MATRIX.Passenger.includes('api::pamana-ai.journey-explanation.create'));
   assert.doesNotMatch(planner, /OpenAI|journey-explanation|pamana-ai/);
   assert.doesNotMatch(phase20, /predictWaitTime|predictDemand|analyzeSupplyDemand|San Luis/i);
   assert.doesNotMatch(phase20, /NUXT_PUBLIC|password|passengerEmail/);

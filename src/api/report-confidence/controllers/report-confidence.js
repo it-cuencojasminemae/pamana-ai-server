@@ -11,6 +11,7 @@
  * eventually supersede/inform this.
  */
 
+const { ROLE, enforceRole } = require('../../../services/security/access-control');
 const RECENCY_WINDOW_MINUTES = 15;
 
 const confidenceLevelFor = (count) => {
@@ -22,6 +23,7 @@ const confidenceLevelFor = (count) => {
 
 module.exports = {
   async list(ctx) {
+    if (!enforceRole(ctx, [ROLE.LGU, ROLE.ADMINISTRATOR])) return;
     const { route, stop } = ctx.query;
 
     if (!route) {
