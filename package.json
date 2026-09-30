@@ -68,6 +68,9 @@
     "test:legacy-trip-search-route-data": "node --env-file=.env scripts/test-trip-search-route-data.js",
     "legacy:update:pilot-corridor-reference-anchors": "node --env-file=.env scripts/update-pilot-corridor-reference-anchors.js",
     "test:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",
+    "test:phase-24": "node scripts/test-phase-24-session.js",
+    "test:phase-24-integration": "node --env-file=.env scripts/test-phase-24-integration.js",
+    "smoke:phase-24-http": "node --env-file=.env scripts/smoke-phase-24-http.js",
     "legacy:update:route-real-data": "node --env-file=.env scripts/update-route-real-data.js",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry"

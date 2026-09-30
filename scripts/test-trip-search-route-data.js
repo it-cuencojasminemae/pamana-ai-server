@@ -133,6 +133,8 @@ async function main() {
     };
     const controller = require('../src/api/trip-search/controllers/trip-search');
     const ctx = {
+      state: { user: { id: 'legacy-regression-audit', role: { name: 'Passenger' } } },
+      request: {},
       query: { origin: 'San Luis, Pampanga', destination: 'City of San Fernando, Pampanga' },
       badRequest: (message) => { throw new Error(message); },
     };

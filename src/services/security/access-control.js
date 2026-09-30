@@ -8,6 +8,7 @@ const ROLE = Object.freeze({
 });
 
 const ROLE_LOOKUP_ACTION = 'plugin::users-permissions.role.find';
+const LOGOUT_ACTION = 'plugin::users-permissions.auth.logout';
 const actions = (contentType, names) => names.map((name) => `api::${contentType}.${contentType}.${name}`);
 
 const TRANSPORT_KNOWLEDGE_TYPES = Object.freeze([
@@ -41,6 +42,7 @@ const TRANSPORT_WORKBENCH_ACTIONS = Object.freeze([
 const ROLE_PERMISSION_MATRIX = Object.freeze({
   [ROLE.PASSENGER]: Object.freeze([
     ROLE_LOOKUP_ACTION,
+    LOGOUT_ACTION,
     ...actions('passenger-profile', ['create', 'find', 'findOne', 'update']),
     ...actions('passenger-report', ['create', 'find', 'findOne']),
     'api::trip-search.trip-search.search',
@@ -53,6 +55,7 @@ const ROLE_PERMISSION_MATRIX = Object.freeze({
   ]),
   [ROLE.DRIVER]: Object.freeze([
     ROLE_LOOKUP_ACTION,
+    LOGOUT_ACTION,
     ...actions('trip', ['find', 'findOne', 'create', 'update']),
     'api::trip.trip.active',
     'api::trip.trip.options',
@@ -65,6 +68,7 @@ const ROLE_PERMISSION_MATRIX = Object.freeze({
   ]),
   [ROLE.LGU]: Object.freeze([
     ROLE_LOOKUP_ACTION,
+    LOGOUT_ACTION,
     'api::pamana-ai.pamana-ai.waitTime',
     'api::pamana-ai.pamana-ai.demand',
     'api::pamana-ai.pamana-ai.supplyDemand',
@@ -83,6 +87,7 @@ const ROLE_PERMISSION_MATRIX = Object.freeze({
   ]),
   [ROLE.ADMINISTRATOR]: Object.freeze([
     ROLE_LOOKUP_ACTION,
+    LOGOUT_ACTION,
     'api::pamana-ai.pamana-ai.waitTime',
     'api::pamana-ai.pamana-ai.demand',
     'api::pamana-ai.pamana-ai.supplyDemand',
@@ -142,7 +147,7 @@ function enforceRole(ctx, allowedRoles) {
 }
 
 function permissionIsManaged(action) {
-  return action === ROLE_LOOKUP_ACTION || MANAGED_API_PREFIXES.some((prefix) => action.startsWith(prefix));
+  return action === ROLE_LOOKUP_ACTION || action === LOGOUT_ACTION || MANAGED_API_PREFIXES.some((prefix) => action.startsWith(prefix));
 }
 
 async function reconcileRolePermissions(strapi) {
