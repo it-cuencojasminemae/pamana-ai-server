@@ -47,6 +47,14 @@ function walkingConfig(overrides = {}) {
     config.initialCandidateRadiusMeters,
     config.maximumCandidateRadiusMeters
   );
+  // Deployment overrides can reduce quota use, but cannot remove the bounds.
+  const boundedInteger = (value, fallback, maximum) => Math.min(maximum, Math.max(1,
+    Math.floor(positiveNumber(value, fallback))));
+  config.maxCandidateCount = boundedInteger(config.maxCandidateCount, DEFAULT_WALKING_CONFIG.maxCandidateCount, 5);
+  config.maxConcurrentRequests = boundedInteger(config.maxConcurrentRequests, DEFAULT_WALKING_CONFIG.maxConcurrentRequests, 2);
+  config.requestTimeoutMs = boundedInteger(config.requestTimeoutMs, DEFAULT_WALKING_CONFIG.requestTimeoutMs, 30000);
+  config.cacheTtlMs = boundedInteger(config.cacheTtlMs, DEFAULT_WALKING_CONFIG.cacheTtlMs, 5 * 60 * 1000);
+  config.cacheMaxEntries = boundedInteger(config.cacheMaxEntries, DEFAULT_WALKING_CONFIG.cacheMaxEntries, 100);
   return Object.freeze(config);
 }
 

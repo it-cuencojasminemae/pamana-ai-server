@@ -4,7 +4,7 @@ const { buildTransportGraph } = require('./graph-builder');
 const { planJourneys } = require('./journey-planner');
 const { findAccessNodes, loadEligibleCoordinateNodes } = require('./access-node-finder');
 const { loadEligibleTransportGraphData } = require('./transport-data-loader');
-const { createWalkingRouter } = require('./walking-router');
+const { getDefaultWalkingRouter } = require('./walking-router');
 const { composeWalkingJourneys } = require('./walking-journey-composer');
 const { loadEligibleDisruptions } = require('./disruption-data-loader');
 const { applyDisruptionConstraints, attachDisruptionWarnings } = require('./disruption-engine');
@@ -39,7 +39,7 @@ async function planJourneysWithWalkingCandidates({
   destination,
   nodes = [],
   graph,
-  router = createWalkingRouter(),
+  router = getDefaultWalkingRouter(),
   config = {},
   signal,
 } = {}) {
@@ -93,7 +93,7 @@ async function planVerifiedJourneysWithWalking({
   destination,
   strapiInstance = global.strapi,
   serviceDate = new Date(),
-  router = createWalkingRouter(),
+  router = getDefaultWalkingRouter(),
   config = {},
   signal,
 } = {}) {

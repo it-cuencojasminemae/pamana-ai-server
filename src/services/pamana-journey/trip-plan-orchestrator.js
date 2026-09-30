@@ -4,7 +4,7 @@ const { buildTransportGraph } = require('./graph-builder');
 const { loadEligibleCoordinateNodes } = require('./access-node-finder');
 const { loadEligibleTransportGraphData } = require('./transport-data-loader');
 const { planJourneysWithWalkingCandidates } = require('./walking-journey-service');
-const { createWalkingRouter } = require('./walking-router');
+const { getDefaultWalkingRouter } = require('./walking-router');
 const { loadFareAndServiceData } = require('./fare-service-data-loader');
 const { loadOperationalData } = require('./availability-data-loader');
 const { enrichJourneyInformation } = require('./journey-information-enricher');
@@ -161,7 +161,7 @@ function baseResponse(request, status, {
 
 async function orchestrateTripPlan(request, {
   strapiInstance = global.strapi,
-  router = createWalkingRouter(),
+  router = getDefaultWalkingRouter(),
   now = () => new Date(),
   config: configOverrides = {},
   walkingConfig = {},

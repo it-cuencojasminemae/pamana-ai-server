@@ -134,11 +134,11 @@ function createWalkingRouter({
 } = {}) {
   const config = walkingConfig(configOverrides);
   const cache = new Map();
+  const pending = new Map();
 
   function cacheKey(from, to) {
-    const precision = config.coordinatePrecision;
+    // Exact endpoints: a cache hit must not substitute a nearby GPS coordinate.
     return [from.lat, from.lng, to.lat, to.lng]
-      .map((value) => value.toFixed(precision))
       .concat('walk')
       .join('|');
   }
@@ -160,19 +160,7 @@ function createWalkingRouter({
     while (cache.size > config.cacheMaxEntries) cache.delete(cache.keys().next().value);
   }
 
-  async function routeWalk({ from: rawFrom, to: rawTo, signal } = {}) {
-    const from = normalizePoint(rawFrom);
-    const to = normalizePoint(rawTo);
-    if (!from || !to) return failure(WALKING_ERROR.INVALID_COORDINATES);
-    if (typeof apiKey !== 'string' || !apiKey.trim()) return failure(WALKING_ERROR.NOT_CONFIGURED);
-    if (typeof fetcher !== 'function') return failure(WALKING_ERROR.NETWORK);
-
-    const timestamp = now();
-    const timestampMs = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime();
-    const key = cacheKey(from, to);
-    const cached = readCache(key, timestampMs);
-    if (cached) return cached;
-
+  async function requestWalk(from, to, signal, timestampMs) {
     const url = new URL(config.routingUrl);
     url.searchParams.set('waypoints', `${from.lat},${from.lng}|${to.lat},${to.lng}`);
     url.searchParams.set('mode', 'walk');
@@ -211,7 +199,6 @@ function createWalkingRouter({
         to,
         calculatedAt: new Date(timestampMs).toISOString(),
       });
-      if (result.ok) writeCache(key, result, timestampMs);
       return result;
     } catch {
       if (timedOut) return failure(WALKING_ERROR.TIMEOUT);
@@ -223,12 +210,87 @@ function createWalkingRouter({
     }
   }
 
+  function bindEndpoints(result, from, to) {
+    if (!result.ok) return result;
+    // Labels belong to this passenger request, not the shared geography cache.
+    const copy = structuredClone(result.value);
+    return Object.freeze({ ok: true, value: Object.freeze({ ...copy, from, to }) });
+  }
+
+  async function routeWalk({ from: rawFrom, to: rawTo, signal } = {}) {
+    if (signal?.aborted) return failure(WALKING_ERROR.CANCELLED);
+    const from = normalizePoint(rawFrom);
+    const to = normalizePoint(rawTo);
+    if (!from || !to) return failure(WALKING_ERROR.INVALID_COORDINATES);
+    if (typeof apiKey !== 'string' || !apiKey.trim()) return failure(WALKING_ERROR.NOT_CONFIGURED);
+    if (typeof fetcher !== 'function') return failure(WALKING_ERROR.NETWORK);
+    const timestampMs = new Date(now()).getTime();
+    const key = cacheKey(from, to);
+    const cached = readCache(key, timestampMs);
+    if (cached) return bindEndpoints(cached, from, to);
+
+    let entry = pending.get(key);
+    if (entry?.controller.signal.aborted) entry = null;
+    if (!entry) {
+      // Bound unfinished unique requests across passengers in this process.
+      if (pending.size >= config.cacheMaxEntries) return failure(WALKING_ERROR.RATE_LIMITED);
+      entry = { controller: new AbortController(), subscribers: 0 };
+      pending.set(key, entry);
+      const current = entry;
+      entry.promise = requestWalk(from, to, entry.controller.signal, timestampMs)
+        .then((result) => {
+          if (result.ok && !current.controller.signal.aborted) {
+            const geography = structuredClone(result);
+            delete geography.value.from.label;
+            delete geography.value.to.label;
+            writeCache(key, geography, new Date(now()).getTime());
+          }
+          return result;
+        })
+        .finally(() => { if (pending.get(key) === current) pending.delete(key); });
+    }
+    const current = entry;
+    current.subscribers++;
+    return new Promise((resolve) => {
+      let settled = false;
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        signal?.removeEventListener('abort', cancel);
+        current.subscribers--;
+        if (!current.subscribers) current.controller.abort();
+        resolve(bindEndpoints(result, from, to));
+      };
+      const cancel = () => finish(failure(WALKING_ERROR.CANCELLED));
+      signal?.addEventListener('abort', cancel, { once: true });
+      if (signal?.aborted) cancel();
+      current.promise.then(finish, () => finish(failure(WALKING_ERROR.NETWORK)));
+    });
+  }
+
   return Object.freeze({ routeWalk });
+}
+
+let defaultRouter = null;
+let defaultConfiguration = null;
+let defaultKey = null;
+
+function getDefaultWalkingRouter() {
+  const config = walkingConfig();
+  const configuration = JSON.stringify(config);
+  const apiKey = process.env.GEOAPIFY_SERVER_API_KEY;
+  if (!defaultRouter || defaultConfiguration !== configuration || defaultKey !== apiKey) {
+    defaultRouter = createWalkingRouter({ apiKey, config });
+    defaultConfiguration = configuration;
+    defaultKey = apiKey;
+  }
+  return defaultRouter;
 }
 
 module.exports = {
   WALKING_ERROR,
   createWalkingRouter,
+  getDefaultWalkingRouter,
   normalizeGeoapifyResponse,
   normalizePoint,
 };

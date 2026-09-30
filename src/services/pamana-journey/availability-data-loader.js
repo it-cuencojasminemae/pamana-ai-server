@@ -1,6 +1,7 @@
 'use strict';
 
 const { unwrapRecord } = require('./graph-builder');
+const { latestLocationQuery, loadLatestLocations, locationKey } = require('./latest-location-loader');
 
 const unique = (values) => [...new Set(values.filter(Boolean))];
 const identity = (record) => {
@@ -40,24 +41,6 @@ function assignedVehicleQuery({ variantIds = [], allowSimulated = false } = {}) 
   };
 }
 
-function latestLocationQuery({ vehicleId, tripId, allowSimulated = false } = {}) {
-  return {
-    filters: {
-      vehicle: { documentId: vehicleId },
-      trip: { documentId: tripId },
-      ...(allowSimulated ? {} : { data_mode: 'REAL' }),
-    },
-    fields: ['recorded_at', 'latitude', 'longitude', 'data_mode'],
-    populate: {
-      trip: {
-        fields: ['trip_status', 'is_simulated', 'data_mode'],
-        populate: { route_variant: { fields: ['variant_code'] } },
-      },
-    },
-    sort: ['recorded_at:desc'],
-  };
-}
-
 async function loadOperationalData({
   journey,
   strapiInstance = global.strapi,
@@ -86,12 +69,13 @@ async function loadOperationalData({
     if (vehicleId && !byVehicle.has(vehicleId)) byVehicle.set(vehicleId, { vehicle, trip: null });
   }
 
-  const records = await Promise.all([...byVehicle.entries()].map(async ([vehicleId, record]) => {
+  const latest = await loadLatestLocations({
+    strapiInstance, allowSimulated,
+    pairs: [...byVehicle.entries()].map(([vehicleId, record]) => ({ vehicleId, tripId: identity(record.trip) })),
+  });
+  const records = [...byVehicle.entries()].map(([vehicleId, record]) => {
     const tripId = identity(record.trip);
-    const location = tripId
-      ? await strapiInstance.documents('api::vehicle-location.vehicle-location')
-        .findFirst(latestLocationQuery({ vehicleId, tripId, allowSimulated }))
-      : null;
+    const location = tripId ? latest.get(locationKey(tripId, vehicleId)) : null;
     const unwrappedLocation = unwrapRecord(location);
     return Object.freeze({
       ...record,
@@ -99,7 +83,7 @@ async function loadOperationalData({
       trip: unwrapRecord(unwrappedLocation?.trip) || record.trip,
       location: unwrappedLocation,
     });
-  }));
+  });
   return Object.freeze({ operationalRecords: Object.freeze(records) });
 }
 

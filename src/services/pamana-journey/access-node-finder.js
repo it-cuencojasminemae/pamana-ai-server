@@ -211,6 +211,7 @@ module.exports = {
   findAccessNodes,
   haversineMeters,
   loadEligibleCoordinateNodes,
+  mapWithConcurrency,
   normalizeEligibleNode,
   usableNodeCoordinate,
 };

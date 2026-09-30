@@ -2,6 +2,7 @@
 
 const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 const { ROLE, enforceRole } = require('../../../services/security/access-control');
+const { loadLatestLocations, locationKey } = require('../../../services/pamana-journey/latest-location-loader');
 
 /**
  * live-vehicle controller
@@ -33,16 +34,17 @@ module.exports = {
       populate: { vehicle: true, route: true, route_variant: true },
     });
 
-    const results = await Promise.all(
-      activeTrips.map(async (trip) => {
+    const latest = await loadLatestLocations({
+      strapiInstance: strapi, allowSimulated: true, populateTrip: false,
+      pairs: activeTrips.filter(trip => trip.vehicle && trip.route && trip.route_variant)
+        .map(trip => ({ tripId: trip.documentId, vehicleId: trip.vehicle.documentId })),
+    });
+    const results = activeTrips.map((trip) => {
         if (!trip.vehicle || !trip.route || !trip.route_variant) {
           return null;
         }
 
-        const location = await strapi.documents('api::vehicle-location.vehicle-location').findFirst({
-          filters: { trip: { id: trip.id } },
-          sort: ['recorded_at:desc'],
-        });
+        const location = latest.get(locationKey(trip.documentId, trip.vehicle.documentId));
 
         if (!location) {
           return null;
@@ -86,8 +88,7 @@ module.exports = {
           heading: location.heading,
           recorded_at: location.recorded_at,
         };
-      })
-    );
+      });
 
     ctx.body = { data: results.filter(Boolean) };
   },
