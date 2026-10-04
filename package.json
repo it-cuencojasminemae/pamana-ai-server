@@ -71,6 +71,9 @@
     "test:phase-24": "node scripts/test-phase-24-session.js",
     "test:phase-24-integration": "node --env-file=.env scripts/test-phase-24-integration.js",
     "smoke:phase-24-http": "node --env-file=.env scripts/smoke-phase-24-http.js",
+    "test:phase-26": "node --test scripts/test-phase-26-hackathon-demo.js",
+    "demo:check": "node --env-file=.env scripts/check-hackathon-demo.js",
+    "demo:rehearse": "node --env-file=.env scripts/rehearse-hackathon-demo.js",
     "legacy:update:route-real-data": "node --env-file=.env scripts/update-route-real-data.js",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry"

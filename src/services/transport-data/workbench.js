@@ -308,7 +308,11 @@ function validateWorkbenchRecord(entity, record, {
 function criticalFields(entity, record = {}) {
   const missing = [];
   const add = (condition, field) => { if (condition) missing.push(field); };
-  add(!hasText(record[ENTITY_CONFIG[entity]?.labelField]), ENTITY_CONFIG[entity]?.labelField || 'name');
+  if (entity === 'route-variant-stops') {
+    add(!Number.isInteger(Number(record.sequence)) || Number(record.sequence) < 1, 'sequence');
+  } else {
+    add(!hasText(record[ENTITY_CONFIG[entity]?.labelField]), ENTITY_CONFIG[entity]?.labelField || 'name');
+  }
   if (entity === 'transport-nodes') add(!finiteCoordinatePair(record).present, 'coordinates');
   if (entity === 'routes') add(!hasText(record.transport_mode), 'transport_mode');
   if (entity === 'route-variants') {
