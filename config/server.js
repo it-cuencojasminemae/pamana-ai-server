@@ -4,6 +4,11 @@ module.exports = ({ env }) => ({
   app: {
     keys: env.array('APP_KEYS'),
   },
+  url: env('PUBLIC_URL'),
+  proxy: {
+    koa: env.bool('IS_PROXIED', true),
+    maxIpsCount: env.int('MAX_IPS_COUNT', 1),
+  },
   webhooks: {
     populateRelations: env.bool('WEBHOOKS_POPULATE_RELATIONS', false),
   },

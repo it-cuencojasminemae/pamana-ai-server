@@ -20,12 +20,22 @@ const deniedExecutableTypes = [
   'application/x-mach-binary',
 ];
 
-module.exports = () => ({
+module.exports = ({ env }) => {
+  const sameSite = env('SESSION_COOKIE_SAME_SITE', 'lax');
+  const secure = env.bool('SESSION_COOKIE_SECURE', env('NODE_ENV', 'development') === 'production');
+  if (!['lax', 'strict', 'none'].includes(sameSite)) {
+    throw new Error('SESSION_COOKIE_SAME_SITE must be lax, strict or none');
+  }
+  if (sameSite === 'none' && !secure) {
+    throw new Error('Cross-site session cookies require SESSION_COOKIE_SECURE=true');
+  }
+  return ({
   'users-permissions': {
     config: {
       jwtManagement: 'refresh',
       sessions: {
         httpOnly: true,
+        cookie: { sameSite, secure, path: '/' },
       },
     },
   },
@@ -37,4 +47,5 @@ module.exports = () => ({
       },
     },
   },
-});
+  });
+};

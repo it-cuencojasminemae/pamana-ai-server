@@ -86,6 +86,7 @@
     "apply:batch-a5b": "node --env-file=.env scripts/apply-batch-a5b-approved-geometry.js --apply",
     "test:batch-a5b": "node --test scripts/test-batch-a5b-geometry.js",
     "test:batch-a5-candidates": "node --test scripts/test-batch-a5-candidates.js",
+    "test:deployment-config": "node --test scripts/test-deployment-config.js",
     "test:batch-a5b-db": "node --env-file=.env scripts/test-batch-a5b-database.js",
     "test:batch-a5b:regressions": "node scripts/run-batch-a5b-regressions.js",
     "test:batch-b": "node --test scripts/test-batch-b-recommendations.js",
@@ -117,5 +118,10 @@
     "core-js-pure@3.50.0": true,
     "esbuild@0.28.2": true,
     "esbuild@0.21.5": true
+  },
+  "overrides": {
+    "@strapi/upload@5.52.1": {
+      "sharp": "0.35.4"
+    }
   }
 }

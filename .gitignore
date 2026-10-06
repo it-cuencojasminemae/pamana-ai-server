@@ -129,3 +129,22 @@ dist
 build
 .strapi-updater.json
 .strapi-cloud.json
+
+############################
+# Local deployment and database-derived evidence
+############################
+/documentation/northflank-backend-preparation.md
+/documentation/batch-a-database-validation.json
+/documentation/batch-a-unit-validation.json
+/documentation/batch-a5-candidate-geometry-review.json
+/documentation/batch-a5-pilot-audit.json
+/documentation/batch-a5b-application-receipt*.json
+/documentation/batch-a5b-before-application.json
+/documentation/batch-a5b-approved-geometry-application.json
+/documentation/batch-a5b-database-regressions.json
+/documentation/batch-a5b-passenger-api-results.json
+/documentation/batch-a5b-production-fare-validation.json
+/documentation/batch-b-database-audit.json
+/documentation/batch-b-passenger-api-results.json
+/documentation/batch-c-database-audit.json
+/documentation/batch-a5-candidates/review-outbound.jpg
