@@ -105,6 +105,17 @@ async function main() {
   );
   assert.strictEqual(ctx.body.data.planning_data_only, true);
 
+  verifiedRoute.route_stops.splice(1, 0, { ...stop(3, 'Intermediate Transfer Point', 2), stop_type: 'transfer' });
+  verifiedRoute.route_stops[2].sequence = 3;
+  verifiedRoute.transport_mode = 'BUS';
+  verifiedRoute.base_fare = '27.68';
+  await controller.search(ctx);
+  assert.ok(ctx.body.data.options.every(option => option.transfer_count === 0), 'one legacy vehicle remains zero transfers despite an intermediate stop name');
+  assert.ok(ctx.body.data.options.every(option => option.fare === 28), 'legacy passenger fares also use whole pesos');
+  verifiedRoute.transport_mode = 'PUJ_TRADITIONAL';
+  await controller.search(ctx);
+  assert.ok(ctx.body.data.options.every(option => option.fare === null && option.fare_status === 'FARE_DISTANCE_UNAVAILABLE'), 'legacy jeepney flat amounts cannot replace missing road distances');
+
   console.log('ok - trip search queries only planning candidates');
   console.log('ok - the shared rule excludes a historical route even if returned by storage');
   console.log('ok - eligible route responses carry their verification status');

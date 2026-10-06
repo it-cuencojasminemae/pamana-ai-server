@@ -105,6 +105,7 @@ async function planFixture(fixture, options = {}) {
 async function testDirectEnrichment() {
   const fixture = directWalkingFixture();
   const variantRecord = fixture.variants[0];
+  variantRecord.route.transport_mode = 'BUS'; // Explicit stored flat fare coverage.
   variantRecord.geometry_source = 'FIELD_GPS';
   variantRecord.geometry_geojson = geometry;
   const result = await planFixture(fixture, {
@@ -131,7 +132,9 @@ async function testDirectEnrichment() {
   assert.deepEqual(transit.geometry, geometry);
   assert.equal(journey.durationSummary.knownWalkingDurationSeconds, 180);
   assert.equal(journey.durationSummary.totalJourneyDurationSeconds, null);
-  assert.equal(JSON.stringify(result).includes('recommendation'), false);
+  assert.equal(result.recommendations.recommended.journeyId, journey.id);
+  assert.equal(result.recommendations.fastest.journeyId, null);
+  assert.equal(result.recommendations.fastest.unavailableReason, 'TIME_DATA_UNAVAILABLE');
   console.log('ok - direct orchestration returns WALK, TRANSIT, WALK with fare, service and live availability and no fake transit duration');
 }
 
@@ -152,7 +155,7 @@ async function testTransfer() {
 async function testUnknownsAndDomainResults() {
   const unknown = await planFixture(directWalkingFixture());
   const transit = unknown.journeys[0].legs.find((leg) => leg.type === 'TRANSIT');
-  assert.equal(transit.fare.status, 'UNKNOWN');
+  assert.equal(transit.fare.status, 'FARE_DISTANCE_UNAVAILABLE');
   assert.equal(transit.fare.payableFare, null);
   assert.equal(transit.service.status, 'UNKNOWN');
   assert.equal(transit.availability.status, 'UNKNOWN');

@@ -1,0 +1,45 @@
+{
+  "source_name": "PAMANA Batch A supplied journey requirements",
+  "source_reference": "BATCH-A-2026-10-04; user-supplied corridors; field stops, service and road geometry pending",
+  "routes": [
+    {
+      "route_code": "RCH-PSU-MEXICO-BAYAN-JEEP",
+      "route_name": "Research: PSU Mexico to Mexico Bayan jeepney",
+      "origin": "Pampanga State University Mexico Campus frontage",
+      "destination": "Mexico Bayan / Sta. Monica",
+      "transport_mode": null
+    }
+  ],
+  "variants": [
+    {
+      "variant_code": "RCH-MEX-CSF-SM-ROB-BAYAN-IN",
+      "route_code": "RCH-MEX-CSF-SM",
+      "display_name": "Research: Robinsons Arayat Gate to Mexico Bayan",
+      "direction": "INBOUND",
+      "signboard_text": "Mexico",
+      "from": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "to": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "instruction": "Board a Mexico Jeepney at Robinsons Starmills Arayat Gate."
+    },
+    {
+      "variant_code": "RCH-MEX-CSF-SM-BAYAN-ROB-OUT",
+      "route_code": "RCH-MEX-CSF-SM",
+      "display_name": "Research: Mexico Bayan to Robinsons Starmills",
+      "direction": "OUTBOUND",
+      "signboard_text": null,
+      "from": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "to": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "instruction": null
+    },
+    {
+      "variant_code": "RCH-PSU-MEXICO-BAYAN-JEEP-OUT",
+      "route_code": "RCH-PSU-MEXICO-BAYAN-JEEP",
+      "display_name": "Research: PSU Mexico to Mexico Bayan jeepney",
+      "direction": "OUTBOUND",
+      "signboard_text": null,
+      "from": "RCH-PSU-MEXICO-FRONT",
+      "to": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "instruction": null
+    }
+  ]
+}

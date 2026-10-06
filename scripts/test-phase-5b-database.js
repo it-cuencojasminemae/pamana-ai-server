@@ -39,9 +39,9 @@ async function main() {
         }
         if (table === 'route_variants') {
           assert.equal(row.operating_status, 'ACTIVE');
-          assert.equal(row.geometry_source, 'UNKNOWN');
+          require('./helpers/pilot-geometry-expectations').assertPilotGeometry(row);
           assert.equal(row.encoded_polyline, null);
-          assert.equal(row.geometry_geojson, null);
+          assert.deepEqual(row.geometry_geojson, require('./helpers/pilot-geometry-expectations').expectedGeometry(row.variant_code));
         }
       }
 

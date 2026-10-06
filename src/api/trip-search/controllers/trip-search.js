@@ -27,6 +27,8 @@ const {
 } = require('../../../services/transport-data/planning-eligibility');
 const { ROLE, enforceRole } = require('../../../services/security/access-control');
 const { consumeRateLimit } = require('../../../services/security/request-guard');
+const { JEEPNEY_POLICIES } = require('../../../services/pamana-journey/fare-policy');
+const { countVehicleTransfers } = require('../../../services/pamana-journey/transfer-count');
 
 // Assumed overhead (wait + walk between legs) added to total journey time
 // for every transfer in a candidate's route - not real headway data, a
@@ -235,7 +237,9 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
     if (isReverse) sortedStops = sortedStops.slice().reverse();
 
     const transferStop = findTransferStop(sortedStops);
-    const transferCount = transferStop ? 1 : 0;
+    // This legacy candidate describes one vehicle on one route. A stop named
+    // "transfer" does not establish another boarding or another vehicle leg.
+    const transferCount = countVehicleTransfers([{ type: 'TRANSIT' }]);
 
     if (!waitTimeCache.has(route.id)) {
       waitTimeCache.set(route.id, await predictWaitTime(strapi, { routeId: route.id }));
@@ -246,7 +250,11 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
 
     for (const vehicle of vehicleCandidates) {
       const data_quality = dataQualityFor(route, waitTime, vehicle);
-      const fare = route.base_fare != null ? Number(route.base_fare) : null;
+      // The legacy model has no trustworthy road segment distance. Jeepney
+      // fares belong to the revised variant planner, never route.base_fare.
+      const rawFare = route.base_fare == null ? null : Number(route.base_fare);
+      const fare = JEEPNEY_POLICIES[route.transport_mode] || rawFare === null || !Number.isFinite(rawFare) || rawFare < 0
+        ? null : Math.round(rawFare);
       const estimatedTravelMinutes = route.estimated_travel_time ?? null;
       const reliability_score = reliabilityScoreFor(waitTime.confidence, vehicle, transferCount);
       const totalJourneyMinutes =
@@ -474,6 +482,8 @@ module.exports = {
         dropoff_stop: formatStop(option.dropoff_stop, option.data_quality.route),
         transfer_stop: formatStop(option.transfer_stop, option.data_quality.route),
         fare: option.fare,
+        fare_status: JEEPNEY_POLICIES[option.route.transport_mode]
+          ? 'FARE_DISTANCE_UNAVAILABLE' : option.fare === null ? 'UNKNOWN' : 'KNOWN',
         fare_source: option.data_quality.fare,
         estimated_travel_minutes: option.estimated_travel_minutes,
         travel_time_source: option.data_quality.travel_time,

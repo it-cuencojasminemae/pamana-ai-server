@@ -9,7 +9,7 @@ const { evaluateFareForLeg } = require('../src/services/pamana-journey/fare-engi
 const { orchestrateTripPlan, TRIP_PLAN_STATUS } = require('../src/services/pamana-journey/trip-plan-orchestrator');
 const { validateTripPlanRequest } = require('../src/services/pamana-journey/trip-plan-request-validator');
 
-const EXPECTED_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
+const EXPECTED_DIGEST = require('./helpers/pilot-geometry-expectations').EXPECTED_DIGEST;
 const NODE_CODES = manifest.nodes.map((item) => item.node_code).sort();
 const ROUTE_CODES = manifest.routes.map((item) => item.route_code).sort();
 const VARIANT_CODES = manifest.variants.map((item) => item.variant_code).sort();
@@ -110,9 +110,9 @@ async function main() {
       assert.equal(variant.verification_status, 'FIELD_VERIFIED');
       assert.equal(variant.data_mode, 'REAL');
       assert.equal(variant.operating_status, 'ACTIVE');
-      assert.equal(variant.geometry_source, 'UNKNOWN');
+      require('./helpers/pilot-geometry-expectations').assertPilotGeometry(variant);
       assert.equal(variant.encoded_polyline, null);
-      assert.equal(variant.geometry_geojson, null);
+      assert.deepEqual(variant.geometry_geojson, require('./helpers/pilot-geometry-expectations').expectedGeometry(variant.variant_code));
       assert.deepEqual(routeVariantPlanningEligibilityFor(variant, { serviceDate: new Date(REQUESTED_AT) }).reasons, []);
       assert.deepEqual(variant.route_variant_stops.map((stop) => stop.sequence), [1, 2]);
     }
@@ -168,18 +168,18 @@ async function main() {
     const fareRules = await loadFareRules(client);
     const directFare = evaluateFareForLeg(direct.legs[0], { fareRules, passengerCategory: 'REGULAR', requestedDate: REQUESTED_AT });
     assert.equal(directFare.status, 'KNOWN');
-    assert.equal(directFare.payableFare, 30);
+    assert.equal(directFare.payableFare, 27);
     const transferFare = evaluateFareForLeg(transfer.legs[1], { fareRules, passengerCategory: 'REGULAR', requestedDate: REQUESTED_AT });
     assert.equal(transferFare.status, 'KNOWN');
     assert.equal(transferFare.payableFare, 14);
     const approximateStudent = evaluateFareForLeg(direct.legs[0], { fareRules, passengerCategory: 'STUDENT', requestedDate: REQUESTED_AT });
-    assert.equal(approximateStudent.status, 'PARTIAL');
-    assert.equal(approximateStudent.regularFare, 30);
-    assert.equal(approximateStudent.payableFare, null);
+    assert.equal(approximateStudent.status, 'KNOWN');
+    assert.equal(approximateStudent.regularFare, 27);
+    assert.equal(approximateStudent.payableFare, 22);
     const exactStudentEvidence = evaluateFareForLeg(transfer.legs[1], { fareRules, passengerCategory: 'STUDENT', requestedDate: REQUESTED_AT });
-    assert.equal(exactStudentEvidence.status, 'PARTIAL');
+    assert.equal(exactStudentEvidence.status, 'KNOWN');
     assert.equal(exactStudentEvidence.regularFare, 14);
-    assert.equal(exactStudentEvidence.payableFare, null);
+    assert.equal(exactStudentEvidence.payableFare, 11);
     assert.ok(fareRules.every((rule) => rule.student_discount_percent === null));
     assert.match(fareRules.find((rule) => Number(rule.regular_base_fare) === 14).notes, /PHP 11/);
     assert.equal((await client.query('select count(*)::int count from fare_rules f join fare_rules_route_variant_lnk l on l.fare_rule_id=f.id join route_variants v on v.id=l.route_variant_id where v.variant_code in ($$RCH-SJ-SMROB-IN$$,$$PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT$$)')).rows[0].count, 0);
@@ -206,7 +206,16 @@ async function main() {
       && journey.legs.some((leg) => leg.type === 'TRANSIT' && leg.variant.code === 'RCH-SJ-SMROB-OUT')));
     assert.ok(outbound.journeys.some((journey) => journey.transferCount === 1));
     assert.ok(outbound.journeys.flatMap((journey) => journey.legs).some((leg) => leg.type === 'WALK' && leg.source === 'GEOAPIFY'));
-    assert.ok(outbound.journeys.flatMap((journey) => journey.legs).filter((leg) => leg.type === 'TRANSIT').every((leg) => leg.geometry === null));
+    for (const leg of outbound.journeys.flatMap(j => j.legs).filter(l => l.type === 'TRANSIT')) assert.deepEqual(leg.geometry, require('./helpers/pilot-geometry-expectations').expectedGeometry(leg.variant.code));
+    const robinsonsPlan = await orchestrateTripPlan({ ...outboundRequest,
+      destination: { lat: 15.050605637995128, lng: 120.69778203294244, source: 'GEOAPIFY' },
+    }, { router: walkingRouter(), now: () => new Date(REQUESTED_AT), services: serviceData });
+    const directWithEgress = robinsonsPlan.journeys.find(journey => journey.transferCount === 0);
+    assert.ok(directWithEgress, 'direct SM jeepney plus walking to Robinsons remains supported');
+    assert.equal(directWithEgress.legs.filter(leg => leg.type === 'TRANSIT').length, 1);
+    assert.equal(directWithEgress.legs.at(-1).type, 'WALK');
+    assert.equal(directWithEgress.legs.at(-1).fare.payableFare, 0);
+    assert.equal(directWithEgress.transferCount, 0);
     const returnRequest = validateTripPlanRequest({
       origin: { lat: 15.050805637995128, lng: 120.69778203294244, source: 'GEOAPIFY' },
       destination: { lat: 15.127826422211173, lng: 120.69826461388278, source: 'GEOAPIFY' },
@@ -219,7 +228,8 @@ async function main() {
     const returnTransit = returnPlan.journeys[0].legs.find((leg) => leg.type === 'TRANSIT');
     assert.equal(returnTransit.variant.code, 'RCH-SJ-SMROB-IN');
     assert.equal(returnTransit.signboard, 'SAN JUAN');
-    assert.equal(returnTransit.fare.status, 'UNKNOWN');
+    assert.equal(returnTransit.fare.status, 'KNOWN');
+    assert.equal(returnTransit.fare.payableFare, 28);
     assert.equal(returnTransit.availability.status, 'UNKNOWN');
 
     const unrelated = (await client.query(`select
@@ -237,9 +247,9 @@ async function main() {
     assert.equal(unrelated.synthetic_nodes, 0);
 
     assert.equal(await digest(client), EXPECTED_DIGEST);
-    console.log('ok - exact field coordinates, trust metadata, ordered stops, null geometry and idempotent counts match');
+    console.log('ok - exact field coordinates, trust metadata, ordered cumulative stops, approved geometry and unchanged counts match');
     console.log('ok - production graph returns direct, SAN JUAN return and one-transfer REAL journeys');
-    console.log('ok - fares preserve PHP 30/PHP 14 while unsupported student amounts remain uncomputed');
+    console.log('ok - historical PHP 30/PHP 14 records are preserved; jeep fares require road distances; demo tricycle is separate');
     console.log(`Transport row digest: ${EXPECTED_DIGEST}`);
   } finally {
     await client.query('rollback');

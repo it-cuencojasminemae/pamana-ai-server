@@ -134,7 +134,10 @@ async function reconciliationTest() {
   const providers = `${read('src/services/pamana-ai/providers/openai-client.js')}\n${read('src/services/pamana-ai/providers/gemini-client.js')}`;
   assert.doesNotMatch(providers, /provider failed:\s*\$\{error\.message\}/);
   assert.doesNotMatch(read('config/middlewares.js'), /origin:\s*['"]\*['"]/);
-  assert.match(read('config/middlewares.js'), /jsonLimit:\s*'256kb'/);
+  const env = Object.assign((key, fallback) => fallback, { array: (key, fallback) => fallback });
+  const middlewares = require('../config/middlewares')({ env });
+  assert.deepEqual(middlewares.find(m => m.name === 'strapi::body').config,
+    { jsonLimit: '256kb', formLimit: '256kb', textLimit: '256kb' });
   console.log('ok - tracked source excludes credential formats and provider logs remain sanitized');
 }
 

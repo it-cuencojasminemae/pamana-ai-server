@@ -1,5 +1,7 @@
 # Phase 12: Deterministic fare and service information
 
+Batch A supersedes the jeepney fare, rounding, walking-fare and discount behavior described in this historical report. See [Batch A implementation and audit](batch-a-system-fare-engine.md) for the current contract. Historical field fare records remain untouched; passenger jeepney estimates use the system policy only with a usable road distance.
+
 Phase 12 enriches Phase 10 and Phase 11 journey copies with verified fare and service facts. It adds no public endpoint, prediction, passenger UI, or database records. Missing transport information remains unknown; PAMANA does not convert missing evidence into a numeric fare, timetable, or service guarantee.
 
 ## Actual schemas used

@@ -56,7 +56,7 @@ function buildTripRecommendationPrompt(option) {
   const wait = option.predicted_wait_minutes
     ? `${option.predicted_wait_minutes.low}-${option.predicted_wait_minutes.high} minutes`
     : 'not available';
-  const fare = typeof option.fare === 'number' ? `PHP ${option.fare.toFixed(2)}` : 'not available';
+  const fare = typeof option.fare === 'number' ? `PHP ${Math.round(option.fare)}` : 'not available';
   const travelTime = typeof option.estimated_travel_minutes === 'number'
     ? `${option.estimated_travel_minutes} minutes`
     : 'not available';
@@ -79,7 +79,7 @@ function buildTripRecommendationPrompt(option) {
     `${waitDescription}: ${wait}.`,
     `Estimated total journey: ${totalTime}.`,
     `Transfers: ${option.transfer_count}.`,
-    'Only restate the facts above. Do not call a fare official/current, a wait live, or a vehicle real-time. Do not invent a route, vehicle number, fare, traffic condition, cause, schedule, or any number not provided.',
+    'Only restate the facts above. Never calculate fares, discounts, totals, or fare distances. Do not call a fare official/current, a wait live, or a vehicle real-time. Do not invent a route, vehicle number, fare, traffic condition, cause, schedule, or any number not provided.',
   ].join(' ');
 }
 

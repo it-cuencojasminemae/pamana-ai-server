@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 
-const EXPECTED_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
+const EXPECTED_DIGEST = require('./helpers/pilot-geometry-expectations').EXPECTED_DIGEST;
 
 async function main() {
   const client = await connect();

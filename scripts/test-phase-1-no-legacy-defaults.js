@@ -8,7 +8,7 @@ const backendRoot = path.join(__dirname, '..');
 const workspaceRoot = path.join(backendRoot, '..');
 const activeRoots = [
   path.join(backendRoot, 'src'),
-  path.join(workspaceRoot, 'pamana-frontend', 'app'),
+  ...(process.argv.includes('--frontend') ? [path.join(workspaceRoot, 'pamana-frontend', 'app')] : []),
 ];
 
 const sourceExtensions = new Set(['.js', '.ts', '.vue', '.json']);
@@ -55,6 +55,7 @@ const tripSearchRoute = fs.readFileSync(
 );
 assert.match(tripSearchRoute, /path: '\/trip-search'/);
 
+if (process.argv.includes('--frontend')) {
 const passengerHome = fs.readFileSync(
   path.join(workspaceRoot, 'pamana-frontend', 'app', 'pages', 'passenger', 'index.vue'),
   'utf8'
@@ -76,8 +77,9 @@ assert.match(driverDashboard, /selectedRouteDocumentId = ref<string \| null>\(nu
 assert.match(driverDashboard, /selectedVariantDocumentId = ref<string \| null>\(null\)/);
 assert.match(driverDashboard, /route_variant: selectedVariantDocumentId\.value/);
 assert.doesNotMatch(driverDashboard, /\/api\/routes|startDirection|route: selectedRoute/);
+console.log('ok - explicit sibling-frontend integration has no automatic route fallback');
+}
 
 console.log('ok - active source contains no former-corridor defaults');
 console.log('ok - prediction APIs require an explicit active route');
-console.log('ok - passenger and driver flows have no automatic route fallback');
 console.log('ok - /api/trip-search remains registered');

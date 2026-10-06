@@ -2,12 +2,14 @@
 
 const { unwrapRecord } = require('./graph-builder');
 const { LEG_TYPE } = require('./types');
+const { JEEPNEY_POLICIES, DISCOUNT_PERCENT, DEMO_TRICYCLE, rawJeepneyFare, matchesDemoTricycle } = require('./fare-policy');
 const {
   finiteNumber,
   identity,
   ruleEligibilityFor,
   sourceSummary,
   text,
+  calendarDate,
 } = require('./rule-utils');
 
 const FARE_STATUS = Object.freeze({
@@ -15,6 +17,7 @@ const FARE_STATUS = Object.freeze({
   NOT_APPLICABLE: 'NOT_APPLICABLE',
   PARTIAL: 'PARTIAL',
   UNKNOWN: 'UNKNOWN',
+  DISTANCE_UNAVAILABLE: 'FARE_DISTANCE_UNAVAILABLE',
 });
 
 const PASSENGER_CATEGORIES = Object.freeze(['REGULAR', 'STUDENT', 'SENIOR', 'PWD']);
@@ -30,21 +33,27 @@ function unknownFare(warnings = ['NO_ELIGIBLE_FARE_RULE']) {
     discountType: null,
     sourceSummary: null,
     verificationStatus: null,
+    sourceType: null,
+    isCalculated: false,
+    isDemoEstimate: false,
     warnings: Object.freeze(warnings),
   });
 }
 
-function notApplicableFare() {
+function notApplicableFare({ walking = false } = {}) {
   return Object.freeze({
     status: FARE_STATUS.NOT_APPLICABLE,
-    currency: null,
-    regularFare: null,
+    currency: walking ? 'PHP' : null,
+    regularFare: walking ? 0 : null,
     discountedFare: null,
-    payableFare: null,
+    payableFare: walking ? 0 : null,
     appliedRuleId: null,
     discountType: null,
     sourceSummary: null,
     verificationStatus: null,
+    sourceType: walking ? 'FREE_WALK' : null,
+    isCalculated: false,
+    isDemoEstimate: false,
     warnings: Object.freeze([]),
   });
 }
@@ -90,27 +99,16 @@ function matchingRules(leg, rules, options) {
   );
 }
 
-function roundCurrency(value) {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
-}
-
-function applyRounding(value, rawRule) {
-  const rule = text(rawRule)?.toUpperCase() || 'NONE';
-  if (rule === 'NONE') return { value: roundCurrency(value), warning: null };
-  if (['NEAREST_PESO', 'ROUND_TO_NEAREST_PESO'].includes(rule)) {
-    return { value: Math.round(value), warning: null };
-  }
-  if (rule === 'CEIL_TO_PESO') return { value: Math.ceil(value), warning: null };
-  if (rule === 'FLOOR_TO_PESO') return { value: Math.floor(value), warning: null };
-  return { value: null, warning: 'ROUNDING_RULE_UNSUPPORTED' };
-}
-
 function calculateRegularFare(rule, leg) {
   const warnings = [];
+  const rounding = text(rule.rounding_rule)?.toUpperCase() || 'NONE';
+  if (!['NONE', 'NEAREST_PESO', 'ROUND_TO_NEAREST_PESO', 'CEIL_TO_PESO', 'FLOOR_TO_PESO'].includes(rounding)) {
+    return { value: null, warnings: ['ROUNDING_RULE_UNSUPPORTED'] };
+  }
   const baseFare = finiteNumber(rule.regular_base_fare);
   if (rule.fare_type === 'FLAT') {
     if (baseFare === null || baseFare < 0) warnings.push('REGULAR_FARE_UNAVAILABLE');
-    return { value: baseFare !== null && baseFare >= 0 ? roundCurrency(baseFare) : null, warnings };
+    return { value: baseFare !== null && baseFare >= 0 ? baseFare : null, warnings };
   }
   if (rule.fare_type === 'DISTANCE_BASED') {
     const distanceMeters = finiteNumber(leg.segmentDistanceMeters);
@@ -124,9 +122,7 @@ function calculateRegularFare(rule, leg) {
     let value = baseFare + Math.max(0, distanceKm - baseDistanceKm) * perKm;
     const minimumFare = finiteNumber(rule.minimum_fare);
     if (minimumFare !== null) value = Math.max(value, minimumFare);
-    const rounded = applyRounding(value, rule.rounding_rule);
-    if (rounded.warning) warnings.push(rounded.warning);
-    return { value: rounded.value, warnings };
+    return { value, warnings };
   }
   if (rule.fare_type === 'ZONE') warnings.push('ZONE_FARE_LOOKUP_NOT_MODELED');
   else if (rule.fare_type === 'MANUAL_LOOKUP') warnings.push('MANUAL_FARE_LOOKUP_REQUIRED');
@@ -149,18 +145,53 @@ function evaluateFareForLeg(leg, {
   requestedDate,
   allowSimulated = false,
 } = {}) {
-  if (leg?.type !== LEG_TYPE.TRANSIT) return notApplicableFare();
+  if (leg?.type !== LEG_TYPE.TRANSIT) return notApplicableFare({ walking: leg?.type === LEG_TYPE.WALK });
   if (!PASSENGER_CATEGORIES.includes(passengerCategory)) {
     return unknownFare(['PASSENGER_CATEGORY_UNSUPPORTED']);
   }
   if (!requestedDate) return unknownFare(['REQUESTED_DATE_REQUIRED']);
+  if (!calendarDate(requestedDate)) return unknownFare(['REQUESTED_DATE_INVALID']);
+  // Graph construction remains responsible for the full route/node eligibility
+  // checks. Never calculate a system/demo amount for excluded evidence.
+  const realLeg = leg.dataMode === 'REAL'
+    && ['FIELD_VERIFIED', 'AUTHORITATIVE_CURRENT'].includes(leg.verificationStatus);
+  const simulatedLeg = allowSimulated && leg.dataMode === 'SIMULATED'
+    && leg.verificationStatus === 'SIMULATED_DEMO';
+  if (JEEPNEY_POLICIES[leg.transportMode] || matchesDemoTricycle(leg)) {
+    if (!realLeg && !simulatedLeg) return unknownFare(['LEG_NOT_PLANNING_ELIGIBLE']);
+    if (matchesDemoTricycle(leg)) {
+      if (!realLeg) return unknownFare(['DEMO_ESTIMATE_REQUIRES_REAL_PILOT_LEG']);
+      return Object.freeze({
+        ...unknownFare([]), status: FARE_STATUS.KNOWN,
+        regularFare: DEMO_TRICYCLE.fare, payableFare: DEMO_TRICYCLE.fare,
+        sourceSummary: DEMO_TRICYCLE.source, sourceType: 'DEMO_ESTIMATE',
+        isDemoEstimate: true,
+        warnings: Object.freeze(['DEMO_ESTIMATE_NOT_VERIFIED']),
+      });
+    }
+    const distance = finiteNumber(leg.segmentDistanceMeters);
+    const usableDistance = ['STORED_ROUTE_STOP_DISTANCE', 'STORED_ROAD_GEOMETRY'].includes(leg.roadDistanceSource);
+    const rawFare = usableDistance ? rawJeepneyFare(leg.transportMode, distance) : null;
+    const discountedFare = rawFare === null ? null : Math.round(rawFare * (1 - DISCOUNT_PERCENT / 100));
+    return Object.freeze({
+      ...unknownFare([]),
+      status: rawFare === null ? FARE_STATUS.DISTANCE_UNAVAILABLE : FARE_STATUS.KNOWN,
+      regularFare: rawFare === null ? null : Math.round(rawFare),
+      discountedFare,
+      payableFare: rawFare === null ? null : passengerCategory === 'REGULAR' ? Math.round(rawFare) : discountedFare,
+      discountType: passengerCategory === 'REGULAR' ? null : passengerCategory,
+      sourceSummary: 'PAMANA Batch A system fare policy',
+      sourceType: 'SYSTEM_CALCULATED', isCalculated: rawFare !== null,
+      warnings: Object.freeze(rawFare === null ? ['FARE_DISTANCE_UNAVAILABLE'] : []),
+    });
+  }
   const [match] = matchingRules(leg, fareRules, { requestedDate, allowSimulated });
   if (!match) return unknownFare();
 
   const { rule } = match;
   const calculated = calculateRegularFare(rule, leg);
   let discountedFare = null;
-  let payableFare = calculated.value;
+  let payableFare = calculated.value === null ? null : Math.round(calculated.value);
   let discountType = null;
   const warnings = calculated.warnings.slice();
 
@@ -173,7 +204,7 @@ function evaluateFareForLeg(leg, {
       payableFare = null;
       warnings.push('DISCOUNT_BASE_FARE_UNKNOWN');
     } else {
-      discountedFare = roundCurrency(calculated.value * (1 - percent / 100));
+      discountedFare = Math.round(calculated.value * (1 - percent / 100));
       payableFare = discountedFare;
       discountType = passengerCategory;
     }
@@ -182,13 +213,16 @@ function evaluateFareForLeg(leg, {
   return Object.freeze({
     status: payableFare === null ? FARE_STATUS.PARTIAL : FARE_STATUS.KNOWN,
     currency: text(rule.currency) || 'PHP',
-    regularFare: calculated.value,
+    regularFare: calculated.value === null ? null : Math.round(calculated.value),
     discountedFare,
     payableFare,
     appliedRuleId: identity(rule),
     discountType,
     sourceSummary: sourceSummary(rule),
     verificationStatus: rule.verification_status || null,
+    sourceType: 'VERIFIED_RULE',
+    isCalculated: payableFare !== null,
+    isDemoEstimate: false,
     warnings: Object.freeze([...new Set(warnings)]),
   });
 }
@@ -199,19 +233,20 @@ function summarizeJourneyFares(legs) {
     .map((leg) => leg.fare);
   const known = transitFares.filter((fare) => fare?.payableFare !== null && fare?.payableFare !== undefined);
   const knownSubtotal = known.length
-    ? roundCurrency(known.reduce((sum, fare) => sum + fare.payableFare, 0))
+    ? known.reduce((sum, fare) => sum + fare.payableFare, 0)
     : null;
   const currencies = new Set(known.map((fare) => fare.currency).filter(Boolean));
   const currencyMismatch = currencies.size > 1;
-  const allKnown = transitFares.length > 0 && known.length === transitFares.length && !currencyMismatch;
+  const walkingOnly = Array.isArray(legs) && legs.length > 0 && legs.every((leg) => leg.type === LEG_TYPE.WALK);
+  const allKnown = walkingOnly || (transitFares.length > 0 && known.length === transitFares.length && !currencyMismatch);
   const hasPartialInformation = known.length > 0
     || transitFares.some((fare) => fare?.status === FARE_STATUS.PARTIAL);
   return Object.freeze({
     totalStatus: allKnown
       ? FARE_STATUS.KNOWN
       : (hasPartialInformation ? FARE_STATUS.PARTIAL : FARE_STATUS.UNKNOWN),
-    knownSubtotal: currencyMismatch ? null : knownSubtotal,
-    totalFare: allKnown ? knownSubtotal : null,
+    knownSubtotal: walkingOnly ? 0 : currencyMismatch ? null : knownSubtotal,
+    totalFare: walkingOnly ? 0 : allKnown ? knownSubtotal : null,
     currency: currencies.size === 1
       ? [...currencies][0]
       : (currencies.size === 0 ? 'PHP' : null),

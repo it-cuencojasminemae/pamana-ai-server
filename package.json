@@ -4,6 +4,11 @@
   "private": true,
   "description": "A Strapi application",
   "scripts": {
+    "test:batch-a": "node --test scripts/test-batch-a-fares.js",
+    "test:batch-a-db": "node --env-file=.env scripts/test-batch-a-database.js",
+    "seed:batch-a:dry-run": "node --env-file=.env scripts/seed-batch-a-research.js",
+    "seed:batch-a:research": "node --env-file=.env scripts/seed-batch-a-research.js --apply",
+    "test:batch-a:regressions": "node scripts/run-batch-a-regressions.js",
     "build": "strapi build",
     "console": "strapi console",
     "deploy": "strapi deploy",
@@ -67,7 +72,7 @@
     "test:pilot-mexico-san-fernando-db": "node --env-file=.env scripts/test-pilot-field-verified-database.js",
     "test:legacy-trip-search-route-data": "node --env-file=.env scripts/test-trip-search-route-data.js",
     "legacy:update:pilot-corridor-reference-anchors": "node --env-file=.env scripts/update-pilot-corridor-reference-anchors.js",
-    "test:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",
+    "smoke:ai-provider": "node --env-file=.env scripts/test-ai-provider.js",
     "test:phase-24": "node scripts/test-phase-24-session.js",
     "test:phase-24-integration": "node --env-file=.env scripts/test-phase-24-integration.js",
     "smoke:phase-24-http": "node --env-file=.env scripts/smoke-phase-24-http.js",
@@ -76,7 +81,15 @@
     "demo:rehearse": "node --env-file=.env scripts/rehearse-hackathon-demo.js",
     "legacy:update:route-real-data": "node --env-file=.env scripts/update-route-real-data.js",
     "upgrade": "npx @strapi/upgrade latest",
-    "upgrade:dry": "npx @strapi/upgrade latest --dry"
+    "upgrade:dry": "npx @strapi/upgrade latest --dry",
+    "apply:batch-a5b:dry-run": "node --env-file=.env scripts/apply-batch-a5b-approved-geometry.js",
+    "apply:batch-a5b": "node --env-file=.env scripts/apply-batch-a5b-approved-geometry.js --apply",
+    "test:batch-a5b": "node --test scripts/test-batch-a5b-geometry.js",
+    "test:batch-a5-candidates": "node --test scripts/test-batch-a5-candidates.js",
+    "test:batch-a5b-db": "node --env-file=.env scripts/test-batch-a5b-database.js",
+    "test:batch-a5b:regressions": "node scripts/run-batch-a5b-regressions.js",
+    "test:batch-b": "node --test scripts/test-batch-b-recommendations.js",
+    "test:batch-c": "node --test scripts/test-batch-c-guide.js"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",

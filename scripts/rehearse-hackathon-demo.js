@@ -48,8 +48,9 @@ async function rehearse(facts, at = new Date().toISOString()) {
   const direct = outbound.journeys.find(journey => journey.transferCount === 0);
   const transfer = outbound.journeys.find(journey => journey.transferCount === 1);
   assert.ok(direct); assert.ok(transfer);
-  assert.equal(direct.fareSummary.totalStatus, 'KNOWN'); assert.equal(direct.fareSummary.totalFare, 30);
-  assert.equal(transfer.fareSummary.totalStatus, 'PARTIAL'); assert.equal(transfer.fareSummary.totalFare, null); assert.equal(transfer.fareSummary.knownSubtotal, 14);
+  assert.equal(direct.fareSummary.totalStatus, 'UNKNOWN'); assert.equal(direct.fareSummary.totalFare, null);
+  assert.ok(direct.legs.some(leg => leg.fare?.status === 'FARE_DISTANCE_UNAVAILABLE'));
+  assert.equal(transfer.fareSummary.totalStatus, 'PARTIAL'); assert.equal(transfer.fareSummary.totalFare, null); assert.equal(transfer.fareSummary.knownSubtotal, 100);
   assert.ok(inbound.journeys[0].legs.some(leg => leg.type === 'TRANSIT' && leg.variant.code === CODES.inbound && leg.signboard === 'SAN JUAN'));
   for (const journey of [...outbound.journeys, ...inbound.journeys]) {
     assert.equal(journey.durationSummary.totalJourneyDurationSeconds, null);
@@ -76,7 +77,7 @@ async function rehearse(facts, at = new Date().toISOString()) {
   assert.ok(snapshots.every(snapshot => snapshot.dataMode === 'SIMULATED' && snapshot.simulation));
   assert.deepEqual(simulateScenarioSnapshot({ elapsedSeconds: 0, now: new Date(at) }), snapshots[0]);
   assert.equal(JSON.stringify(facts), untouched);
-  return { direct: 'PASS — REAL FIELD-VERIFIED TRANSPORT DATA', transfer: 'PASS — PARTIAL fare; known subtotal PHP 14',
+  return { direct: 'PASS — REAL FIELD-VERIFIED TRANSPORT DATA; fare distance unavailable', transfer: 'PASS — PARTIAL fare; demo subtotal PHP 100',
     inbound: 'PASS — explicit INBOUND variant / SAN JUAN', simulation: 'PASS — SIMULATED OPERATIONAL DATA',
     occupancy: 'AVAILABLE → NEAR_FULL → FULL', disruption: 'PASS — in-memory normalized effect only; unrelated inbound unchanged; reset verified',
     aiFailure: 'PASS — mocked failure; factual result unchanged', geometry: 'TRANSIT remains null; no nonzero walking geometry fabricated',

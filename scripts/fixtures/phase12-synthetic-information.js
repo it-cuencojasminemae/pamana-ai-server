@@ -55,7 +55,9 @@ function servicePattern(code, variantRecord, overrides = {}) {
 
 function distanceFareFixture() {
   const nodes = { A: node('FARE-A'), B: node('FARE-B'), C: node('FARE-C') };
-  const routeRecord = route('FARE-DISTANCE');
+  // Explicit database formula tests cover non-jeepney services; jeepneys use
+  // Batch A's centralized product policy regardless of historical flat rules.
+  const routeRecord = route('FARE-DISTANCE', 'BUS');
   const variantRecord = variant('FARE-DISTANCE-OUT', 'OUTBOUND', routeRecord, [
     stop('FARE-DISTANCE-OUT', nodes.A, 1, { distance_from_variant_start_m: 0 }),
     stop('FARE-DISTANCE-OUT', nodes.B, 2, { distance_from_variant_start_m: 2000 }),

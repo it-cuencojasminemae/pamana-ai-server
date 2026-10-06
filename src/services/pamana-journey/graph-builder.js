@@ -3,6 +3,7 @@
 const {
   planningEligibilityFor,
 } = require('../transport-data/planning-eligibility');
+const { geometryStopOffsets } = require('./route-distance');
 const {
   PLANNING_OPERATING_STATUSES,
   TRANSPORT_MODES,
@@ -96,8 +97,8 @@ function normalizeNode(rawNode) {
   const id = identity(node);
   const nodeCode = text(node?.node_code);
   const name = text(node?.name);
-  const latitude = Number(node?.latitude);
-  const longitude = Number(node?.longitude);
+  const latitude = node?.latitude == null || node.latitude === '' ? NaN : Number(node.latitude);
+  const longitude = node?.longitude == null || node.longitude === '' ? NaN : Number(node.longitude);
   if (!id || !nodeCode || !name) return null;
   return Object.freeze({
     id,
@@ -120,7 +121,7 @@ function normalizeVariant(rawVariant) {
   const id = identity(variant);
   const routeId = identity(route);
   if (!id || !routeId || !text(variant.variant_code) || !text(route.route_code)) return null;
-  const stops = unwrapMany(variant.route_variant_stops)
+  const normalizedStops = unwrapMany(variant.route_variant_stops)
     .map((rawStop) => {
       const node = normalizeNode(rawStop.transport_node);
       if (!node) return null;
@@ -141,6 +142,10 @@ function normalizeVariant(rawVariant) {
     })
     .filter(Boolean)
     .sort((first, second) => first.sequence - second.sequence);
+  const offsets = geometryStopOffsets(variant, normalizedStops);
+  const stops = normalizedStops.map((stop, index) => Object.freeze({
+    ...stop, geometryOffsetMeters: offsets[index] ?? null,
+  }));
   return Object.freeze({
     id,
     variantCode: variant.variant_code,

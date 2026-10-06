@@ -6,7 +6,7 @@ const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 const { orchestrateTripPlan } = require('../src/services/pamana-journey/trip-plan-orchestrator');
 const { validateTripPlanRequest } = require('../src/services/pamana-journey/trip-plan-request-validator');
 
-const EXPECTED_TRANSPORT_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
+const EXPECTED_TRANSPORT_DIGEST = require('./helpers/pilot-geometry-expectations').EXPECTED_DIGEST;
 
 async function main() {
   const client = await connect();

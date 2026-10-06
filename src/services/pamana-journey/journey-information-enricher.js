@@ -2,6 +2,7 @@
 
 const { evaluateFareForLeg, summarizeJourneyFares } = require('./fare-engine');
 const { loadFareAndServiceData } = require('./fare-service-data-loader');
+const { countVehicleTransfers } = require('./transfer-count');
 const { evaluateServiceForLeg } = require('./service-pattern-engine');
 const { loadOperationalData } = require('./availability-data-loader');
 const {
@@ -47,6 +48,7 @@ function enrichJourneyInformation(journey, {
   return Object.freeze({
     ...journey,
     legs,
+    transferCount: countVehicleTransfers(legs),
     fareSummary: summarizeJourneyFares(legs),
     availabilitySummary: summarizeJourneyAvailability(legs),
     informationAsOf: requestedDeparture || null,

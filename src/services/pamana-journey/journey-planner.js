@@ -3,6 +3,8 @@
 const crypto = require('node:crypto');
 const { canTransfer } = require('./transfer-detector');
 const { LEG_TYPE, MAX_TRANSFERS } = require('./types');
+const { distanceForEdge } = require('./route-distance');
+const { countVehicleTransfers } = require('./transfer-count');
 
 const nodeReference = (node) => Object.freeze({
   nodeId: node.id,
@@ -13,12 +15,7 @@ const nodeReference = (node) => Object.freeze({
 });
 
 function legFromEdge(edge, sequence) {
-  const boardDistance = edge.boardStop.distanceFromVariantStartMeters;
-  const alightDistance = edge.alightStop.distanceFromVariantStartMeters;
-  const segmentDistanceMeters = boardDistance !== null && alightDistance !== null
-    && alightDistance >= boardDistance
-    ? alightDistance - boardDistance
-    : null;
+  const distance = distanceForEdge(edge);
   return Object.freeze({
     sequence,
     type: LEG_TYPE.TRANSIT,
@@ -33,7 +30,8 @@ function legFromEdge(edge, sequence) {
     alightAt: nodeReference(edge.alightStop.node),
     boardSequence: edge.boardStop.sequence,
     alightSequence: edge.alightStop.sequence,
-    segmentDistanceMeters,
+    segmentDistanceMeters: distance.meters,
+    roadDistanceSource: distance.source,
     signboard: edge.variant.signboard,
     intermediateNodes: Object.freeze(edge.intermediateNodes.map(nodeReference)),
     verificationStatus: edge.variant.verificationStatus,
@@ -58,7 +56,7 @@ function journeyFromEdges(edges) {
   return Object.freeze({
     id: `journey-${crypto.createHash('sha256').update(identity).digest('hex').slice(0, 16)}`,
     legs,
-    transferCount: Math.max(0, legs.length - 1),
+    transferCount: countVehicleTransfers(legs),
     modes,
     originNode: legs[0].boardAt,
     destinationNode: legs[legs.length - 1].alightAt,

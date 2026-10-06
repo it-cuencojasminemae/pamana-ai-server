@@ -22,7 +22,7 @@ function transportGraphQuery({ demoMode = false } = {}) {
     },
     fields: [
       'variant_code', 'direction', 'signboard_text', 'operating_status',
-      'geometry_source', 'geometry_geojson',
+      'geometry_source', 'geometry_geojson', 'encoded_polyline',
       'planning_enabled', 'verification_status', 'data_mode', 'verified_at',
       'source_name', 'source_url', 'source_reference', 'effective_from', 'effective_to',
     ],

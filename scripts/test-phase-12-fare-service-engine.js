@@ -37,6 +37,9 @@ const {
 const REQUESTED = '2026-09-28T08:00:00+08:00';
 
 function journeyFor(fixture, origin, destination) {
+  // Preserve stored-rule precedence/eligibility coverage on another supported
+  // mode. Batch A separately tests the system-owned jeepney fare policy.
+  fixture.variants.forEach((variant) => { variant.route.transport_mode = 'BUS'; });
   return planJourneys(buildTransportGraph(fixture), {
     candidateBoardingNodeIds: [origin],
     candidateDestinationNodeIds: [destination],

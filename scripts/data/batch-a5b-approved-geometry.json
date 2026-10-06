@@ -1,0 +1,120 @@
+{
+  "phase": "BATCH_A.5B",
+  "approval_date": "2026-10-05",
+  "approval_statement": "The user manually reviewed all four Batch A.5A Geoapify road candidates and approved all four for geometry application and fare enablement.",
+  "approval_request_sha256": "eb66cea2e687942ec5fe727d33247efcd0f42990dbcd59395f1dd05abdaf953d",
+  "approval_request_received_at": "2026-10-05T01:11:32.380Z",
+  "review_report_sha256": "5119ca98eeada758dfde465dfb8259fa59e92f33435a180e849b694ca108658d",
+  "review_generated_at": "2026-10-05T00:46:31.249Z",
+  "integrity_evidence": "All candidate mtimes and review-report mtime precede receipt of approval; exact endpoints, request IDs, archived metadata and deterministic measured lengths match A.5A. SHA-256 values are frozen here for this approved application; A.5A did not record a pre-review file checksum.",
+  "approved": [
+    {
+      "variant_code": "RCH-SJ-SMROB-OUT",
+      "variant_id": 3,
+      "stop_ids": [
+        17,
+        18
+      ],
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "transport_mode": "PUJ_TRADITIONAL",
+      "filename": "RCH-SJ-SMROB-OUT.candidate.geojson",
+      "sha256": "ddcf3a262fb70672c73aa2364c6b67c08ad73b9d9c05ecafb5716ed3c15b085c",
+      "geometry_sha256": "cd3627ac44dddb944230c942e915b849777f3a6f107afa894536afc25712c773",
+      "request_id": "26723c06-c2e1-4ff4-aed6-4219bdd76b69",
+      "origin_node_code": "RCH-PSU-MEXICO-FRONT",
+      "destination_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "origin_coordinates": [
+        120.69826461388278,
+        15.128026422211173
+      ],
+      "destination_coordinates": [
+        120.69885494898818,
+        15.05158520927461
+      ],
+      "provider_reported_distance_m": 10709,
+      "geometry_measured_distance_m": 10694.258194344386,
+      "artifact_modified_at": "2026-10-05T00:53:08.114Z"
+    },
+    {
+      "variant_code": "RCH-SJ-SMROB-IN",
+      "variant_id": 4,
+      "stop_ids": [
+        19,
+        20
+      ],
+      "route_code": "RCH-SJ-CSF-SM-ROB",
+      "transport_mode": "PUJ_TRADITIONAL",
+      "filename": "RCH-SJ-SMROB-IN.candidate.geojson",
+      "sha256": "cb957e4df64312dbaf020256d3bd5a64617c26c221af24e236ccea3e085f80c0",
+      "geometry_sha256": "94f3c351a518884d7ec96f51140c8e5fec3f297b45545186946f2b61f1c2e747",
+      "request_id": "88a93aca-014d-4d60-83f1-0ad9cdf3fb79",
+      "origin_node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "destination_node_code": "RCH-PSU-MEXICO-FRONT",
+      "origin_coordinates": [
+        120.69778203294244,
+        15.050605637995128
+      ],
+      "destination_coordinates": [
+        120.69826461388278,
+        15.128026422211173
+      ],
+      "provider_reported_distance_m": 11179,
+      "geometry_measured_distance_m": 11164.518804277131,
+      "artifact_modified_at": "2026-10-05T00:53:08.116Z"
+    },
+    {
+      "variant_code": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT",
+      "variant_id": 9,
+      "stop_ids": [
+        23,
+        24
+      ],
+      "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO",
+      "transport_mode": "PUJ_TRADITIONAL",
+      "filename": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT.candidate.geojson",
+      "sha256": "30113dd9a05f56ca9457b4a122c479d7043e71d5718626e636137b700b17fa6f",
+      "geometry_sha256": "e2d97de6de369f1a385d89de0339dd5301b754562b599e6f44e3acc6eee31dce",
+      "request_id": "0863eb0c-a1dc-4868-b8aa-1501a376ee8f",
+      "origin_node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "destination_node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "origin_coordinates": [
+        120.72025022065026,
+        15.064333794084051
+      ],
+      "destination_coordinates": [
+        120.69885494898818,
+        15.05158520927461
+      ],
+      "provider_reported_distance_m": 3013,
+      "geometry_measured_distance_m": 3006.7836757819987,
+      "artifact_modified_at": "2026-10-05T00:53:08.119Z"
+    },
+    {
+      "variant_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT",
+      "variant_id": 10,
+      "stop_ids": [
+        21,
+        22
+      ],
+      "route_code": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE",
+      "transport_mode": "TRICYCLE",
+      "filename": "PILOT-PSU-MEXICO-BAYAN-TRICYCLE-OUT.candidate.geojson",
+      "sha256": "92ce5a60d12f9067c70d544c270ac63362d34903a9ba34e3cf588c6257061bb1",
+      "geometry_sha256": "5e62e4f00b54500b914b768b5d8b76c8fe7b27c2df9865ac261c5ccdbc0bc864",
+      "request_id": "89813f2c-8193-44e6-be14-8e3b93d3d9a4",
+      "origin_node_code": "RCH-PSU-MEXICO-FRONT",
+      "destination_node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "origin_coordinates": [
+        120.69826461388278,
+        15.128026422211173
+      ],
+      "destination_coordinates": [
+        120.72025022065026,
+        15.064333794084051
+      ],
+      "provider_reported_distance_m": 7696,
+      "geometry_measured_distance_m": 7687.474760052879,
+      "artifact_modified_at": "2026-10-05T00:53:08.120Z"
+    }
+  ]
+}

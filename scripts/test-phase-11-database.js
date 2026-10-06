@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const { connect, snapshot } = require('./seed-phase5b-transfer-research');
 const { findAccessNodes } = require('../src/services/pamana-journey/access-node-finder');
 
-const EXPECTED_PHASE_10_DIGEST = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
+const EXPECTED_PHASE_10_DIGEST = require('./helpers/pilot-geometry-expectations').EXPECTED_DIGEST;
 const PROTECTED_NODE_CODES = [
   'RCH-PSU-MEXICO-FRONT',
   'RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER',
@@ -65,14 +65,14 @@ async function main() {
       assert.equal(record.verification_status, 'FIELD_VERIFIED');
       assert.equal(record.operating_status, 'ACTIVE');
       assert.equal(record.encoded_polyline, null);
-      assert.equal(record.geometry_geojson, null);
+      require('./helpers/pilot-geometry-expectations').assertPilotGeometry(record);
     }
 
     const state = await snapshot(client);
     const digest = crypto.createHash('sha256').update(JSON.stringify(state)).digest('hex');
     assert.equal(digest, EXPECTED_PHASE_10_DIGEST, 'Phase 11 must not modify PostgreSQL transport rows');
     console.log('ok - current PostgreSQL data has exactly four eligible coordinate-bearing pilot access nodes');
-    console.log('ok - approved variants are active while transit geometry remains unresolved');
+    console.log('ok - approved variants are active and geometry matches the application checkpoint');
     console.log(`Transport row digest: ${digest}`);
   } finally {
     await client.query('rollback');

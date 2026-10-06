@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PAMANA · Batch A.5A geometry review</title>
+  <link rel="stylesheet" href="/vendor/maplibre-gl.css">
+  <style>
+    *{box-sizing:border-box}body{margin:0;color:#16332b;background:#f5f7f3;font:15px system-ui,sans-serif}
+    header{padding:18px 24px;background:#173b30;color:white}h1{font-size:23px;margin:0 0 6px}header p{margin:0;color:#ddede1}
+    main{display:grid;grid-template-columns:390px minmax(0,1fr);gap:16px;padding:16px}aside{height:calc(100vh - 126px);overflow:auto;padding:18px;border:1px solid #d6dfd8;border-radius:14px;background:white}
+    h2{font-size:17px;margin:20px 0 8px}h3{font-size:15px;margin:14px 0 6px}p{margin:8px 0;line-height:1.5}select,button{font:inherit;border:1px solid #bccfc3;border-radius:8px;background:#f8fbf8;padding:10px;cursor:pointer}select{width:100%;font-size:12px;margin:8px 0}
+    .tag{display:inline-block;background:#fff2be;border:1px solid #efd26b;color:#654b00;border-radius:6px;padding:5px 8px;font-size:12px;font-weight:700}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+    #map{height:calc(100vh - 170px);min-height:420px;border-radius:14px;overflow:hidden;background:#e6eee8}.legend{background:white;padding:12px;border-radius:9px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px}.swatch{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+    dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}dt{color:#65766d;font-size:12px}dd{margin:0;font-weight:600;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;padding:8px 5px;border-bottom:1px solid #e1e8e2}
+    li{margin:8px 0;line-height:1.45}ul,ol{padding-left:22px}.warning{background:#fff6de;padding:10px;border-left:3px solid #de9b26;border-radius:6px}#status{font-size:13px;color:#576b60}.node-label{color:#1a342c;background:#ffffffed;border:1px solid #c1d1c7;border-radius:5px;padding:3px 6px;font-size:11px;white-space:nowrap;box-shadow:0 1px 4px #0002}
+    #review-notes{width:100%;min-height:85px;font:inherit;padding:8px;border:1px solid #c1d1c7;border-radius:8px}.steps{max-height:260px;overflow:auto;font-size:12px}.steps button{font-size:12px;text-align:left;width:100%;padding:6px;margin:2px 0}a{color:#076c4c}.muted{font-size:12px;color:#62736b}
+    @media(max-width:850px){main{grid-template-columns:1fr}aside{height:auto;max-height:40vh}#map{height:40vh;min-height:260px}header{padding:14px}}
+  </style>
+</head>
+<body>
+<header><h1>PAMANA · Batch A.5A geometry review</h1><p>Standalone road candidates for manual review. No database application or Passenger API changes.</p></header>
+<main>
+<aside>
+  <span class="tag">PENDING_MANUAL_REVIEW</span>
+  <label for="variant"><h2>Choose a road candidate</h2></label><select id="variant" aria-label="Variant"></select>
+  <div class="controls"><button id="fit">Fit candidate</button><a id="download" download>Download GeoJSON</a></div>
+  <p id="status" role="status">Loading review artifacts…</p>
+  <div id="summary"></div>
+  <h2>Candidate fare preview</h2><p class="muted">What the Batch A policy would calculate if this road distance is approved later. Modern fares are an alternative policy preview; this does not establish a modern service on the route.</p><div id="fares"></div>
+  <details><summary>PSU → tricycle → Mexico Bayan → jeep → SM</summary><div id="multi"></div></details>
+  <h2>Route-specific review</h2><ol id="questions"></ol>
+  <h2>Warnings and uncertainty</h2><ul id="warnings"></ul>
+  <details><summary>Road segments and provider directions</summary><p class="muted">Click a segment to inspect its bounds. Road classes flag possible access concerns; suitability still requires manual review.</p><div id="steps" class="steps"></div></details>
+  <details><summary>Possible corridor guidance</summary><p>Prior research names PSU / San Juan → Santa Cruz → Laput → Balas → San Carlos → Mexico Bayan → Sto. Cristo → Lagundi → SM/Rob. No waypoint coordinates were supplied. None were invented or sent to Geoapify.</p><p>Compare the line against that reported corridor. Any correction needs evidence for precise road waypoints before another routing request.</p></details>
+  <h2>Manual review notes</h2><label for="decision">Candidate decision</label><select id="decision"><option value="PENDING_MANUAL_REVIEW">Pending</option><option value="LOOKS_SUITABLE_FOR_LATER_REVIEW">Looks suitable for later application review</option><option value="NEEDS_WAYPOINTS_OR_CORRECTION">Needs waypoints or correction</option><option value="REJECT_CANDIDATE">Reject candidate</option></select>
+  <textarea id="review-notes" aria-label="Manual review notes" placeholder="Corridor, mall gate, shortcut or waypoint observations…"></textarea>
+  <button id="export-notes">Download notes for all routes</button><p class="muted">Notes stay in this browser tab until downloaded. Downloading notes does not approve or apply geometry to PAMANA.</p>
+</aside>
+<section><div id="map" aria-label="Candidate geometry map"></div><div class="legend"><span><i class="swatch" style="background:#16866f"></i>Origin O</span><span><i class="swatch" style="background:#d84148"></i>Destination D</span><span><i class="swatch" style="background:#3e72a8"></i>Known pilot node</span><span><i class="swatch" style="background:#7843bc"></i>Candidate road · direction arrows</span><span><i class="swatch" style="background:#e29122"></i>Endpoint snapping gap · excluded from fare</span></div></section>
+</main>
+<script type="module" src="/review.js"></script>
+</body></html>

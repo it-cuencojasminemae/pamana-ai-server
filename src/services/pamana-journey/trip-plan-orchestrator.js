@@ -9,6 +9,8 @@ const { loadFareAndServiceData } = require('./fare-service-data-loader');
 const { loadOperationalData } = require('./availability-data-loader');
 const { enrichJourneyInformation } = require('./journey-information-enricher');
 const { tripPlanConfig } = require('./trip-plan-config');
+const { countVehicleTransfers } = require('./transfer-count');
+const { recommendJourneys } = require('./journey-recommendations');
 const { loadEligibleDisruptions } = require('./disruption-data-loader');
 const { applyDisruptionConstraints, attachDisruptionWarnings } = require('./disruption-engine');
 
@@ -96,6 +98,7 @@ function normalizeLeg(leg, { transitGeometries = new Map() } = {}) {
       intermediateNodes: leg.intermediateNodes || Object.freeze([]),
       signboard: leg.signboard || null,
       segmentDistanceMeters: leg.segmentDistanceMeters ?? null,
+      roadDistanceSource: leg.roadDistanceSource || null,
       durationSeconds: null,
       geometry: transitGeometries.get(leg.routeVariantId) || null,
       fare: leg.fare,
@@ -124,7 +127,7 @@ function normalizeJourney(journey, options = {}) {
   })).values()];
   return Object.freeze({
     id: journey.id,
-    transferCount: journey.transferCount,
+    transferCount: countVehicleTransfers(legs),
     modes: journey.modes,
     legs,
     fareSummary: journey.fareSummary,
@@ -146,6 +149,7 @@ function baseResponse(request, status, {
     request,
     status,
     journeys: Object.freeze(journeys),
+    recommendations: recommendJourneys(journeys),
     warnings: Object.freeze([...new Set([
       ...failures.map((failure) => failure.code).filter(Boolean),
       ...warningCodes.filter(Boolean),

@@ -7,7 +7,7 @@ const { compileStrapi, createStrapi } = require('@strapi/strapi');
 const { connect } = require('./seed-phase5b-transfer-research');
 const { counts, digest } = require('./activate-pilot-field-verified');
 const { orchestrateTripPlan } = require('../src/services/pamana-journey/trip-plan-orchestrator');
-const EXPECTED = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af9139';
+const EXPECTED = require('./helpers/pilot-geometry-expectations').EXPECTED_DIGEST;
 
 // The real Strapi data loaders and deterministic engine run together. Only the
 // external walking provider is mocked; its synthetic geometry is never saved.
@@ -42,7 +42,9 @@ const EXPECTED = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af91
       for (const journey of result.journeys) {
         assert.equal(journey.dataQuality.planningEligible, true);
         for (const leg of journey.legs.filter(leg => leg.type === 'TRANSIT')) {
-          assert.equal(leg.geometry, null); assert.equal(leg.durationSeconds, null);
+          assert.deepEqual(leg.geometry, require('./helpers/pilot-geometry-expectations').expectedGeometry(leg.variant.code)); assert.equal(leg.durationSeconds, null);
+          assert.equal(leg.fare.status, 'KNOWN'); assert.ok(Number.isInteger(leg.fare.payableFare));
+          assert.equal(leg.roadDistanceSource, 'STORED_ROUTE_STOP_DISTANCE');
           assert.equal(leg.service.status, 'UNKNOWN');
           assert.equal(leg.service.headwayMinutes, null);
         }
@@ -50,11 +52,18 @@ const EXPECTED = '3d63fcdb5d9581d71e2c68d54db9c00868510dcc9b91e6e38fcb893373af91
       }
       results.push(result);
     }
-    assert.ok(results[0].journeys.some(journey => journey.transferCount === 0 && journey.fareSummary.totalFare === 30));
+    assert.ok(results[0].journeys.some(journey => journey.transferCount === 0 && journey.fareSummary.totalFare === 27
+      && journey.legs.some(leg => leg.type === 'TRANSIT' && leg.fare.sourceType === 'SYSTEM_CALCULATED')));
+    assert.ok(results[0].journeys.some(journey => journey.transferCount === 1 && journey.fareSummary.totalFare === 114));
+    assert.ok(results[1].journeys.some(journey => journey.fareSummary.totalFare === 100
+      && journey.legs.some(leg => leg.fare?.sourceType === 'DEMO_ESTIMATE')));
     assert.ok(results[0].journeys.some(journey => journey.transferCount === 1));
     assert.ok(results[3].journeys.every(journey => journey.legs.some(leg => leg.type === 'TRANSIT' && leg.direction === 'INBOUND')));
-    assert.ok(results[4].journeys.every(journey => journey.legs.filter(leg => leg.type === 'TRANSIT').every(leg => leg.fare.discountedFare === null)));
-    console.log('ok - real Strapi loaders compose direct, transfer, intermediate and inbound pilot journeys with factual fares and unknown schedules/ETA');
+    for (const leg of results[4].journeys.flatMap(j=>j.legs).filter(l=>l.type==='TRANSIT')) {
+      if(leg.transportMode==='TRICYCLE') { assert.equal(leg.fare.payableFare,100); assert.equal(leg.fare.discountedFare,null); }
+      else { assert.ok(Number.isInteger(leg.fare.discountedFare)); assert.equal(leg.fare.payableFare,leg.fare.discountedFare); }
+    }
+    console.log('ok - real Strapi loaders compose direct, transfer, intermediate and inbound pilot journeys with approved geometry, system fares and unknown schedules/ETA');
     const missing = await orchestrateTripPlan({ ...results[0].request, origin: { lat: 14, lng: 119 } }, { strapiInstance: app, router });
     assert.equal(missing.status, 'NO_ELIGIBLE_ACCESS_NODES'); assert.deepEqual(missing.journeys, []);
     const nonzeroWalk = { ...results[0].request, origin: { ...results[0].request.origin, lat: results[0].request.origin.lat + 0.0003 }, destination: { ...results[0].request.destination, lat: results[0].request.destination.lat + 0.0003 } };

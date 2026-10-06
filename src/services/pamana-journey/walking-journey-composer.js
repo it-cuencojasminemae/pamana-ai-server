@@ -1,6 +1,7 @@
 'use strict';
 
 const { LEG_TYPE } = require('./types');
+const { countVehicleTransfers } = require('./transfer-count');
 
 function candidateByNode(candidates) {
   const result = new Map();
@@ -50,9 +51,11 @@ function composeWalkingJourneys(transportJourneys, {
     const access = accessByNode.get(journey?.originNode?.nodeId);
     const egress = egressByNode.get(journey?.destinationNode?.nodeId);
     if (!access || !egress) continue;
+    const legs = sequenceLegs(access, journey.legs, egress);
     journeys.push(Object.freeze({
       ...journey,
-      legs: sequenceLegs(access, journey.legs, egress),
+      legs,
+      transferCount: countVehicleTransfers(legs),
       access: Object.freeze({
         node: access.node,
         walkingDistanceMeters: access.walkingDistanceMeters,
