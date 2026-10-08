@@ -29,6 +29,7 @@ const { ROLE, enforceRole } = require('../../../services/security/access-control
 const { consumeRateLimit } = require('../../../services/security/request-guard');
 const { JEEPNEY_POLICIES } = require('../../../services/pamana-journey/fare-policy');
 const { countVehicleTransfers } = require('../../../services/pamana-journey/transfer-count');
+const { availabilityForTrip, TRIP_AVAILABILITY_FIELDS } = require('../../../services/vehicle-availability/policy');
 
 // Assumed overhead (wait + walk between legs) added to total journey time
 // for every transfer in a candidate's route - not real headway data, a
@@ -112,12 +113,13 @@ const buildServiceName = (originLabel, destinationLabel, transferStopName) => {
   return `${from} - ${to} Jeepney`;
 };
 
-const reliabilityScoreFor = (waitConfidence, vehicle, transferCount) => {
+const reliabilityScoreFor = (waitConfidence, vehicle, transferCount, availability) => {
   let score = waitConfidence * 60;
 
   if (vehicle) {
     score += VEHICLE_STATUS_RELIABILITY[vehicle.vehicle_status] ?? 0;
-    score += OCCUPANCY_RELIABILITY[vehicle.occupancy_level] ?? 8;
+    const level = { AVAILABLE: 'low', LIMITED: 'near_full', FULL: 'full' }[availability?.status];
+    score += OCCUPANCY_RELIABILITY[level] ?? 8;
   } else {
     score += 8; // no specific vehicle assigned yet - modest default, not zero
   }
@@ -158,7 +160,8 @@ const formatVehicle = (vehicle, source, location = null) =>
         plate_number: vehicle.plate_number ?? null,
         vehicle_type: vehicle.vehicle_type,
         vehicle_status: vehicle.vehicle_status,
-        occupancy_level: vehicle.occupancy_level ?? null,
+        occupancy_level: { AVAILABLE: 'low', LIMITED: 'near_full', FULL: 'full' }[location?.availability?.status] ?? null,
+        availability: location?.availability || availabilityForTrip(null, { dataMode: vehicle.data_mode }),
         data_mode: vehicle.data_mode ?? DATA_MODE.SIMULATED,
         source,
         location,
@@ -198,7 +201,7 @@ async function latestObservedVehicleLocation(strapi, vehicleId) {
       is_simulated: false,
       data_mode: DATA_MODE.REAL,
     },
-    fields: ['id'],
+    fields: ['id', 'trip_status', 'is_simulated', 'data_mode', ...TRIP_AVAILABILITY_FIELDS],
   });
 
   if (!activeTrip) return null;
@@ -219,6 +222,7 @@ async function latestObservedVehicleLocation(strapi, vehicleId) {
     recorded_at: location.recorded_at,
     source: 'observed',
     data_mode: DATA_MODE.REAL,
+    availability: availabilityForTrip(activeTrip),
   };
 }
 
@@ -245,7 +249,7 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
       waitTimeCache.set(route.id, await predictWaitTime(strapi, { routeId: route.id }));
     }
     const waitTime = waitTimeCache.get(route.id);
-    const eligibleVehicles = (route.vehicles || []).filter((v) => v.vehicle_status !== 'offline');
+    const eligibleVehicles = (route.vehicles || []).filter((v) => v.vehicle_status !== 'offline' && v.data_mode === DATA_MODE.REAL);
     const vehicleCandidates = eligibleVehicles.length > 0 ? eligibleVehicles : [null];
 
     for (const vehicle of vehicleCandidates) {
@@ -256,7 +260,6 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
       const fare = JEEPNEY_POLICIES[route.transport_mode] || rawFare === null || !Number.isFinite(rawFare) || rawFare < 0
         ? null : Math.round(rawFare);
       const estimatedTravelMinutes = route.estimated_travel_time ?? null;
-      const reliability_score = reliabilityScoreFor(waitTime.confidence, vehicle, transferCount);
       const totalJourneyMinutes =
         (waitTime.predicted_wait_minutes?.high ?? 0) +
         (estimatedTravelMinutes ?? 0) +
@@ -268,6 +271,8 @@ async function buildCandidates(strapi, routes, searchOrigin, searchDestination) 
         }
         vehicle_location = vehicleLocationCache.get(vehicle.id);
       }
+      const reliability_score = reliabilityScoreFor(waitTime.confidence, vehicle, transferCount, vehicle_location?.availability);
+      data_quality.occupancy = vehicle_location?.availability?.confidence || 'UNKNOWN';
 
       candidates.push({
         id: `${route.documentId}:${direction}:${vehicle ? vehicle.documentId : 'unassigned'}`,

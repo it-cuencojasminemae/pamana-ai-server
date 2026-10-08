@@ -1,0 +1,36 @@
+{
+  "status": "VERIFIED_INDICATIVE",
+  "cityCode": "035416000",
+  "barangayCount": 35,
+  "geometrySha256": "feb34e8a7b3829bcc2a18e409a5415c7fe0db49fc8946b527da1e395f8ce8681",
+  "source": "PSA via DOST GeoRisk Philippines",
+  "sourceUrl": "https://portal.georisk.gov.ph/arcgis/rest/services/PSA/Barangay/MapServer/4",
+  "verifiedAt": "2026-10-08T06:28:36.731Z",
+  "referencePoints": [
+    {
+      "name": "City Proper return loading",
+      "lat": 15.029006842709281,
+      "lng": 120.69283148014446,
+      "expectedInside": true
+    },
+    {
+      "name": "Victory Liner reference",
+      "lat": 15.039373960293801,
+      "lng": 120.68311389238005,
+      "expectedInside": true
+    },
+    {
+      "name": "McDonalds reference",
+      "lat": 15.04124663498475,
+      "lng": 120.68364202268374,
+      "expectedInside": true
+    },
+    {
+      "name": "San Juan terminal outside the city",
+      "lat": 15.117429648993976,
+      "lng": 120.7024058913807,
+      "expectedInside": false
+    }
+  ],
+  "notice": "Indicative June 2016 barangay boundaries based on PSA 2015 census; geographic pin authorization only, not a legal survey or transport verification."
+}

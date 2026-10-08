@@ -17,7 +17,7 @@ const LEG_TYPE = Object.freeze({
   TRANSFER: 'TRANSFER',
 });
 
-const MAX_TRANSFERS = 1;
+const MAX_TRANSFERS = 2;
 
 module.exports = {
   LEG_TYPE,

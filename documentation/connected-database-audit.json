@@ -1,0 +1,86 @@
+{
+  "executedAt": "2026-10-08T10:47:34.434Z",
+  "transportDigest": "6e46cafdfcd17b27d30a869ce866fa1075dbe119d7c963299dc50aa521c9647f",
+  "counts": {
+    "transport_nodes": 13,
+    "routes": 9,
+    "route_variants": 6,
+    "route_variant_stops": 12,
+    "fare_rules": 2,
+    "service_patterns": 0,
+    "route_variants_route_lnk": 6,
+    "route_variants_start_node_lnk": 6,
+    "route_variants_end_node_lnk": 6,
+    "route_variant_stops_route_variant_lnk": 12,
+    "route_variant_stops_transport_node_lnk": 12
+  },
+  "reusedInventory": [
+    {
+      "node_code": "RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER",
+      "name": "Mexico Bayan – Sta. Monica Parish Church Transfer Area",
+      "node_type": "TRANSFER_POINT",
+      "latitude": "15.064333794084051",
+      "longitude": "120.720250220650260",
+      "planning_enabled": true,
+      "verification_status": "FIELD_VERIFIED",
+      "data_mode": "REAL"
+    },
+    {
+      "node_code": "RCH-PSU-MEXICO-FRONT",
+      "name": "Pampanga State University Mexico Campus – Front Waiting Area",
+      "node_type": "DESIGNATED_STOP",
+      "latitude": "15.128026422211173",
+      "longitude": "120.698264613882780",
+      "planning_enabled": true,
+      "verification_status": "FIELD_VERIFIED",
+      "data_mode": "REAL"
+    },
+    {
+      "node_code": "RCH-ROB-STARMILLS-ARAYAT-GATE-LOAD",
+      "name": "Robinsons Starmills – Arayat Gate Return Loading Area",
+      "node_type": "LOADING_BAY",
+      "latitude": "15.050605637995128",
+      "longitude": "120.697782032942440",
+      "planning_enabled": true,
+      "verification_status": "FIELD_VERIFIED",
+      "data_mode": "REAL"
+    },
+    {
+      "node_code": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF",
+      "name": "SM City Pampanga Main Gate Drop-off Area",
+      "node_type": "DROP_OFF",
+      "latitude": "15.051585209274610",
+      "longitude": "120.698854948988180",
+      "planning_enabled": true,
+      "verification_status": "FIELD_VERIFIED",
+      "data_mode": "REAL"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Administrator",
+      "action": "api::pamana-ai.journey-details.create"
+    },
+    {
+      "role": "Administrator",
+      "action": "api::pamana-ai.planning-capabilities.find"
+    },
+    {
+      "role": "LGU",
+      "action": "api::pamana-ai.journey-details.create"
+    },
+    {
+      "role": "LGU",
+      "action": "api::pamana-ai.planning-capabilities.find"
+    },
+    {
+      "role": "Passenger",
+      "action": "api::pamana-ai.journey-details.create"
+    },
+    {
+      "role": "Passenger",
+      "action": "api::pamana-ai.planning-capabilities.find"
+    }
+  ],
+  "transportUnchanged": true
+}

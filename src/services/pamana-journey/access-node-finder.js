@@ -5,6 +5,7 @@ const {
   planningEligibilityFor,
 } = require('../transport-data/planning-eligibility');
 const { walkingConfig } = require('./walking-config');
+const { eligibilityForContext } = require('./planning-context');
 const { normalizePoint } = require('./walking-router');
 
 const EARTH_RADIUS_METERS = 6371008.8;
@@ -40,8 +41,8 @@ function haversineMeters(first, second) {
   return 2 * EARTH_RADIUS_METERS * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function normalizeEligibleNode(node) {
-  if (!planningEligibilityFor(node).eligible) return null;
+function normalizeEligibleNode(node, context) {
+  if (!eligibilityForContext(node, { context }).eligible) return null;
   const point = usableNodeCoordinate(node);
   const nodeId = identity(node);
   const nodeCode = text(node?.node_code);
@@ -54,6 +55,7 @@ function normalizeEligibleNode(node) {
     nodeType: text(node.node_type),
     lat: point.lat,
     lng: point.lng,
+    ...(node.connector ? { connector: node.connector } : {}),
   });
 }
 
@@ -116,6 +118,7 @@ async function findAccessNodes({
   router,
   config: configOverrides = {},
   signal,
+  context,
 } = {}) {
   const point = normalizePoint(rawPoint);
   const config = walkingConfig(configOverrides);
@@ -130,7 +133,7 @@ async function findAccessNodes({
 
   const prefetched = [];
   for (const rawNode of Array.isArray(nodes) ? nodes : []) {
-    const node = normalizeEligibleNode(rawNode);
+    const node = normalizeEligibleNode(rawNode, context);
     if (!node) continue;
     const straightLineDistanceMeters = haversineMeters(point, node);
     if (straightLineDistanceMeters === null
@@ -148,10 +151,24 @@ async function findAccessNodes({
   const expanded = prefetched.filter((item) =>
     item.straightLineDistanceMeters > config.initialCandidateRadiusMeters
   );
-  const shortlist = [...initial, ...expanded].slice(0, config.maxCandidateCount);
+  const nearby = [...initial, ...expanded];
+  const shortlist = [];
+  if (context?.researchPreview && direction === 'ACCESS' && nearby.some(item => item.node.connector?.temporary)) {
+    // Reserve permanent-stop fallbacks and one nearest point per service,
+    // then use the remaining bounded calls for alternative road access.
+    shortlist.push(...nearby.filter(item => !item.node.connector?.temporary).slice(0, 2));
+    const services = new Set();
+    for (const item of nearby.filter(item => item.node.connector?.temporary)) {
+      const key = `${item.node.connector.variantCode}:${item.node.connector.direction}`;
+      if (services.has(key)) continue;
+      services.add(key); shortlist.push(item);
+    }
+  }
+  for (const item of nearby) if (!shortlist.includes(item)) shortlist.push(item);
+  shortlist.splice(config.maxCandidateCount);
 
   const resolved = await mapWithConcurrency(shortlist, config.maxConcurrentRequests, async (item) => {
-    if (item.straightLineDistanceMeters <= config.proximityThresholdMeters) {
+    if (!item.node.connector?.temporary && item.straightLineDistanceMeters <= config.proximityThresholdMeters) {
       return Object.freeze({
         candidate: Object.freeze({
           node: item.node,
@@ -179,12 +196,28 @@ async function findAccessNodes({
         }),
       });
     }
-    if (result.value.distanceMeters === null
-      || result.value.durationSeconds === null
-      || result.value.geometry === null) {
+    if (!Number.isFinite(result.value?.distanceMeters) || result.value.distanceMeters < 0
+      || !Number.isFinite(result.value?.durationSeconds) || result.value.durationSeconds < 0
+      || !result.value?.geometry) {
       return Object.freeze({
         failure: Object.freeze({ nodeId: item.node.nodeId, code: 'WALKING_ROUTE_UNAVAILABLE' }),
       });
+    }
+    if (item.node.connector?.temporary && direction === 'ACCESS') {
+      const geometry = result.value.geometry;
+      const line = geometry.type === 'MultiLineString' ? geometry.coordinates.flat() : geometry.coordinates;
+      const first = line?.[0], last = line?.at(-1);
+      const near = (coordinate, endpoint, tolerance) => {
+        if (!Array.isArray(coordinate) || coordinate.length < 2 || !coordinate.every(Number.isFinite)) return false;
+        const distance = haversineMeters({ lng: coordinate[0], lat: coordinate[1] }, endpoint);
+        return Number.isFinite(distance) && distance <= tolerance;
+      };
+      if (!Array.isArray(line) || line.length < 2 || !near(first, from, 30) || !near(last, to, 20)) {
+        return { failure: { nodeId: item.node.nodeId, code: 'WALKING_CORRIDOR_ENDPOINT_UNRESOLVED' } };
+      }
+    }
+    if (Number.isFinite(config.maximumWalkMeters) && result.value.distanceMeters > config.maximumWalkMeters) {
+      return { failure: { nodeId: item.node.nodeId, code: 'WALK_EXCEEDS_HARD_MAXIMUM' } };
     }
     return Object.freeze({
       candidate: Object.freeze({

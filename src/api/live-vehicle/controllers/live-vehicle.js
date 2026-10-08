@@ -3,6 +3,7 @@
 const { DATA_MODE } = require('../../../services/transport-data/planning-eligibility');
 const { ROLE, enforceRole } = require('../../../services/security/access-control');
 const { loadLatestLocations, locationKey } = require('../../../services/pamana-journey/latest-location-loader');
+const { availabilityForTrip } = require('../../../services/vehicle-availability/policy');
 
 /**
  * live-vehicle controller
@@ -35,7 +36,7 @@ module.exports = {
     });
 
     const latest = await loadLatestLocations({
-      strapiInstance: strapi, allowSimulated: true, populateTrip: false,
+      strapiInstance: strapi, allowSimulated: false, populateTrip: false,
       pairs: activeTrips.filter(trip => trip.vehicle && trip.route && trip.route_variant)
         .map(trip => ({ tripId: trip.documentId, vehicleId: trip.vehicle.documentId })),
     });
@@ -54,6 +55,9 @@ module.exports = {
           .every((mode) => mode === DATA_MODE.REAL)
           ? DATA_MODE.REAL
           : DATA_MODE.SIMULATED;
+        // Demonstrations use the separately gated demo endpoint/overlay.
+        if (dataMode !== DATA_MODE.REAL || trip.route.data_mode !== DATA_MODE.REAL || trip.is_simulated === true) return null;
+        const availability = availabilityForTrip(trip, { dataMode });
 
         return {
           vehicle_id: trip.vehicle.id,
@@ -62,7 +66,9 @@ module.exports = {
           plate_number: trip.vehicle.plate_number,
           vehicle_type: trip.vehicle.vehicle_type,
           vehicle_status: trip.vehicle.vehicle_status,
-          occupancy_level: trip.vehicle.occupancy_level,
+          // Legacy approximate vocabulary follows the same expiry; no count is inferred.
+          occupancy_level: { AVAILABLE: 'low', LIMITED: 'near_full', FULL: 'full' }[availability.status] ?? null,
+          availability,
           wheelchair_accessible: trip.vehicle.wheelchair_accessible,
           low_floor: trip.vehicle.low_floor,
           data_mode: dataMode,

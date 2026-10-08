@@ -1,8 +1,8 @@
 'use strict';
 
 const {
-  planningEligibilityFor,
-} = require('../transport-data/planning-eligibility');
+  eligibilityForContext: planningEligibilityFor,
+} = require('./planning-context');
 const { geometryStopOffsets } = require('./route-distance');
 const {
   PLANNING_OPERATING_STATUSES,
@@ -47,12 +47,13 @@ function effectiveDateReason(variant, serviceDate) {
 function routeVariantPlanningEligibilityFor(rawVariant, {
   demoMode = false,
   serviceDate = new Date(),
+  context,
 } = {}) {
   const variant = unwrapRecord(rawVariant);
   const reasons = [];
   if (!variant) return { eligible: false, reasons: ['VARIANT_MISSING'] };
 
-  planningEligibilityFor(variant, { allowSimulated: demoMode }).reasons
+  planningEligibilityFor(variant, { allowSimulated: demoMode, context }).reasons
     .forEach((reason) => reasons.push(`VARIANT_${reason}`));
 
   if (!PLANNING_OPERATING_STATUSES.includes(variant.operating_status)) {
@@ -66,7 +67,7 @@ function routeVariantPlanningEligibilityFor(rawVariant, {
   if (!route) {
     reasons.push('ROUTE_MISSING');
   } else {
-    planningEligibilityFor(route, { requireActive: true, allowSimulated: demoMode }).reasons
+    planningEligibilityFor(route, { requireActive: true, allowSimulated: demoMode, context }).reasons
       .forEach((reason) => reasons.push(`ROUTE_${reason}`));
     if (route.active !== true) reasons.push('ROUTE_ACTIVE_FLAG_FALSE');
     if (!TRANSPORT_MODES.includes(route.transport_mode)) reasons.push('TRANSPORT_MODE_UNSUPPORTED');
@@ -85,7 +86,7 @@ function routeVariantPlanningEligibilityFor(rawVariant, {
       reasons.push(`STOP_${index + 1}_NODE_MISSING`);
       continue;
     }
-    planningEligibilityFor(node, { allowSimulated: demoMode }).reasons
+    planningEligibilityFor(node, { allowSimulated: demoMode, context }).reasons
       .forEach((reason) => reasons.push(`STOP_${index + 1}_NODE_${reason}`));
   }
 
@@ -112,10 +113,11 @@ function normalizeNode(rawNode) {
       ? { lat: latitude, lng: longitude } : {}),
     verificationStatus: node.verification_status,
     dataMode: node.data_mode,
+    ...(node.connector ? { connector: node.connector } : {}),
   });
 }
 
-function normalizeVariant(rawVariant) {
+function normalizeVariant(rawVariant, options = {}) {
   const variant = unwrapRecord(rawVariant);
   const route = unwrapRecord(variant.route);
   const id = identity(variant);
@@ -137,12 +139,13 @@ function normalizeVariant(rawVariant) {
         pickupAllowed: rawStop.pickup_allowed === true,
         dropoffAllowed: rawStop.dropoff_allowed === true,
         transferAllowed: rawStop.transfer_allowed === true,
+        instructionTemplate: text(rawStop.instruction_template),
         node,
       });
     })
     .filter(Boolean)
     .sort((first, second) => first.sequence - second.sequence);
-  const offsets = geometryStopOffsets(variant, normalizedStops);
+  const offsets = geometryStopOffsets(variant, normalizedStops, { allowResearch: options.context?.researchPreview === true });
   const stops = normalizedStops.map((stop, index) => Object.freeze({
     ...stop, geometryOffsetMeters: offsets[index] ?? null,
   }));
@@ -154,6 +157,12 @@ function normalizeVariant(rawVariant) {
     operatingStatus: variant.operating_status,
     verificationStatus: variant.verification_status,
     dataMode: variant.data_mode,
+    evidenceClass: variant.evidenceClass || 'VERIFIED_OPERATIONAL',
+    researchEvidenceId: variant.researchEvidenceId || null,
+    geometry: variant.geometry_geojson || null,
+    geometrySource: variant.geometry_source || null,
+    signboardAliases: variant.signboardAliases || [],
+    boardingInstructions: variant.boardingInstructions || [],
     route: Object.freeze({
       id: routeId,
       routeCode: route.route_code,
@@ -188,7 +197,7 @@ function buildTransportGraph({ variants = [] } = {}, options = {}) {
       excludedVariants.push(Object.freeze({ id: rawId, reasons: Object.freeze(eligibility.reasons) }));
       continue;
     }
-    const variant = normalizeVariant(rawVariant);
+    const variant = normalizeVariant(rawVariant, options);
     if (!variant || seenVariants.has(variant.id)) continue;
     seenVariants.add(variant.id);
     variantMap.set(variant.id, variant);

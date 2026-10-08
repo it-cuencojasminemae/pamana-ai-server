@@ -1,4 +1,5 @@
 'use strict';
+const { accessPolicy } = require('./planning-context');
 
 const DEFAULT_WALKING_CONFIG = Object.freeze({
   routingUrl: 'https://api.geoapify.com/v1/routing',
@@ -21,6 +22,7 @@ function positiveNumber(value, fallback) {
 function walkingConfig(overrides = {}) {
   const config = {
     ...DEFAULT_WALKING_CONFIG,
+    ...accessPolicy(),
     initialCandidateRadiusMeters: positiveNumber(
       process.env.PAMANA_WALK_INITIAL_RADIUS_METERS,
       DEFAULT_WALKING_CONFIG.initialCandidateRadiusMeters
@@ -52,7 +54,7 @@ function walkingConfig(overrides = {}) {
     Math.floor(positiveNumber(value, fallback))));
   config.maxCandidateCount = boundedInteger(config.maxCandidateCount, DEFAULT_WALKING_CONFIG.maxCandidateCount, 5);
   config.maxConcurrentRequests = boundedInteger(config.maxConcurrentRequests, DEFAULT_WALKING_CONFIG.maxConcurrentRequests, 2);
-  config.requestTimeoutMs = boundedInteger(config.requestTimeoutMs, DEFAULT_WALKING_CONFIG.requestTimeoutMs, 30000);
+  config.requestTimeoutMs = boundedInteger(config.requestTimeoutMs, DEFAULT_WALKING_CONFIG.requestTimeoutMs, 7000);
   config.cacheTtlMs = boundedInteger(config.cacheTtlMs, DEFAULT_WALKING_CONFIG.cacheTtlMs, 5 * 60 * 1000);
   config.cacheMaxEntries = boundedInteger(config.cacheMaxEntries, DEFAULT_WALKING_CONFIG.cacheMaxEntries, 100);
   return Object.freeze(config);

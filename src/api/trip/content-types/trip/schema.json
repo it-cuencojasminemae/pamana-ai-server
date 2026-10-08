@@ -11,6 +11,16 @@
   },
   "pluginOptions": {},
   "attributes": {
+    "availability_status": {
+      "type": "enumeration",
+      "enum": ["AVAILABLE", "LIMITED", "FULL", "UNKNOWN"],
+      "default": "UNKNOWN"
+    },
+    "availability_source": {
+      "type": "enumeration",
+      "enum": ["DRIVER", "PASSENGER", "SYSTEM_ESTIMATE", "SIMULATION"]
+    },
+    "availability_reported_at": { "type": "datetime" },
     "started_at": {
       "type": "datetime"
     },

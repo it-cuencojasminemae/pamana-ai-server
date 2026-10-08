@@ -47,6 +47,11 @@ function ruleEligibilityFor(rawRecord, {
 } = {}) {
   const record = unwrapRecord(rawRecord);
   const reasons = planningEligibilityFor(record, { allowSimulated }).reasons.slice();
+  if (allowSimulated && record?.data_mode === 'SIMULATED' && record.verification_status === 'SIMULATED_DEMO'
+    && record.documentId?.startsWith('preview-observation-') && Number.isFinite(Date.parse(record.simulation_validated_at))) {
+    const missing = reasons.indexOf('VERIFIED_AT_MISSING_OR_INVALID');
+    if (missing >= 0) reasons.splice(missing, 1);
+  }
   const dateReason = effectiveDateReason(unwrapRecord(effectiveRecord), requestedDate);
   if (dateReason) reasons.push(dateReason);
   return Object.freeze({ eligible: reasons.length === 0, reasons: Object.freeze(reasons) });

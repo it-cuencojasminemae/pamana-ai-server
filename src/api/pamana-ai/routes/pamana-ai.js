@@ -6,6 +6,11 @@
 
 module.exports = {
   routes: [
+    { method: 'GET', path: '/pamana-ai/planning-capabilities', handler: 'planning-capabilities.find', config: { policies: [] } },
+    { method: 'POST', path: '/pamana-ai/journey-details', handler: 'journey-details.create', config: { policies: [] } },
+    { method: 'GET', path: '/pamana-ai/landmarks', handler: 'landmarks.find', config: { policies: [] } },
+    { method: 'GET', path: '/pamana-ai/pin-area', handler: 'pin-area.find', config: { policies: [] } },
+    { method: 'POST', path: '/pamana-ai/travel-time', handler: 'travel-time.create', config: { policies: [] } },
     {
       method: 'POST',
       path: '/pamana-ai/trip-plan',

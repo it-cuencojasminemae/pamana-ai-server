@@ -2,6 +2,7 @@
 
 const { unwrapRecord } = require('./graph-builder');
 const { evaluateLocationFreshness, latestFreshness, FRESHNESS_STATUS } = require('./vehicle-freshness');
+const { availabilityForTrip } = require('../vehicle-availability/policy');
 
 const OCCUPANCY_STATUS = Object.freeze({
   AVAILABLE: 'AVAILABLE',
@@ -20,9 +21,16 @@ function relationMatches(relation, legVariantId) {
   return Boolean(record && [identity(record), record.variant_code].filter(Boolean).includes(legVariantId));
 }
 
-function occupancyFor(record, freshness) {
+function occupancyFor(record, freshness, { now = new Date() } = {}) {
   const vehicle = unwrapRecord(record?.vehicle);
   if (!vehicle || freshness.status !== FRESHNESS_STATUS.FRESH) return OCCUPANCY_STATUS.UNKNOWN;
+  const trip = unwrapRecord(record?.trip);
+  if (vehicle.data_mode === 'REAL' || trip?.availability_reported_at) {
+    const availability = availabilityForTrip(trip, { now, dataMode: vehicle.data_mode });
+    return availability.status === 'LIMITED' ? OCCUPANCY_STATUS.NEAR_FULL : availability.status;
+  }
+  // Preserve explicitly isolated synthetic scenario occupancy profiles.
+  if (vehicle.data_mode !== 'SIMULATED') return OCCUPANCY_STATUS.UNKNOWN;
   if (vehicle.vehicle_status === 'full' || vehicle.occupancy_level === 'full') return OCCUPANCY_STATUS.FULL;
   if (vehicle.occupancy_level === 'near_full') return OCCUPANCY_STATUS.NEAR_FULL;
   if (['empty', 'low', 'moderate'].includes(vehicle.occupancy_level)) return OCCUPANCY_STATUS.AVAILABLE;
@@ -68,12 +76,13 @@ function resolveLiveVehicles(leg, {
     const freshness = evaluateLocationFreshness(rawRecord.location, { now, config });
     const active = isOperationallyActive(rawRecord, leg.routeVariantId);
     const live = active && freshness.status === FRESHNESS_STATUS.FRESH;
-    const occupancy = occupancyFor(rawRecord, freshness);
+    const occupancy = occupancyFor(rawRecord, freshness, { now });
     records.push(Object.freeze({
       vehicleId: identity(vehicle),
       assigned: true,
       live,
       occupancy,
+      availability: availabilityForTrip(unwrapRecord(rawRecord.trip), { now, dataMode: vehicle.data_mode }),
       boardable: live && [OCCUPANCY_STATUS.AVAILABLE, OCCUPANCY_STATUS.NEAR_FULL].includes(occupancy),
       dataFreshness: freshness,
     }));

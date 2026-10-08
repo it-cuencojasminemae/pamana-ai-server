@@ -223,7 +223,9 @@ function createJourneyExplanationService({
     if (!facts.rides.length) return { status: EXPLANATION_STATUS.INVALID_JOURNEY, provider: providerName, explanation: null, generatedAt: now().toISOString() };
     let result;
     try {
-      result = await provider.explainJourney(facts, { systemPrompt: SYSTEM_PROMPT, signal });
+      const systemPrompt = facts.rides.length === 3
+        ? SYSTEM_PROMPT.replace('2-4 short sentences, at most 120 words', '2-6 short sentences, at most 180 words') : SYSTEM_PROMPT;
+      result = await provider.explainJourney(facts, { systemPrompt, signal });
     } catch {
       result = { ok: false, reason: 'PROVIDER_ERROR' };
     }

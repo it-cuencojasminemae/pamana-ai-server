@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "id": "CSF-OUTBOUND-2026-10-07",
+  "status": "PENDING_VERIFICATION",
+  "testimony": { "source": "USER_COMMUTER_TESTIMONY", "reportedAt": "2026-10-07", "observedAt": null, "transportVerification": false },
+  "review": { "reviewedBy": null, "verifiedAt": null, "sourceReference": null },
+  "routes": [ { "route_code": "CSF-SM-PALENGKE", "route_name": "SM Pampanga Terminal to Palengke", "transport_mode": "PUJ_TRADITIONAL", "origin": "SM Pampanga Terminal", "destination": "San Fernando Palengke" } ],
+  "nodes": [
+    { "node_code": "CSF-SM-TERMINAL-BOARD", "name": "SM Pampanga Terminal boarding point", "node_type": "TERMINAL", "latitude": 15.051272978367622, "longitude": 120.69700506569626, "verification": null },
+    { "node_code": "CSF-SNR-ALIGHT", "name": "S&R roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-snr", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-GREEN-CITY-ALIGHT", "name": "Green City roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-green-city", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-ST-NICOLAS-ALIGHT", "name": "St. Nicolas roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-st-nicolas", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-JENRA-ALIGHT", "name": "Jumbo Jenra roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-jumbo-jenra", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-JBL-ALIGHT", "name": "JBL roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-jbl", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-PUREGOLD-ALIGHT", "name": "Puregold Jr. roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-puregold-jr", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-PHS-ALIGHT", "name": "Pampanga High School roadside drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-phs", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-SFELAPCO-ALIGHT", "name": "SFELAPCO City Proper final drop-off", "node_type": "DROP_OFF", "landmarkId": "csf-sfelapco", "latitude": null, "longitude": null, "verification": null },
+    { "node_code": "CSF-MARKET-ALIGHT", "name": "City Proper market-side final drop-off", "node_type": "DROP_OFF", "latitude": 15.030460442970819, "longitude": 120.6935243570713, "verification": null },
+    { "node_code": "CSF-PALENGKE-ALIGHT", "name": "Palengke jeep downtown final drop-off", "node_type": "DROP_OFF", "latitude": 15.02909710837544, "longitude": 120.69240541125485, "verification": null }
+  ],
+  "variants": [
+    { "variant_code": "CSF-MEXICO-SFELAPCO-OUT", "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO", "display_name": "Mexico Bayan to City Proper (SFELAPCO terminus)", "signboard_text": "Palengke", "signboardAliases": ["Palengke"], "direction": "OUTBOUND", "geometry_source": "UNKNOWN", "geometry_geojson": null, "corridorVerification": null, "stops": ["RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER", "CSF-SNR-ALIGHT", "CSF-GREEN-CITY-ALIGHT", "CSF-ST-NICOLAS-ALIGHT", "CSF-JENRA-ALIGHT", "CSF-JBL-ALIGHT", "CSF-PUREGOLD-ALIGHT", "CSF-PHS-ALIGHT", "CSF-SFELAPCO-ALIGHT"] },
+    { "variant_code": "CSF-MEXICO-MARKET-OUT", "route_code": "RCH-ARAYAT-SF-VIA-STAANA-MEXICO", "display_name": "Mexico Bayan to City Proper (market-side terminus)", "signboard_text": "Palengke", "signboardAliases": ["Palengke"], "direction": "OUTBOUND", "geometry_source": "UNKNOWN", "geometry_geojson": null, "corridorVerification": null, "stops": ["RCH-MEXICO-BAYAN-STA-MONICA-TRANSFER", "CSF-SNR-ALIGHT", "CSF-GREEN-CITY-ALIGHT", "CSF-ST-NICOLAS-ALIGHT", "CSF-JENRA-ALIGHT", "CSF-JBL-ALIGHT", "CSF-PUREGOLD-ALIGHT", "CSF-PHS-ALIGHT", "CSF-MARKET-ALIGHT"] },
+    { "variant_code": "CSF-SM-PALENGKE-OUT", "route_code": "CSF-SM-PALENGKE", "display_name": "SM Pampanga Terminal to Palengke / SM Downtown", "signboard_text": "Palengke", "signboardAliases": ["Palengke", "JBL", "Makabali", "SM Downtown"], "direction": "OUTBOUND", "geometry_source": "UNKNOWN", "geometry_geojson": null, "corridorVerification": null, "stops": ["CSF-SM-TERMINAL-BOARD", "CSF-SNR-ALIGHT", "CSF-GREEN-CITY-ALIGHT", "CSF-ST-NICOLAS-ALIGHT", "CSF-JENRA-ALIGHT", "CSF-JBL-ALIGHT", "CSF-PUREGOLD-ALIGHT", "CSF-PHS-ALIGHT", "CSF-PALENGKE-ALIGHT"] }
+  ],
+  "connections": [ { "id": "CSF-SM-DROPOFF-TO-TERMINAL", "fromNodeCode": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF", "toNodeCode": "CSF-SM-TERMINAL-BOARD", "status": "PENDING_VERIFICATION", "verification": null } ],
+  "transferPermissionChanges": [
+    { "variantCode": "RCH-SJ-SMROB-OUT", "nodeCode": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF", "expected": false, "value": true },
+    { "variantCode": "PILOT-ARAYAT-SF-MEXICO-BAYAN-SM-OUT", "nodeCode": "RCH-SM-PAMPANGA-MAIN-GATE-DROPOFF", "expected": false, "value": true }
+  ],
+  "reviewInstructions": "Candidate stops and order only. Remove stops not confirmed for EACH terminus, supply safe curb coordinates and evidence, verify actual jeep corridors and pedestrian crossing, then review the complete manifest. Building coordinates are never silently promoted to transport stops. No return routes or Robinsons crossing are authorized."
+}

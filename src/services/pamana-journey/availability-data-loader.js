@@ -2,6 +2,7 @@
 
 const { unwrapRecord } = require('./graph-builder');
 const { latestLocationQuery, loadLatestLocations, locationKey } = require('./latest-location-loader');
+const { TRIP_AVAILABILITY_FIELDS } = require('../vehicle-availability/policy');
 
 const unique = (values) => [...new Set(values.filter(Boolean))];
 const identity = (record) => {
@@ -16,7 +17,7 @@ function operationalTripQuery({ variantIds = [], allowSimulated = false } = {}) 
       route_variant: { documentId: { $in: variantIds } },
       ...(allowSimulated ? {} : { is_simulated: false, data_mode: 'REAL' }),
     },
-    fields: ['trip_status', 'is_simulated', 'data_mode', 'started_at'],
+    fields: ['trip_status', 'is_simulated', 'data_mode', 'started_at', ...TRIP_AVAILABILITY_FIELDS],
     populate: {
       route_variant: { fields: ['variant_code'] },
       vehicle: {
@@ -80,7 +81,7 @@ async function loadOperationalData({
     return Object.freeze({
       ...record,
       // The location's trip is authoritative for the ping when available.
-      trip: unwrapRecord(unwrappedLocation?.trip) || record.trip,
+      trip: record.trip || unwrapRecord(unwrappedLocation?.trip),
       location: unwrappedLocation,
     });
   });

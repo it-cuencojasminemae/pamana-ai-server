@@ -144,6 +144,7 @@ function evaluateFareForLeg(leg, {
   passengerCategory = 'REGULAR',
   requestedDate,
   allowSimulated = false,
+  context,
 } = {}) {
   if (leg?.type !== LEG_TYPE.TRANSIT) return notApplicableFare({ walking: leg?.type === LEG_TYPE.WALK });
   if (!PASSENGER_CATEGORIES.includes(passengerCategory)) {
@@ -157,8 +158,9 @@ function evaluateFareForLeg(leg, {
     && ['FIELD_VERIFIED', 'AUTHORITATIVE_CURRENT'].includes(leg.verificationStatus);
   const simulatedLeg = allowSimulated && leg.dataMode === 'SIMULATED'
     && leg.verificationStatus === 'SIMULATED_DEMO';
+  const researchLeg = context?.researchPreview && leg.evidenceClass === 'USER_REPORTED' && leg.verificationStatus === 'RESEARCH_CANDIDATE' && leg.dataMode === 'REAL';
   if (JEEPNEY_POLICIES[leg.transportMode] || matchesDemoTricycle(leg)) {
-    if (!realLeg && !simulatedLeg) return unknownFare(['LEG_NOT_PLANNING_ELIGIBLE']);
+    if (!realLeg && !simulatedLeg && !researchLeg) return unknownFare(['LEG_NOT_PLANNING_ELIGIBLE']);
     if (matchesDemoTricycle(leg)) {
       if (!realLeg) return unknownFare(['DEMO_ESTIMATE_REQUIRES_REAL_PILOT_LEG']);
       return Object.freeze({
@@ -170,7 +172,8 @@ function evaluateFareForLeg(leg, {
       });
     }
     const distance = finiteNumber(leg.segmentDistanceMeters);
-    const usableDistance = ['STORED_ROUTE_STOP_DISTANCE', 'STORED_ROAD_GEOMETRY'].includes(leg.roadDistanceSource);
+    const usableDistance = ['STORED_ROUTE_STOP_DISTANCE', 'STORED_ROAD_GEOMETRY'].includes(leg.roadDistanceSource)
+      || (researchLeg && leg.roadDistanceSource === 'RESEARCH_DERIVED_GEOMETRY');
     const rawFare = usableDistance ? rawJeepneyFare(leg.transportMode, distance) : null;
     const discountedFare = rawFare === null ? null : Math.round(rawFare * (1 - DISCOUNT_PERCENT / 100));
     return Object.freeze({
@@ -182,7 +185,8 @@ function evaluateFareForLeg(leg, {
       discountType: passengerCategory === 'REGULAR' ? null : passengerCategory,
       sourceSummary: 'PAMANA Batch A system fare policy',
       sourceType: 'SYSTEM_CALCULATED', isCalculated: rawFare !== null,
-      warnings: Object.freeze(rawFare === null ? ['FARE_DISTANCE_UNAVAILABLE'] : []),
+      warnings: Object.freeze(rawFare === null ? ['FARE_DISTANCE_UNAVAILABLE'] : researchLeg ? ['RESEARCH_DISTANCE_FARE_ESTIMATE'] : []),
+      ...(researchLeg ? { evidenceClass: 'RESEARCH_PREVIEW' } : {}),
     });
   }
   const [match] = matchingRules(leg, fareRules, { requestedDate, allowSimulated });

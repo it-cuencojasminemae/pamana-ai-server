@@ -3,11 +3,14 @@
 const { buildTransportGraph } = require('./graph-builder');
 const { planJourneys } = require('./journey-planner');
 const { findAccessNodes, loadEligibleCoordinateNodes } = require('./access-node-finder');
+const { mapWithConcurrency } = require('./access-node-finder');
 const { loadEligibleTransportGraphData } = require('./transport-data-loader');
 const { getDefaultWalkingRouter } = require('./walking-router');
 const { composeWalkingJourneys } = require('./walking-journey-composer');
 const { loadEligibleDisruptions } = require('./disruption-data-loader');
 const { applyDisruptionConstraints, attachDisruptionWarnings } = require('./disruption-engine');
+const { expansionSettings, filterExpansionGraphData } = require('./pilot-expansion');
+const { walkingConfig: resolveWalkingConfig } = require('./walking-config');
 
 function graphNodeId(graph, node) {
   for (const candidate of [node?.documentId, node?.document_id, node?.id, node?.node_code]) {
@@ -41,18 +44,26 @@ async function planJourneysWithWalkingCandidates({
   graph,
   router = getDefaultWalkingRouter(),
   config = {},
+  maxTransfers = 1,
+  transferConnections = [],
   signal,
+  context,
+  accessPreference = 'AUTO',
+  maxPublicRides,
+  allowInitialFeeder = false,
 } = {}) {
+  if (signal?.aborted) return Object.freeze({ accessCandidates: [], egressCandidates: [], journeys: [], failures: [{ code: 'ROUTING_CANCELLED' }] });
   const roleNodes = roleEligibleNodes(nodes, graph);
-  const access = await findAccessNodes({
+  const [access, egress] = await Promise.all([findAccessNodes({
     point: origin,
     nodes: roleNodes.access,
     direction: 'ACCESS',
     router,
     config,
     signal,
-  });
-  if (signal?.aborted || access.candidates.length === 0) {
+    context,
+  }), findAccessNodes({ point: destination, nodes: roleNodes.egress, direction: 'EGRESS', router, config, signal, context })]);
+  if (access.candidates.length === 0) {
     return Object.freeze({
       accessCandidates: access.candidates,
       egressCandidates: Object.freeze([]),
@@ -62,25 +73,54 @@ async function planJourneysWithWalkingCandidates({
       journeys: Object.freeze([]),
     });
   }
-  const egress = await findAccessNodes({
-    point: destination,
-    nodes: roleNodes.egress,
-    direction: 'EGRESS',
-    router,
-    config,
-    signal,
-  });
-  const transportJourneys = planJourneys(graph, {
-    candidateBoardingNodeIds: access.candidates.map((candidate) => candidate.node.nodeId),
+  const feederIds = new Set([...graph.variants.values()].filter(v => v.route.transportMode === 'TRICYCLE').flatMap(v => v.stops.filter(s => s.pickupAllowed).map(s => s.node.id)));
+  // A point can serve both tricycles and jeepneys. Filter the first service,
+  // rather than removing a shared boarding point for WALK_ONLY passengers.
+  const eligibleAccess = access.candidates.filter(candidate => accessPreference !== 'FEEDER' || feederIds.has(candidate.node.nodeId));
+  let transportJourneys = planJourneys(graph, {
+    candidateBoardingNodeIds: eligibleAccess.map((candidate) => candidate.node.nodeId),
     candidateDestinationNodeIds: egress.candidates.map((candidate) => candidate.node.nodeId),
+    maxTransfers,
+    transferConnections,
+    context,
+    maxPublicRides,
+    allowInitialFeeder,
+  });
+  if (accessPreference === 'FEEDER') transportJourneys = transportJourneys.filter(j => j.legs.find(l => l.type === 'TRANSIT')?.transportMode === 'TRICYCLE');
+  if (accessPreference === 'WALK_ONLY') transportJourneys = transportJourneys.filter(j => j.legs.find(l => l.type === 'TRANSIT')?.transportMode !== 'TRICYCLE');
+  if (context?.researchPreview) {
+    const policy = resolveWalkingConfig(config);
+    const walkingJourneys = transportJourneys.filter(j => j.legs.find(l => l.type === 'TRANSIT')?.transportMode !== 'TRICYCLE');
+    const practicalWalk = walkingJourneys.some(j => {
+      const first = j.legs.find(l => l.type === 'TRANSIT');
+      const candidate = eligibleAccess.find(c => c.node.nodeId === first.boardAt.nodeId);
+      return candidate && (candidate.walkingDistanceMeters ?? candidate.straightLineDistanceMeters) <= policy.preferredWalkMeters;
+    });
+    if (accessPreference === 'WALK_ONLY' || (accessPreference === 'AUTO' && practicalWalk && !context.minimizeWalking)) transportJourneys = walkingJourneys;
+  }
+  const transferWalks = new Map();
+  const transferFailures = [];
+  const needed = new Map(transportJourneys.flatMap(j => (j.transferConnections || []).filter(Boolean).map(c => [c.id, c])));
+  // Only approved links actually used by eligible journeys generate provider calls.
+  await mapWithConcurrency([...needed.values()], 2, async connection => {
+    if (signal?.aborted) { transferFailures.push({ code: 'ROUTING_CANCELLED' }); return; }
+    const from = graph.nodes.get(graph.resolveNodeId(connection.fromNodeCode));
+    const to = graph.nodes.get(graph.resolveNodeId(connection.toNodeCode));
+    if (!from || !to || ![from.lat, from.lng, to.lat, to.lng].every(Number.isFinite)) return;
+    let result;
+    try { result = await router.routeWalk({ from: { lat: from.lat, lng: from.lng, label: from.name }, to: { lat: to.lat, lng: to.lng, label: to.name }, signal }); }
+    catch { result = { ok: false, error: { code: 'ROUTING_NETWORK_ERROR' } }; }
+    if (!signal?.aborted && result?.ok && result.value?.geometry && Number.isFinite(result.value.distanceMeters)) transferWalks.set(connection.id, result.value);
+    else transferFailures.push({ nodeId: from.id, connectionId: connection.id, code: result?.error?.code || 'TRANSFER_WALK_UNAVAILABLE' });
   });
   return Object.freeze({
     accessCandidates: access.candidates,
     egressCandidates: egress.candidates,
-    failures: Object.freeze([...access.failures, ...egress.failures]),
+    failures: Object.freeze([...access.failures, ...egress.failures, ...transferFailures]),
     journeys: composeWalkingJourneys(transportJourneys, {
-      accessCandidates: access.candidates,
+      accessCandidates: eligibleAccess,
       egressCandidates: egress.candidates,
+      transferWalks,
     }),
   });
 }
@@ -102,7 +142,8 @@ async function planVerifiedJourneysWithWalking({
     loadEligibleTransportGraphData({ strapiInstance, demoMode: false, serviceDate }),
     loadEligibleDisruptions({ strapiInstance, serviceDate, allowSimulated: false }),
   ]);
-  const constrained = applyDisruptionConstraints(graphData, disruptions);
+  const settings = expansionSettings();
+  const constrained = applyDisruptionConstraints(filterExpansionGraphData(graphData, settings), disruptions);
   const graph = buildTransportGraph(constrained.graphData, { demoMode: false, serviceDate });
   const result = await planJourneysWithWalkingCandidates({
     origin,
@@ -111,6 +152,8 @@ async function planVerifiedJourneysWithWalking({
     graph,
     router,
     config,
+    maxTransfers: settings.maxTransfers,
+    transferConnections: settings.connections,
     signal,
   });
   return Object.freeze({

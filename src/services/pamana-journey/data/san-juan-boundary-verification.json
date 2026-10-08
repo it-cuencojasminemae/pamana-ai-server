@@ -1,0 +1,16 @@
+{
+  "status": "VERIFIED_INDICATIVE",
+  "psgc": "0305413031",
+  "geometrySha256": "2b028c771600a224849ee5f3e85c494db293b743b83bec7f7f968fc15305f64f",
+  "source": "Philippine Statistics Authority, via DOST GeoRisk Philippines PSA Barangay Boundary layer 4",
+  "sourceUrl": "https://portal.georisk.gov.ph/arcgis/rest/services/PSA/Barangay/MapServer/4",
+  "datasetDescription": "Indicative June 2016 barangay boundaries, based on PSA 2015 census. Not represented as current legal survey boundaries.",
+  "verifiedAt": "2026-10-07",
+  "verificationMethod": "Exact San Juan/Mexico/Pampanga identity and PSGC query; unreduced WGS84 source polygon; containment checks against previously field-verified PAMANA pilot coordinates.",
+  "referencePoints": [
+    { "name": "PSU Mexico Campus front waiting area", "lat": 15.128026422211173, "lng": 120.69826461388278, "expectedInside": true },
+    { "name": "Mexico Bayan Sta. Monica Parish Church transfer area", "lat": 15.064333794084051, "lng": 120.72025022065026, "expectedInside": false },
+    { "name": "SM City Pampanga main gate drop-off", "lat": 15.05158520927461, "lng": 120.69885494898818, "expectedInside": false },
+    { "name": "Robinsons Starmills Arayat gate loading area", "lat": 15.050605637995128, "lng": 120.69778203294244, "expectedInside": false }
+  ]
+}

@@ -1,15 +1,18 @@
 'use strict';
 
 const { PASSENGER_CATEGORIES } = require('./fare-engine');
+const { pinAllowed } = require('./pin-area');
+const { resolveLandmark } = require('./pilot-landmarks');
+const { MODES } = require('./planning-context');
 
 const MAX_REQUEST_BYTES = 8192;
-const LOCATION_SOURCES = Object.freeze(['GEOAPIFY', 'USER_GPS']);
+const LOCATION_SOURCES = Object.freeze(['GEOAPIFY', 'USER_GPS', 'MAP_PIN', 'PILOT_LANDMARK']);
 const FORBIDDEN_FACT_FIELDS = new Set([
   'routeVariantId', 'boardingNodeId', 'alightingNodeId', 'fare', 'wait',
   'servicePattern', 'service', 'vehicle',
 ]);
-const TOP_LEVEL_FIELDS = new Set(['origin', 'destination', 'departureAt', 'passengerCategory']);
-const POINT_FIELDS = new Set(['lat', 'lng', 'label', 'source']);
+const TOP_LEVEL_FIELDS = new Set(['origin', 'destination', 'departureAt', 'passengerCategory', 'planningMode', 'accessPreference']);
+const POINT_FIELDS = new Set(['lat', 'lng', 'label', 'source', 'landmarkId']);
 const RFC3339 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 const plainObject = (value) => Boolean(value)
@@ -39,7 +42,7 @@ function optionalText(value, { field, maxLength, allowed } = {}) {
   return { ok: true, value: normalized };
 }
 
-function validatePoint(rawPoint, name) {
+function validatePoint(rawPoint, name, context) {
   if (!plainObject(rawPoint)) return failure(`${name} coordinates are invalid.`);
   if (Object.keys(rawPoint).some((key) => !POINT_FIELDS.has(key))) {
     return failure(`${name} contains unsupported fields.`);
@@ -57,6 +60,15 @@ function validatePoint(rawPoint, name) {
     field: `${name} source`, maxLength: 32, allowed: LOCATION_SOURCES,
   });
   if (!source.ok) return failure(source.message);
+  if (source.value === 'PILOT_LANDMARK') {
+    const canonical = resolveLandmark(rawPoint, context);
+    return canonical ? Object.freeze({ ok: true, value: Object.freeze(canonical) })
+      : failure(`${name} landmark is unavailable or its coordinates do not match the catalog.`);
+  }
+  if (rawPoint.landmarkId !== undefined) return failure(`${name} landmark ID requires a catalog location.`);
+  if (source.value === 'MAP_PIN' && !pinAllowed({ lat, lng }, undefined, context)) {
+    return failure(`${name} pin must be inside an enabled pilot pin area.`);
+  }
   return Object.freeze({
     ok: true,
     value: Object.freeze({ lat, lng, label: label.value, source: source.value }),
@@ -88,7 +100,7 @@ function validateDeparture(value, now) {
   return Object.freeze({ ok: true, value: date.toISOString() });
 }
 
-function validateTripPlanRequest(body, { now = () => new Date() } = {}) {
+function validateTripPlanRequest(body, { now = () => new Date(), context } = {}) {
   if (!plainObject(body)) return failure('Request body is invalid.');
   let size;
   try {
@@ -101,9 +113,12 @@ function validateTripPlanRequest(body, { now = () => new Date() } = {}) {
   if (Object.keys(body).some((key) => !TOP_LEVEL_FIELDS.has(key))) {
     return failure('Request contains unsupported fields.');
   }
-  const origin = validatePoint(body.origin, 'Origin');
+  if (body.planningMode !== undefined && !MODES.includes(body.planningMode)) return failure('Planning mode is invalid.');
+  if (body.planningMode === 'RESEARCH_PREVIEW' && !context?.researchPreview) return failure('Research preview must be authorized by the server.');
+  if (body.accessPreference !== undefined && !['AUTO', 'WALK_ONLY', 'FEEDER'].includes(body.accessPreference)) return failure('Access preference is invalid.');
+  const origin = validatePoint(body.origin, 'Origin', context);
   if (!origin.ok) return origin;
-  const destination = validatePoint(body.destination, 'Destination');
+  const destination = validatePoint(body.destination, 'Destination', context);
   if (!destination.ok) return destination;
   const departure = validateDeparture(body.departureAt, now);
   if (!departure.ok) return departure;
@@ -118,6 +133,8 @@ function validateTripPlanRequest(body, { now = () => new Date() } = {}) {
       destination: destination.value,
       departureAt: departure.value,
       passengerCategory,
+      ...(body.planningMode !== undefined ? { planningMode: body.planningMode } : {}),
+      ...(body.accessPreference !== undefined ? { accessPreference: body.accessPreference } : {}),
     }),
   });
 }

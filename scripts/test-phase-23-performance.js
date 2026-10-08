@@ -101,7 +101,7 @@ async function defaultReuse() {
 async function bounds() {
   const config = walkingConfig({ maxCandidateCount: 100, maxConcurrentRequests: 100, requestTimeoutMs: 1e9, cacheTtlMs: 1e9 });
   assert.equal(config.maxCandidateCount, 5); assert.equal(config.maxConcurrentRequests, 2);
-  assert.equal(config.requestTimeoutMs, 30000); assert.equal(config.cacheTtlMs, 300000);
+  assert.equal(config.requestTimeoutMs, 7000); assert.equal(config.cacheTtlMs, 300000);
   const nodes = Array.from({ length: 50 }, (_, index) => withCoordinates(node(`PERF-${index}`), from.lat + (index + 1) * 0.0003, from.lng));
   let calls = 0, active = 0, peak = 0;
   const result = await findAccessNodes({ point: from, nodes, config, router: { async routeWalk({ from, to }) {

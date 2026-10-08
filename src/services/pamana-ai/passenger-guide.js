@@ -38,9 +38,10 @@ function passengerGuideFacts(sanitized) {
 }
 
 function safePassengerGuide(text, facts) {
-  if (typeof text !== 'string' || !text.trim() || text.length > 1200 || text.trim().split(/\s+/).length > 120 || FORBIDDEN.test(text) || INTERNAL_FIELDS.test(text) || /[<>`]|https?:\/\//i.test(text)) return false;
+  const threeRides = facts.rides.length === 3;
+  if (typeof text !== 'string' || !text.trim() || text.length > (threeRides ? 1800 : 1200) || text.trim().split(/\s+/).length > (threeRides ? 180 : 120) || FORBIDDEN.test(text) || INTERNAL_FIELDS.test(text) || /[<>`]|https?:\/\//i.test(text)) return false;
   const sentences = text.trim().replace(/\b(Sta|St|Dr|Mr|Mrs|Ms|Jr|Sr)\./gi, '$1').split(/[.!?]+(?:\s+|$)/).filter(Boolean);
-  if (sentences.length < 2 || sentences.length > 4) return false;
+  if (sentences.length < 2 || sentences.length > (threeRides ? 6 : 4)) return false;
   // No complete journey time exists in the current contract.
   if (/\b(?:ETA|hours?|days?|duration|travel time|trip takes|journey takes|schedule|every)\b/i.test(text)) return false;
   if (!facts.estimatedWaitMinutes && /\b(?:minutes?|wait(?:ing)?\s+(?:time|for|\d)|arrives? (?:in|soon|shortly))\b/i.test(text)) return false;

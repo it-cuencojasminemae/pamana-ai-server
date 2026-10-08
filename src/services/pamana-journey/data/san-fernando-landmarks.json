@@ -1,0 +1,19 @@
+{
+  "version": "1.1.0",
+  "source": { "type": "COMMUTER_TESTIMONY", "reportedAt": "2026-10-07", "observedAt": null, "coordinatePurpose": "LANDMARK_LOCATION", "transportStopVerified": false },
+  "landmarks": [
+    { "id": "csf-snr", "name": "S&R Membership Shopping - San Fernando", "category": "SHOPPING", "lat": 15.047620574015921, "lng": 120.69090540535781, "aliases": ["S&R", "SNR"] },
+    { "id": "csf-green-city", "name": "Green City Medical Center", "category": "HOSPITAL", "lat": 15.044243853175653, "lng": 120.68580170088299, "aliases": ["Green City", "GreenCity Medical Center"] },
+    { "id": "csf-st-nicolas", "name": "St. Nicolas College", "category": "SCHOOL", "lat": 15.04181281734176, "lng": 120.68312516113633, "aliases": ["Saint Nicolas College"], "connectionNote": "Commuter-reported Lubao, Bacolor and Guagua connections nearby. Ask the driver about the destination and boarding point; these connections are outside this pilot." },
+    { "id": "csf-jumbo-jenra", "name": "Jumbo Jenra Dolores", "category": "SHOPPING", "lat": 15.04072234862173, "lng": 120.68197048901071, "aliases": ["Jumbo Jenra", "Jenra Dolores"], "connectionNote": "Commuter-reported Angeles connections nearby. Ask the driver about the destination and boarding point; these connections are outside this pilot." },
+    { "id": "csf-jbl", "name": "JBL", "category": "HOSPITAL", "lat": 15.03462448939258, "lng": 120.6846559254486, "aliases": ["JBL Hospital"] },
+    { "id": "csf-puregold-jr", "name": "Puregold Jr.", "category": "SHOPPING", "lat": 15.033465074114613, "lng": 120.6871634517035, "aliases": ["Puregold Junior"] },
+    { "id": "csf-phs", "name": "Pampanga High School", "category": "SCHOOL", "lat": 15.030377901384702, "lng": 120.6883114052988, "aliases": ["PHS"] },
+    { "id": "csf-sfelapco", "name": "SFELAPCO", "category": "SERVICE", "lat": 15.027403281625501, "lng": 120.69069049255118, "aliases": ["City Proper"] },
+    { "id": "csf-sm-downtown", "name": "SM Downtown", "category": "SHOPPING", "lat": 15.027933147664186, "lng": 120.69243525955473, "aliases": ["SM Downtown San Fernando", "City Proper", "Palengke"] },
+    { "id": "csf-wet-market", "name": "San Fernando Wet Market", "category": "MARKET", "lat": 15.030153925400718, "lng": 120.69388479340104, "aliases": ["Wet Market", "Palengke", "City Proper"] },
+    { "id": "csf-market-plaza", "name": "City Market Plaza", "category": "MARKET", "lat": 15.029074390569477, "lng": 120.69351790618812, "aliases": ["City Market", "Palengke", "City Proper"] },
+    { "id": "csf-victory-liner", "name": "Victory Liner Bus Terminal", "category": "SERVICE", "lat": 15.039373960293801, "lng": 120.68311389238005, "aliases": ["Victory Liner", "Victory"], "source": { "evidenceClass": "USER_REPORTED", "receivedAt": "2026-10-08", "observedAt": null, "coordinatePurpose": "LANDMARK_REFERENCE" } },
+    { "id": "csf-mcdonalds", "name": "McDonald's", "category": "SHOPPING", "lat": 15.04124663498475, "lng": 120.68364202268374, "aliases": ["McDonalds", "McDonald", "McDo"], "source": { "evidenceClass": "USER_REPORTED", "receivedAt": "2026-10-08", "observedAt": null, "coordinatePurpose": "LANDMARK_REFERENCE" } }
+  ]
+}

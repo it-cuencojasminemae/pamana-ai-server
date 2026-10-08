@@ -5,6 +5,7 @@ const { loadFareAndServiceData } = require('./fare-service-data-loader');
 const { countVehicleTransfers } = require('./transfer-count');
 const { evaluateServiceForLeg } = require('./service-pattern-engine');
 const { loadOperationalData } = require('./availability-data-loader');
+const { simulatedRideDuration } = require('./research-demo-observations');
 const {
   availabilityForLeg,
   summarizeJourneyAvailability,
@@ -19,6 +20,7 @@ function enrichJourneyInformation(journey, {
   observedAt = new Date(),
   availabilityConfig = {},
   allowSimulated = false,
+  context,
 } = {}) {
   if (!journey || !Array.isArray(journey.legs)) return null;
   const legs = Object.freeze(journey.legs.map((leg) => {
@@ -29,20 +31,24 @@ function enrichJourneyInformation(journey, {
     });
     return Object.freeze({
       ...leg,
+      ...(context?.allowSimulatedObservations && leg.type === 'TRANSIT' ? { simulatedDurationSeconds: simulatedRideDuration(leg, context) } : {}),
       fare: evaluateFareForLeg(leg, {
         fareRules,
         passengerCategory,
         requestedDate: requestedDeparture,
         allowSimulated,
+        context,
       }),
       service,
-      availability: availabilityForLeg(leg, {
+      availability: (() => { const availability = availabilityForLeg(leg, {
         service,
         operationalRecords,
         now: observedAt,
         config: availabilityConfig,
         allowSimulated,
-      }),
+      }); return { ...availability, ...(context?.allowSimulatedObservations && leg.type === 'TRANSIT'
+        ? { evidenceClass: 'SIMULATED', sourceSummary: 'SIMULATED preview observations', wait: { ...availability.wait,
+          basis: availability.wait.basis ? 'SIMULATED_HEADWAY' : null } } : {}) }; })(),
     });
   }));
   return Object.freeze({

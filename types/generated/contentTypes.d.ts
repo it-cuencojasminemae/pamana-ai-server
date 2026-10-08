@@ -1558,6 +1558,14 @@ export interface ApiTripTrip extends Struct.CollectionTypeSchema {
     draftAndPublish: false;
   };
   attributes: {
+    availability_reported_at: Schema.Attribute.DateTime;
+    availability_source: Schema.Attribute.Enumeration<
+      ['DRIVER', 'PASSENGER', 'SYSTEM_ESTIMATE', 'SIMULATION']
+    >;
+    availability_status: Schema.Attribute.Enumeration<
+      ['AVAILABLE', 'LIMITED', 'FULL', 'UNKNOWN']
+    > &
+      Schema.Attribute.DefaultTo<'UNKNOWN'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1595,6 +1603,52 @@ export interface ApiTripTrip extends Struct.CollectionTypeSchema {
       'oneToMany',
       'api::vehicle-location.vehicle-location'
     >;
+  };
+}
+
+export interface ApiVehicleAvailabilityReportVehicleAvailabilityReport
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'vehicle_availability_reports';
+  info: {
+    displayName: 'Vehicle Availability Report';
+    pluralName: 'vehicle-availability-reports';
+    singularName: 'vehicle-availability-report';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    data_mode: Schema.Attribute.Enumeration<['REAL', 'SIMULATED']> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'SIMULATED'>;
+    driver: Schema.Attribute.Relation<'manyToOne', 'api::driver.driver'> &
+      Schema.Attribute.Required;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::vehicle-availability-report.vehicle-availability-report'
+    > &
+      Schema.Attribute.Private;
+    publishedAt: Schema.Attribute.DateTime;
+    reported_at: Schema.Attribute.DateTime & Schema.Attribute.Required;
+    source: Schema.Attribute.Enumeration<
+      ['DRIVER', 'PASSENGER', 'SYSTEM_ESTIMATE', 'SIMULATION']
+    > &
+      Schema.Attribute.Required;
+    status: Schema.Attribute.Enumeration<
+      ['AVAILABLE', 'LIMITED', 'FULL', 'UNKNOWN']
+    > &
+      Schema.Attribute.Required;
+    trip: Schema.Attribute.Relation<'manyToOne', 'api::trip.trip'> &
+      Schema.Attribute.Required;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vehicle: Schema.Attribute.Relation<'manyToOne', 'api::vehicle.vehicle'> &
+      Schema.Attribute.Required;
   };
 }
 
@@ -2248,6 +2302,7 @@ declare module '@strapi/strapi' {
       'api::service-pattern.service-pattern': ApiServicePatternServicePattern;
       'api::transport-node.transport-node': ApiTransportNodeTransportNode;
       'api::trip.trip': ApiTripTrip;
+      'api::vehicle-availability-report.vehicle-availability-report': ApiVehicleAvailabilityReportVehicleAvailabilityReport;
       'api::vehicle-location.vehicle-location': ApiVehicleLocationVehicleLocation;
       'api::vehicle.vehicle': ApiVehicleVehicle;
       'plugin::content-releases.release': PluginContentReleasesRelease;

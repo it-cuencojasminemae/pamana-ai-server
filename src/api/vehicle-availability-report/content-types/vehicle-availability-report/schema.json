@@ -1,0 +1,15 @@
+{
+  "kind": "collectionType",
+  "collectionName": "vehicle_availability_reports",
+  "info": { "singularName": "vehicle-availability-report", "pluralName": "vehicle-availability-reports", "displayName": "Vehicle Availability Report" },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "status": { "type": "enumeration", "enum": ["AVAILABLE", "LIMITED", "FULL", "UNKNOWN"], "required": true },
+    "source": { "type": "enumeration", "enum": ["DRIVER", "PASSENGER", "SYSTEM_ESTIMATE", "SIMULATION"], "required": true },
+    "reported_at": { "type": "datetime", "required": true },
+    "data_mode": { "type": "enumeration", "enum": ["REAL", "SIMULATED"], "required": true, "default": "SIMULATED" },
+    "trip": { "type": "relation", "relation": "manyToOne", "target": "api::trip.trip", "required": true },
+    "vehicle": { "type": "relation", "relation": "manyToOne", "target": "api::vehicle.vehicle", "required": true },
+    "driver": { "type": "relation", "relation": "manyToOne", "target": "api::driver.driver", "required": true }
+  }
+}

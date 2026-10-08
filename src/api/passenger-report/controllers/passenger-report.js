@@ -60,7 +60,7 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
 
     const windowStart = new Date(Date.now() - DUPLICATE_WINDOW_MINUTES * 60 * 1000).toISOString();
     const duplicateFilters = {
-      passenger: { id: passengerProfile.id }, report_type: validation.value.category,
+      passenger: { id: passengerProfile.id }, report_type: validation.value.category, data_mode: DATA_MODE.REAL,
       reported_at: { $gte: windowStart },
     };
     for (const [key, value] of Object.entries(context.relations)) duplicateFilters[key] = { documentId: value };
@@ -95,7 +95,11 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
     await this.validateQuery(ctx);
     const query = await this.sanitizeQuery(ctx);
     const ownership = reviewer ? null : { passenger: { id: profile?.id ?? -1 } };
-    const filters = ownership && query.filters ? { $and: [query.filters, ownership] } : ownership || query.filters;
+    const filters = { $and: [
+      { data_mode: DATA_MODE.REAL },
+      ...(ownership ? [ownership] : []),
+      ...(query.filters ? [query.filters] : []),
+    ] };
     const { results, pagination } = await strapi.service('api::passenger-report.passenger-report').find({
       ...query, filters, populate: SAFE_POPULATE,
     });
@@ -109,7 +113,7 @@ module.exports = createCoreController('api::passenger-report.passenger-report', 
     const report = await strapi.documents('api::passenger-report.passenger-report').findOne({
       documentId: ctx.params.id, populate: [...SAFE_POPULATE, 'passenger'],
     });
-    if (!report) return ctx.notFound();
+    if (!report || report.data_mode !== DATA_MODE.REAL) return ctx.notFound();
     if (!reviewer) {
       const profile = await getOwnPassengerProfile(strapi, ctx.state.user.id);
       if (!profile || report.passenger?.id !== profile.id) return ctx.notFound();

@@ -1,6 +1,7 @@
 'use strict';
 
 const { walkingConfig } = require('./walking-config');
+const { withProviderSlot } = require('./provider-budget');
 
 const WALKING_ERROR = Object.freeze({
   CANCELLED: 'ROUTING_CANCELLED',
@@ -182,11 +183,11 @@ function createWalkingRouter({
     }, config.requestTimeoutMs);
 
     try {
-      const response = await fetcher(url.toString(), {
+      const response = await withProviderSlot(() => fetcher(url.toString(), {
         method: 'GET',
         headers: { Accept: 'application/geo+json, application/json' },
         signal: controller.signal,
-      });
+      }), controller.signal);
       if (!response?.ok) return statusFailure(Number(response?.status));
       let payload;
       try {

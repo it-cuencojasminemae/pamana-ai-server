@@ -96,7 +96,7 @@ test('mocked Passenger submit/My Reports writes evidence only and scopes results
     },
     service: uid => ({ find: async query => {
       assert.equal(uid, 'api::passenger-report.passenger-report');
-      assert.deepEqual(JSON.parse(JSON.stringify(query.filters)), { $and: [{ review_status: 'PENDING' }, { passenger: { id: profile.id } }] });
+      assert.deepEqual(JSON.parse(JSON.stringify(query.filters)), { $and: [{ data_mode: 'REAL' }, { passenger: { id: profile.id } }, { review_status: 'PENDING' }] });
       return { results: [{ documentId: 'test-only-report', report_type: 'OTHER', passenger: profile, latitude: 14, longitude: 119 }], pagination: { total: 1 } };
     } }),
   };
@@ -114,6 +114,7 @@ test('mocked Passenger submit/My Reports writes evidence only and scopes results
   const result = await controller.create(ctx);
   assert.equal(ctx.status, 201); assert.equal(writes.length, 1); assert.equal(writes[0].uid, 'api::passenger-report.passenger-report');
   assert.equal(writes[0].data.review_status, 'PENDING'); assert.equal(writes[0].data.passenger, profile.documentId);
+  assert.equal(writes[0].data.data_mode, 'REAL');
   assert.equal(writes[0].data.planning_enabled, undefined); assert.equal(result.data.passenger, undefined);
   const own = await controller.find(ctx);
   assert.equal(own.data.length, 1); assert.equal(own.data[0].latitude, undefined); assert.equal(own.data[0].passenger, undefined);

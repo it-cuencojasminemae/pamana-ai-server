@@ -18,10 +18,11 @@ function candidateByNode(candidates) {
   return result;
 }
 
-function transferLeg(first, second) {
+function transferLeg(first, second, connection) {
   return Object.freeze({
     type: LEG_TYPE.TRANSFER,
     at: first.alightAt,
+    ...(connection ? { to: second.boardAt, connectionId: connection.id } : {}),
     fromRouteVariantId: first.routeVariantId,
     fromVariantCode: first.variantCode,
     toRouteVariantId: second.routeVariantId,
@@ -29,20 +30,25 @@ function transferLeg(first, second) {
   });
 }
 
-function sequenceLegs(accessCandidate, transitLegs, egressCandidate) {
+function sequenceLegs(accessCandidate, transitLegs, egressCandidate, connections = [], transferWalks = new Map()) {
   const ordered = [];
-  if (accessCandidate.walkingLeg) ordered.push(accessCandidate.walkingLeg);
+  if (accessCandidate.walkingLeg) ordered.push({ ...accessCandidate.walkingLeg, purpose: 'ACCESS' });
   transitLegs.forEach((leg, index) => {
     ordered.push(leg);
-    if (index < transitLegs.length - 1) ordered.push(transferLeg(leg, transitLegs[index + 1]));
+    if (index < transitLegs.length - 1) {
+      const connection = connections[index];
+      ordered.push(transferLeg(leg, transitLegs[index + 1], connection));
+      if (connection) ordered.push({ ...transferWalks.get(connection.id), purpose: 'TRANSFER', connectionId: connection.id });
+    }
   });
-  if (egressCandidate.walkingLeg) ordered.push(egressCandidate.walkingLeg);
+  if (egressCandidate.walkingLeg) ordered.push({ ...egressCandidate.walkingLeg, purpose: 'EGRESS' });
   return Object.freeze(ordered.map((leg, index) => Object.freeze({ ...leg, sequence: index + 1 })));
 }
 
 function composeWalkingJourneys(transportJourneys, {
   accessCandidates = [],
   egressCandidates = [],
+  transferWalks = new Map(),
 } = {}) {
   const accessByNode = candidateByNode(accessCandidates);
   const egressByNode = candidateByNode(egressCandidates);
@@ -51,7 +57,9 @@ function composeWalkingJourneys(transportJourneys, {
     const access = accessByNode.get(journey?.originNode?.nodeId);
     const egress = egressByNode.get(journey?.destinationNode?.nodeId);
     if (!access || !egress) continue;
-    const legs = sequenceLegs(access, journey.legs, egress);
+    const connections = journey.transferConnections || [];
+    if (connections.some(connection => connection && !transferWalks.has(connection.id))) continue;
+    const legs = sequenceLegs(access, journey.legs, egress, connections, transferWalks);
     journeys.push(Object.freeze({
       ...journey,
       legs,

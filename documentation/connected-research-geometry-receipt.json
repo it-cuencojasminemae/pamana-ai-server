@@ -1,0 +1,108 @@
+{
+  "appliedAt": "2026-10-08T06:17:33.276Z",
+  "databaseWrites": 0,
+  "summary": [
+    {
+      "variantCode": "RCH-SJ-MEXICO-OUT",
+      "status": "GENERATED_RESEARCH",
+      "distance": 6336,
+      "pointCount": 112,
+      "roads": [
+        "Drive southeast on Centro III.",
+        "Bear right onto Mexico-Arayat Road.",
+        "Bear right onto 3/Jose Abad Santos Avenue.",
+        "Your destination is on the right."
+      ]
+    },
+    {
+      "variantCode": "CSF-MEXICO-SFELAPCO-OUT",
+      "status": "GENERATED_RESEARCH",
+      "distance": 7797,
+      "pointCount": 298,
+      "roads": [
+        "Drive south on 3/Jose Abad Santos Avenue.",
+        "You have arrived at your destination.",
+        "Drive southwest on 3/Jose Abad Santos Avenue.",
+        "Keep right to stay on 3/Jose Abad Santos Avenue.",
+        "Keep left to stay on 3/Jose Abad Santos Avenue.",
+        "Turn left onto 2/MacArthur Highway.",
+        "Enter the roundabout and take the 2nd exit onto 2/MacArthur Highway.",
+        "Exit the roundabout onto 2/MacArthur Highway.",
+        "Turn right onto V. Tiomico Street.",
+        "Turn right onto T. Limjoco Street."
+      ]
+    },
+    {
+      "variantCode": "CSF-MEXICO-MARKET-OUT",
+      "status": "GENERATED_RESEARCH",
+      "distance": 7301,
+      "pointCount": 271,
+      "roads": [
+        "Drive south on 3/Jose Abad Santos Avenue.",
+        "You have arrived at your destination.",
+        "Drive southwest on 3/Jose Abad Santos Avenue.",
+        "Keep right to stay on 3/Jose Abad Santos Avenue.",
+        "Keep left to stay on 3/Jose Abad Santos Avenue.",
+        "Turn left onto 2/MacArthur Highway.",
+        "Enter the roundabout and take the 2nd exit onto 2/MacArthur Highway.",
+        "Exit the roundabout onto 2/MacArthur Highway.",
+        "Turn right onto V. Tiomico Street.",
+        "Turn left onto General Hizon Avenue.",
+        "Your destination is on the left."
+      ]
+    },
+    {
+      "variantCode": "CSF-SM-PALENGKE-OUT",
+      "status": "GENERATED_RESEARCH",
+      "distance": 6157,
+      "pointCount": 232,
+      "roads": [
+        "Drive north.",
+        "Turn right.",
+        "Turn left onto SM City Pampanga Driveway.",
+        "Turn right to stay on SM City Pampanga Driveway.",
+        "Turn right onto 3/Jose Abad Santos Avenue.",
+        "You have arrived at your destination.",
+        "Drive southwest on 3/Jose Abad Santos Avenue.",
+        "Keep right to stay on 3/Jose Abad Santos Avenue.",
+        "Keep left to stay on 3/Jose Abad Santos Avenue.",
+        "Turn left onto 2/MacArthur Highway.",
+        "Enter the roundabout and take the 2nd exit onto 2/MacArthur Highway.",
+        "Exit the roundabout onto 2/MacArthur Highway.",
+        "Turn right onto V. Tiomico Street.",
+        "Turn right onto B. Mendoza Street.",
+        "Your destination is on the left."
+      ]
+    },
+    {
+      "variantCode": "CSF-CITY-ROB-IN",
+      "status": "GENERATED_RESEARCH",
+      "distance": 4157,
+      "pointCount": 188,
+      "roads": [
+        "Drive southwest on V. Tiomico Street.",
+        "Turn right onto B. Mendoza Street.",
+        "Enter the roundabout and take the 2nd exit onto 2/MacArthur Highway.",
+        "Exit the roundabout onto 2/MacArthur Highway.",
+        "Turn right onto 2/Jose Abad Santos Avenue. Continue on Jose Abad Santos Avenue.",
+        "Turn right.",
+        "You have arrived at your destination."
+      ]
+    },
+    {
+      "variantCode": "CSF-ARAYAT-ROB-IN",
+      "status": "GENERATED_RESEARCH",
+      "distance": 4157,
+      "pointCount": 188,
+      "roads": [
+        "Drive southwest on V. Tiomico Street.",
+        "Turn right onto B. Mendoza Street.",
+        "Enter the roundabout and take the 2nd exit onto 2/MacArthur Highway.",
+        "Exit the roundabout onto 2/MacArthur Highway.",
+        "Turn right onto 2/Jose Abad Santos Avenue. Continue on Jose Abad Santos Avenue.",
+        "Turn right.",
+        "You have arrived at your destination."
+      ]
+    }
+  ]
+}

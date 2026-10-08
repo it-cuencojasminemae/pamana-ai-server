@@ -8,6 +8,8 @@ const {
 } = require('../../../services/driver-trip/driver-trip-policy');
 const { ROLE, enforceRole } = require('../../../services/security/access-control');
 const { consumeRateLimit, validateDataEnvelope } = require('../../../services/security/request-guard');
+const { availabilityForTrip } = require('../../../services/vehicle-availability/policy');
+const { lockTrip, reportAvailability } = require('../../../services/vehicle-availability/report');
 
 const ownDriver = (strapi, userId) => strapi.documents('api::driver.driver').findFirst({
   filters: { user: { id: userId } },
@@ -22,6 +24,24 @@ const activeTripForDriver = (strapi, driverId) => strapi.documents('api::trip.tr
 const endpointLabel = (node, fallback) => node?.name || node?.node_name || fallback || 'Endpoint not verified';
 
 module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
+  async availability(ctx) {
+    if (!enforceRole(ctx, [ROLE.DRIVER])) return;
+    if (!consumeRateLimit(ctx, 'driver-availability', { limit: 30, windowMs: 60_000 })) return;
+    const envelope = validateDataEnvelope(ctx.request.body, { allowedFields: ['status'], maxBytes: 1024 });
+    if (!envelope.ok || typeof ctx.params.id !== 'string' || !/^[A-Za-z0-9_-]{8,80}$/.test(ctx.params.id)) {
+      return ctx.badRequest('Availability request is invalid.');
+    }
+    try {
+      const result = await reportAvailability(strapi, { userId: ctx.state.user.id, tripId: ctx.params.id, status: envelope.data.status });
+      ctx.body = { data: result.availability, meta: { duplicate: result.duplicate } };
+    } catch (error) {
+      if (error.message === 'NOT_OWN_TRIP') return ctx.notFound();
+      if (['INVALID_STATUS', 'INACTIVE_TRIP', 'MODE_MISMATCH'].includes(error.message)) {
+        return ctx.badRequest('Select a valid availability status for your assigned active trip.');
+      }
+      throw error;
+    }
+  },
   async active(ctx) {
     if (!enforceRole(ctx, [ROLE.DRIVER])) return;
     const userId = ctx.state.user?.id;
@@ -48,6 +68,7 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
         direction: trip.direction,
         data_mode: trip.data_mode,
         started_at: trip.started_at,
+        availability: availabilityForTrip(trip),
         route: trip.route ? {
           documentId: trip.route.documentId,
           route_code: trip.route.route_code,
@@ -226,17 +247,24 @@ module.exports = createCoreController('api::trip.trip', ({ strapi }) => ({
     if (!ending.valid) {
       return ctx.badRequest('"trip_status" must be "completed" or "cancelled".');
     }
-    const updated = await strapi.documents('api::trip.trip').update({
-      documentId: trip.documentId,
-      data: ending.data,
-      populate: ['vehicle', 'route', 'route_variant'],
-    });
-    if (trip.vehicle) {
-      await strapi.documents('api::vehicle.vehicle').update({
-        documentId: trip.vehicle.documentId,
-        data: { vehicle_status: 'available', active_route_variant: null },
+    const updated = await strapi.db.transaction(async ({ trx }) => {
+      await lockTrip(strapi, trx, trip.documentId);
+      const current = await strapi.documents('api::trip.trip').findOne({ documentId: trip.documentId });
+      if (current?.trip_status !== 'active') return null;
+      const result = await strapi.documents('api::trip.trip').update({
+        documentId: trip.documentId,
+        data: ending.data,
+        populate: ['vehicle', 'route', 'route_variant'],
       });
-    }
+      if (trip.vehicle) {
+        await strapi.documents('api::vehicle.vehicle').update({
+          documentId: trip.vehicle.documentId,
+          data: { vehicle_status: 'available', active_route_variant: null },
+        });
+      }
+      return result;
+    });
+    if (!updated) return ctx.badRequest('Only an active trip can be ended.');
     const sanitized = await this.sanitizeOutput(updated, ctx);
     return this.transformResponse(sanitized);
   },

@@ -9,6 +9,7 @@ const {
 const {
   PLANNING_OPERATING_STATUSES,
 } = require('./types');
+const { filterExpansionGraphData } = require('./pilot-expansion');
 
 function transportGraphQuery({ demoMode = false } = {}) {
   return {
@@ -37,7 +38,7 @@ function transportGraphQuery({ demoMode = false } = {}) {
       route_variant_stops: {
         fields: [
           'sequence', 'pickup_allowed', 'dropoff_allowed', 'transfer_allowed',
-          'distance_from_variant_start_m',
+          'distance_from_variant_start_m', 'instruction_template',
         ],
         sort: ['sequence:asc'],
         populate: {
@@ -72,7 +73,7 @@ async function loadEligibleTransportGraphData({
   const eligibleVariants = (Array.isArray(variants) ? variants : []).filter((variant) =>
     routeVariantPlanningEligibilityFor(variant, { demoMode, serviceDate }).eligible
   );
-  return Object.freeze({ variants: Object.freeze(eligibleVariants) });
+  return Object.freeze({ variants: Object.freeze(filterExpansionGraphData({ variants: eligibleVariants }).variants) });
 }
 
 module.exports = {

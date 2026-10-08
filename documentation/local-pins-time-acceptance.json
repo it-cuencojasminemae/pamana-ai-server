@@ -1,0 +1,81 @@
+{
+  "checkedAt": "2026-10-07T10:53:29.271Z",
+  "api": "http://127.0.0.1:1338",
+  "cases": [
+    {
+      "case": "authenticated sourced pin area",
+      "status": "PASS"
+    },
+    {
+      "case": "PSU local pin to searched SM, regular fares",
+      "status": "PASS",
+      "fares": [
+        27,
+        114
+      ]
+    },
+    {
+      "case": "live optional road estimate",
+      "status": "PASS",
+      "elapsedMs": 1311,
+      "estimate": {
+        "journeyId": "journey-b192b791ff888fd9",
+        "status": "COMPLETE",
+        "walkingSeconds": 0,
+        "rideSeconds": 1640.277,
+        "movingSeconds": 1640.277,
+        "walkingComplete": true,
+        "ridesComplete": true,
+        "knownRideCount": 1,
+        "rideCount": 1,
+        "calculatedAt": "2026-10-07T10:53:29.863Z",
+        "expiresAt": "2026-10-07T10:58:29.863Z",
+        "source": "GEOAPIFY_ROAD_PROXY",
+        "exclusions": [
+          "WAITING",
+          "BOARDING",
+          "TRANSFER_DELAYS",
+          "UNSCHEDULED_STOPS",
+          "LIVE_TRAFFIC"
+        ],
+        "reasons": []
+      }
+    },
+    {
+      "case": "Student pin journey fares",
+      "status": "PASS",
+      "fares": [
+        22,
+        111
+      ]
+    },
+    {
+      "case": "Robinsons searched origin to local pin",
+      "status": "PASS"
+    },
+    {
+      "case": "outside pin rejected; in-area unsupported location explained",
+      "status": "PASS"
+    },
+    {
+      "case": "anonymous, forged and stale requests rejected safely",
+      "status": "PASS"
+    }
+  ],
+  "transportDigest": "c3e0df0c5fdaf1c8ea5fb5873d635d8f5d6188858a41e589059465971e4782f4",
+  "transportCounts": {
+    "transport_nodes": 13,
+    "routes": 9,
+    "route_variants": 6,
+    "route_variant_stops": 12,
+    "fare_rules": 2,
+    "service_patterns": 0,
+    "field_verified_nodes": 4,
+    "field_verified_routes": 3,
+    "field_verified_variants": 4,
+    "field_verified_fares": 2,
+    "planning_nodes": 7,
+    "planning_routes": 4,
+    "planning_variants": 6
+  }
+}

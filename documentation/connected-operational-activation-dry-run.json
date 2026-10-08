@@ -1,0 +1,28 @@
+{
+  "status": "VERIFICATION_REQUIRED",
+  "errors": [
+    "Manifest requires a completed verification review.",
+    "Unverified passenger point: CSF-SM-TERMINAL-BOARD",
+    "Unverified passenger point: CSF-SNR-ALIGHT",
+    "Unverified passenger point: CSF-GREEN-CITY-ALIGHT",
+    "Unverified passenger point: CSF-ST-NICOLAS-ALIGHT",
+    "Unverified passenger point: CSF-JENRA-ALIGHT",
+    "Unverified passenger point: CSF-JBL-ALIGHT",
+    "Unverified passenger point: CSF-PUREGOLD-ALIGHT",
+    "Unverified passenger point: CSF-PHS-ALIGHT",
+    "Unverified passenger point: CSF-SFELAPCO-ALIGHT",
+    "Unverified passenger point: CSF-MARKET-ALIGHT",
+    "Unverified passenger point: CSF-PALENGKE-ALIGHT",
+    "Unverified corridor/stops: CSF-MEXICO-SFELAPCO-OUT",
+    "Unverified corridor/stops: CSF-MEXICO-MARKET-OUT",
+    "Unverified corridor/stops: CSF-SM-PALENGKE-OUT",
+    "SM pedestrian connection is not verified."
+  ],
+  "variants": [
+    "CSF-MEXICO-SFELAPCO-OUT",
+    "CSF-MEXICO-MARKET-OUT",
+    "CSF-SM-PALENGKE-OUT"
+  ],
+  "nodeCount": 11,
+  "observedAt": null
+}

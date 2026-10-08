@@ -299,7 +299,7 @@ async function testDirectComposition() {
     config: { initialCandidateRadiusMeters: 300, maximumCandidateRadiusMeters: 300 },
   });
   assert.deepEqual(noAccess.journeys, []);
-  assert.equal(noAccessRouter.calls.length, 0, 'egress routing is skipped when no boarding candidate exists');
+  assert.equal(noAccessRouter.calls.length, 1, 'independent egress enrichment may run concurrently; unavailable access still excludes the journey');
   console.log('ok - direct fixture composes WALK, TRANSIT, WALK without deferred estimates');
 }
 

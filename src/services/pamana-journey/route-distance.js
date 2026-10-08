@@ -45,8 +45,8 @@ function decodePolyline(encoded) {
   return points.length >= 2 && points.every(validPoint) ? points : null;
 }
 
-function roadLine(variant) {
-  if (!ROAD_GEOMETRY_SOURCES.has(variant.geometry_source)) return null;
+function roadLine(variant, { allowResearch = false } = {}) {
+  if (!ROAD_GEOMETRY_SOURCES.has(variant.geometry_source) && !(allowResearch && variant.geometry_source === 'RESEARCH_PREVIEW')) return null;
   const geo = variant.geometry_geojson?.type === 'Feature'
     ? variant.geometry_geojson.geometry : variant.geometry_geojson;
   let line = null;
@@ -92,8 +92,8 @@ function offsetOnLine(line, node) {
   return best.offset;
 }
 
-function geometryStopOffsets(rawVariant, stops) {
-  const line = roadLine(rawVariant);
+function geometryStopOffsets(rawVariant, stops, options = {}) {
+  const line = roadLine(rawVariant, options);
   return line ? stops.map((stop) => offsetOnLine(line, stop.node)) : [];
 }
 
@@ -103,18 +103,19 @@ function distanceForEdge(edge) {
   const cumulative = stops.map((stop) => stop.distanceFromVariantStartMeters);
   const board = cumulative[0];
   const alight = cumulative[cumulative.length - 1];
+  const source = edge.variant.geometrySource === 'RESEARCH_PREVIEW' ? 'RESEARCH_DERIVED_GEOMETRY' : 'STORED_ROUTE_STOP_DISTANCE';
   const present = cumulative.filter((value) => Number.isFinite(value));
   if (Number.isFinite(board) && Number.isFinite(alight) && board >= 0 && alight > board
     && present.every((value, i) => value >= 0 && (i === 0 || value >= present[i - 1]))) {
-    return { meters: alight - board, source: 'STORED_ROUTE_STOP_DISTANCE' };
+    return { meters: alight - board, source };
   }
   const offsets = stops.map((stop) => stop.geometryOffsetMeters);
   if (offsets.every(Number.isFinite) && offsets.length >= 2
     && offsets.every((value, i) => i === 0 || value >= offsets[i - 1])
     && offsets[offsets.length - 1] > offsets[0]) {
-    return { meters: offsets[offsets.length - 1] - offsets[0], source: 'STORED_ROAD_GEOMETRY' };
+    return { meters: offsets[offsets.length - 1] - offsets[0], source: source === 'RESEARCH_DERIVED_GEOMETRY' ? source : 'STORED_ROAD_GEOMETRY' };
   }
   return { meters: null, source: null };
 }
 
-module.exports = { distanceForEdge, geometryStopOffsets, roadLine, decodePolyline };
+module.exports = { distanceForEdge, geometryStopOffsets, roadLine, decodePolyline, offsetOnLine, segmentLength };

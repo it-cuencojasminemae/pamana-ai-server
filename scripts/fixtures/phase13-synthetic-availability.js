@@ -28,6 +28,10 @@ function operationalRecord(variant, {
     is_simulated: isSimulated,
     data_mode: dataMode,
     route_variant: tripVariant,
+    availability_status: vehicleStatus === 'full' || occupancyLevel === 'full' ? 'FULL'
+      : occupancyLevel === 'near_full' ? 'LIMITED' : ['empty', 'low', 'moderate'].includes(occupancyLevel) ? 'AVAILABLE' : 'UNKNOWN',
+    availability_source: dataMode === 'REAL' ? 'DRIVER' : 'SIMULATION',
+    availability_reported_at: recordedAt,
     vehicle,
   };
   return {
