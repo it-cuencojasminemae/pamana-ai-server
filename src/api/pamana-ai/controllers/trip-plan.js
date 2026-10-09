@@ -16,8 +16,17 @@ function createTripPlanHandler({
     if (!consumeRateLimit(ctx, 'trip-plan', { limit: 30, windowMs: 60_000 })) return;
     let context;
     try { context = await passengerPlanningContext(ctx.request?.body?.planningMode || 'OPERATIONAL', ctx.state.user); }
-    catch (error) { ctx.status = error.message === 'RESEARCH_PREVIEW_DISABLED' ? 403 : 400;
-      ctx.body = { status: error.message, message: 'Research preview requires both server preview flags and an explicit mode selection.' }; return; }
+    catch (error) {
+      const code = error?.message;
+      if (code === 'RESEARCH_PREVIEW_DISABLED' || code === 'INVALID_PLANNING_MODE') {
+        ctx.status = code === 'RESEARCH_PREVIEW_DISABLED' ? 403 : 400;
+        ctx.body = { status: code, message: 'Research preview requires both server preview flags and an explicit mode selection.' };
+      } else {
+        ctx.status = 503;
+        ctx.body = { status: 'SERVICE_UNAVAILABLE', message: 'Trip planning is temporarily unavailable.' };
+      }
+      return;
+    }
     ctx.set?.('Cache-Control', 'no-store');
     const validation = validate(ctx.request?.body, { now, context });
     if (!validation.ok) {

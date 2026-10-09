@@ -24,7 +24,7 @@ function recommendJourneys(journeys, { context } = {}) {
   const availabilityRanks = { LIVE_ACTIVE: 3, SERVICE_EXPECTED: 2, LIMITED: 1 };
   const evidence = options.map(journey => ({ journey, strength: Math.min(...journey.legs.filter(leg => leg.type === 'TRANSIT')
     .map(leg => leg.availability?.status === 'LIVE_ACTIVE' && !(leg.availability.boardableVehicleCount > 0) ? 0 : availabilityRanks[leg.availability?.status] || 0)) }));
-  const reliable = evidence.length && evidence.every(item => item.strength > 0) && new Set(evidence.map(item => item.strength)).size > 1
+  const reliable = evidence.length && evidence.every(item => item.strength > 0)
     ? evidence.reduce((best, item) => item.strength > best.strength ? item : best).journey : null;
   return Object.freeze({
     recommended: choice(first, 'NO_VALID_JOURNEY'),

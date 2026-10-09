@@ -120,7 +120,7 @@ test('G: boarding representatives remain distinct only when enriched passenger f
   boarding.boardAt={...boarding.boardAt,nodeCode:'RCH-PSU-MEXICO-FRONT',name:'PSU frontage',connector:undefined};
   const access=permanent.legs.find(l=>l.type==='WALK'&&l.purpose==='ACCESS');
   access.distanceMeters+=190;access.durationSeconds+=150;
-  assert.equal(resultKey(permanent,{accessAlternatives:true}),keys[0], 'same fare and downstream service must collapse regardless of boarding point');
+  assert.notEqual(resultKey(permanent),keys[0], 'a meaningful permanent boarding point remains a genuine alternative');
   const unavailable=structuredClone(permanent);firstRide(unavailable).availability.status='OUTSIDE_SERVICE';
   assert.notEqual(resultKey(unavailable,{accessAlternatives:true}),keys[0]);
   const cheaper=structuredClone(result.journeys[0]);cheaper.fareSummary.totalFare-=1;

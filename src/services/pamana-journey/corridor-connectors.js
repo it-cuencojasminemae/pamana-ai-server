@@ -95,6 +95,13 @@ function attachCorridorConnectors(graphData, nodes, request, { context, sections
       for (const { section, position } of matches) {
         if (position.offsetMeters <= positioned[0].offset || position.offsetMeters >= positioned.at(-1).offset) continue;
         const key = crypto.createHash('sha256').update([original.variant_code, role, position.lat, position.lng, section.id].join('|')).digest('hex').slice(0, 16);
+        // The +/-100m pedestrian probes are connection alternatives, not new
+        // transport services. A permanent stop between probes keeps them apart.
+        const interval = positioned.filter(item => item.offset < position.offsetMeters).length;
+        const candidateGroupId = crypto.createHash('sha256').update([
+          original.documentId || original.id || original.variant_code, original.direction,
+          role, section.id, point.lat, point.lng, interval,
+        ].join('|')).digest('hex').slice(0, 16);
         const node = { ...original, route_variant_stops: undefined, route: undefined, geometry_geojson: undefined,
           ...(section.evidenceClass === 'LOCAL_RESEARCH' ? {
             data_mode: 'REAL', verification_status: 'RESEARCH_CANDIDATE', planning_enabled: false, verified_at: null,
@@ -103,7 +110,7 @@ function attachCorridorConnectors(graphData, nodes, request, { context, sections
           } : {}),
           documentId: `connector-${key}`, node_code: `CONNECTOR-${key}`, name: role === 'ACCESS' ? section.pickupName || 'Roadside boarding point' : 'Roadside alighting point',
           node_type: role === 'ACCESS' ? 'ROADSIDE_PICKUP' : 'DESIGNATED_STOP', latitude: position.lat, longitude: position.lng,
-          connector: { role, sectionId: section.id, evidenceClass: section.evidenceClass, placementSource: section.placementSource,
+          connector: { role, sectionId: section.id, candidateGroupId, evidenceClass: section.evidenceClass, placementSource: section.placementSource,
             serviceLabel: section.serviceLabel || original.signboard_text, fieldBoardingSideVerified: section.fieldBoardingSideVerified === true,
             variantCode: original.variant_code, direction: original.direction, offsetMeters: position.offsetMeters, temporary: true } };
         temporary.push(node);

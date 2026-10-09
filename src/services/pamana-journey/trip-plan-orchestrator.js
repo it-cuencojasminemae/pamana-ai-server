@@ -19,7 +19,7 @@ const { materializeResearchTransport } = require('./research-transport');
 const { attachCorridorConnectors } = require('./corridor-connectors');
 const { requestBudget } = require('./provider-budget');
 const { demoObservations } = require('./research-demo-observations');
-const { resultKey } = require('./journey-result-deduplicator');
+const { distinctJourneyResults } = require('./journey-result-deduplicator');
 
 const TRIP_PLAN_STATUS = Object.freeze({
   INVALID_REQUEST: 'INVALID_REQUEST',
@@ -89,15 +89,7 @@ function sortJourneys(journeys, { preferWalking = false } = {}) {
 }
 
 function distinctRidePatterns(journeys, options = {}) {
-  const groups = new Map();
-  const walkDistance = j => (j.legs || []).filter(l => l.type === 'WALK').reduce((sum, l) => sum + (Number.isFinite(l.distanceMeters) ? l.distanceMeters : Infinity), 0);
-  for (const journey of sortJourneys(journeys)) {
-    const key = journey.legs.filter(l => l.type === 'TRANSIT').map(l => l.variantCode).join('>')
-      + '|' + (journey.transferConnections || []).map(c => c?.id || '').join('>');
-    const current = groups.get(key);
-    if (!current || walkDistance(journey) < walkDistance(current)) groups.set(key, journey);
-  }
-  return sortJourneys([...groups.values()], options);
+  return sortJourneys(distinctJourneyResults(journeys), options);
 }
 
 function legWarnings(leg) {
@@ -290,8 +282,7 @@ async function orchestrateTripPlan(request, {
   }
   // Preview compares alternative boarding points after fare/service enrichment,
   // so a cheaper or otherwise meaningfully different boarding is not discarded.
-  const candidates = context.researchPreview ? sortJourneys(walking.journeys || [], { preferWalking: true })
-    : expansion.enabled ? distinctRidePatterns(walking.journeys || []) : sortJourneys(walking.journeys || []);
+  const candidates = walking.journeys || [];
   if (!candidates.length) {
     return baseResponse(request, TRIP_PLAN_STATUS.NO_TRANSPORT_JOURNEY, {
       failures,
@@ -302,12 +293,11 @@ async function orchestrateTripPlan(request, {
     });
   }
 
-  // Compare enriched facts before limiting the unique results. Evidence loads
-  // stay bounded to the existing batch size; only duplicates require refilling.
-  const journeys = [];
-  const seenResults = new Set();
-  const seenAccessPatterns = new Set();
-  for (let offset = 0; offset < candidates.length && journeys.length < config.maxJourneys; offset += config.maxJourneys) {
+  // Enrich every candidate before deduplication, ranking and limiting. A better
+  // walk or genuine alternative can occur after the first full result batch.
+  // Keep each evidence request bounded to the existing batch size.
+  const enrichedCandidates = [];
+  for (let offset = 0; offset < candidates.length; offset += config.maxJourneys) {
     const selected = candidates.slice(offset, offset + config.maxJourneys);
     const combinedJourney = Object.freeze({
       legs: Object.freeze(selected.flatMap((journey) => journey.legs)),
@@ -330,16 +320,11 @@ async function orchestrateTripPlan(request, {
         context,
       }
     ), { transitGeometries, context }));
-    for (const journey of enriched) {
-      const key = resultKey(journey);
-      const accessKey = context.researchPreview ? resultKey(journey, { accessAlternatives: true }) : null;
-      if (seenResults.has(key) || (accessKey && seenAccessPatterns.has(accessKey))) continue;
-      seenResults.add(key);
-      if (accessKey) seenAccessPatterns.add(accessKey);
-      journeys.push(journey);
-      if (journeys.length === config.maxJourneys) break;
-    }
+    enrichedCandidates.push(...enriched);
   }
+  const journeys = sortJourneys(distinctJourneyResults(enrichedCandidates), {
+    preferWalking: context.researchPreview,
+  }).slice(0, config.maxJourneys);
   return baseResponse(request, TRIP_PLAN_STATUS.JOURNEYS_FOUND, {
     journeys, failures, now: generatedAt, maxJourneys: config.maxJourneys, context,
   });

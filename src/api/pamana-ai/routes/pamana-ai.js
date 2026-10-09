@@ -6,6 +6,10 @@
 
 module.exports = {
   routes: [
+    // These read-only map resources use the existing map-access permission.
+    // Authentication and role checks stay enabled; no permission DB changes.
+    { method: 'GET', path: '/pamana-ai/traffic', handler: 'traffic.find', config: { auth: { scope: ['api::pamana-ai.pin-area.find'] }, policies: [] } },
+    { method: 'GET', path: '/pamana-ai/traffic-tiles/:z/:x/:y', handler: 'traffic.tile', config: { auth: { scope: ['api::pamana-ai.pin-area.find'] }, policies: [] } },
     { method: 'GET', path: '/pamana-ai/planning-capabilities', handler: 'planning-capabilities.find', config: { policies: [] } },
     { method: 'POST', path: '/pamana-ai/journey-details', handler: 'journey-details.create', config: { policies: [] } },
     { method: 'GET', path: '/pamana-ai/landmarks', handler: 'landmarks.find', config: { policies: [] } },
